@@ -1,0 +1,13 @@
+h1,
+.dashboard {
+  font-family: Helvetica, sans-serif;
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  height: 2.8rem;
+  padding: 0.3rem 0.3rem;
+  font-size: 1.2rem;
+  border-bottom: 1px solid;
+}
