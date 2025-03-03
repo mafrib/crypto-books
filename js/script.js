@@ -10,6 +10,7 @@ function startDashboard() {
 
       // Filter the data if needed
       // Run functions to create the visualizations
+      makeMap();
     })
     .catch((error) => {
       // If there's an error while loading the data, log the error.

@@ -6,6 +6,7 @@
     <link href="css/dashboard.css" rel="stylesheet" />
     <!-- D3.js library -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
     <!-- JavaScript files for the dashboard -->
     <script src="js/script.js"></script>
     <script src="js/create.js"></script>
@@ -21,7 +22,8 @@
 
     <div class="dashboard">
         <!-- Visualization Area for each chart-->
-        <div class="visualization" id="nameOfTheChart"></div>
+        <!-- <div class="visualization" id="map"></div> -->
+        <svg class= visualization id="map"></svg>
     </div>
 
   </body>
