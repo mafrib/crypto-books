@@ -1,18 +1,58 @@
-// Functions to create each visualization
+const zoomMin = 0.9;
+const zoomMax = 8;
 
+const width = 300;
+const height = 200;
 
 function makeMap() {
-    // Initialize dimensions
-    const width = 300;
-    const height = 200;
 
-    // Create SVG container
     const svg = d3.select("svg")
         .attr("width", width)
-        .attr("height", height)
-        .call(d3.zoom().on("zoom", handleZoom))
-        .append("g");
+        .attr("height", height);
 
+    const mapGroup = svg.append("g");
+
+    const zoomControl = svg.append("g")
+        .attr("class", "zoom-controls")
+        .attr("transform", "translate(20,20)");
+
+    // Zoom in button (top)
+    zoomControl.append("g")
+        .attr("class", "zoom-button")
+        .on("click", () => zoom.scaleBy(svg, 1.2))
+        .on("dblclick", function(event) {
+            event.stopPropagation(); // Prevent zoom in behind the button
+        })    
+        .call(button => {
+            button.append("circle")
+                .attr("class", "zoom-button-bg")
+                .attr("r", 10);
+            button.append("text")
+                .attr("class", "zoom-icon")
+                .attr("text-anchor", "middle")
+                .attr("dy", "0.3em")
+                .text("+");
+        });
+
+    // Zoom out button (bottom)
+    zoomControl.append("g")
+        .attr("class", "zoom-button")
+        .attr("transform", "translate(0,25)")
+        .on("click", () => zoom.scaleBy(svg.transition().duration(50), 0.8))
+        .on("dblclick", function(event) {
+            event.stopPropagation(); // Prevent zoom in behind the button
+        })    
+        .call(button => {
+            button.append("circle")
+                .attr("class", "zoom-button-bg")
+                .attr("r", 10);
+            button.append("text")
+                .attr("class", "zoom-icon")
+                .attr("text-anchor", "middle")
+                .attr("dy", "0.3em")
+                .text("-");
+        });
+        
     const projection = d3.geoMercator()
         .center([15, 52])  // Initial center
         .scale(200)
@@ -20,17 +60,15 @@ function makeMap() {
 
     const path = d3.geoPath().projection(projection);
 
-    // Create zoom handler
-    function handleZoom(event) {
-        svg.attr("transform", event.transform);
-    }
-
+    // Initialize zoom
     const zoom = d3.zoom()
-        .scaleExtent([0.9, 8]) // Min/max zoom levels
+        .scaleExtent([zoomMin, zoomMax])
         .translateExtent([[0, 0], [width, height]])
-        .on("zoom", handleZoom);
+        .on("zoom", (event) => {
+            mapGroup.attr("transform", event.transform);
+        });
 
-    d3.select("svg").call(zoom);
+    svg.call(zoom);
 
     // Country names that are visible on the map
     const visibleCountries = new Set([
@@ -61,12 +99,9 @@ function makeMap() {
                 visibleGeometries
             );
 
-            svg.append("path")
+            mapGroup.append("path")
                 .datum(mergedGeometries)
                 .attr("class", "europe-outline")
-                .attr("d", path)
-                .style("fill", "#90AA86")
-                .style("stroke", "#333")
-                .style("stroke-width", "0.5px");
+                .attr("d", path);
         })
 }

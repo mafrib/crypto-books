@@ -24,3 +24,28 @@ h1,
   padding: 10px;
 }
 
+/* -------MAP------- */
+.zoom-button {
+    cursor: pointer;
+}
+
+.zoom-button-bg {
+    fill: #fff;
+    stroke: #333;
+    stroke-width: 1px;
+}
+
+.europe-outline {
+    fill: #90AA86;
+    stroke: #333;
+    stroke-width: 0.5px;
+}
+
+.zoom-button:hover .zoom-button-bg {
+    fill: #f0f0f0;
+}
+
+.zoom-button:hover .zoom-icon {
+  font-weight: 900;
+}
+
