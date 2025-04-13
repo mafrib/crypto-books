@@ -8,22 +8,53 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
     <!-- JavaScript files for the dashboard -->
-    <script src="js/script.js"></script>
     <script src="js/map.js"></script>
+    <script src="js/catalog.js"></script>
     <script src="js/update.js"></script>
     <script src="js/linked.js"></script>
+    <script src="js/filter.js"></script>
+    <script src="js/script.js"></script>
   </head>
 
   <body onload="startDashboard()">
 
     <nav class="navbar">
-      <h1 class="title">Crypto-Books</div>
+      <h1 class="title">Crypto-Books</h1>
+      <ul>
+        <li><a>About</a></li>
+        <li><a>Database</a></li>
+      </div>
     </nav>
 
     <div class="dashboard">
-      <!-- Visualization Area for each chart-->
-      <!-- <div class="visualization" id="map"></div> -->
-      <svg class="visualization" id="map"></svg>
+      <div class="visualization">
+        <svg id="map"></svg>
+        <div class="map-legend"></div>
+      </div>
+      <div class="visualization" id="network-graph"></div>
+      <div class="visualization" id="treemap"></div>
+      <div class="visualization" id="catalog">
+        <div class="search-container">
+          <input type="text" id="search-input" placeholder="Search for a book, author or library...">
+          <img src="../icons/search.svg" id="search-icon"></img>
+        </div>
+        <div class="catalog-header">
+          <h5 class="sortable" data-column="Obra">
+            Title
+            <img class="sort-icon" src="icons/sort-neutral.png"/>
+          </h5>
+          <h5 class="sortable" data-column="Nome_Autor">
+            Author
+            <img class="sort-icon" src="icons/sort-neutral.png"/>
+          </h5>
+          <h5 class="sortable" data-column="Livraria">
+            Library
+            <img class="sort-icon" src="icons/sort-up.png"/>
+          </h5>
+       </div>
+        <div id="catalog-entries"></div>
+        <div id="book-count"></div>
+      </div> 
     </div>
 
   </body>

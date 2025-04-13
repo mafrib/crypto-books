@@ -1,8 +1,8 @@
 const zoomMin = 0.9;
 const zoomMax = 8;
 
-const width = 300;
-const height = 200;
+const width = 355;
+const height = 180;
 
 function makeMap() {
 
