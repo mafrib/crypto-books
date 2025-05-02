@@ -1,33 +1,51 @@
 let globalData;
+let currentTreemapMode = 'category';
+
+// Function to switch modes and redraw the treemap
+function switchMode(mode) {
+    currentTreemapMode = mode;
+    createTreemap('#treemap-area', globalData, mode);
+    
+    // Update button styles
+    d3.selectAll('.mode-button')
+        .classed('active', false);
+    d3.select(`.mode-button[data-mode="${mode}"]`)
+        .classed('active', true);
+}
 
 // Function to initiate the dashboard and load the data
 function startDashboard() {
+    document.getElementById("search-input").value = "";
 
-  document.getElementById("search-input").value = "";
+    // Load the data
+    d3.csv("data/dataset.csv")
+        .then((data) => {
+            globalData = data;
+          
+        // Filter the data if needed
+        makeMap();
 
-  // Load the data
-  d3.csv("data/dataset.csv")
-    .then((data) => {
-      // Store data in the globalData variable
-      globalData = data;
+        // Default alphabetical sort by library owner
+        const initialSortColumn = "Livraria";
+        const sortedData = [...globalData].sort((a, b) =>
+            a[initialSortColumn].localeCompare(b[initialSortColumn])
+        );
 
-      // Filter the data if needed
-      makeMap();
+        // Books' Catalog     
+        createBooksCatalog(sortedData);
+        setupSearchBar(sortedData);
+        setupSorting(sortedData, initialSortColumn);
 
-      // Default alphabetical sort by library owner
-      const initialSortColumn = "Livraria";
-      const sortedData = [...globalData].sort((a, b) =>
-        a[initialSortColumn].localeCompare(b[initialSortColumn])
-      );
+        createTreemap('#treemap-area', globalData, currentTreemapMode);
 
-      // Books' Catalog     
-      createBooksCatalog(sortedData);
-      setupSearchBar(sortedData);
-      setupSorting(sortedData, initialSortColumn);
-
+        // Set up mode switch buttons
+        d3.selectAll('.mode-button')
+            .on('click', function() {
+                const mode = this.getAttribute('data-mode');
+                switchMode(mode);
+            });
     })
     .catch((error) => {
-      // If there's an error while loading the data, log the error.
-      console.error("Error loading the CSV file:", error);
+        console.error("Error loading the CSV file:", error);
     });
 }
