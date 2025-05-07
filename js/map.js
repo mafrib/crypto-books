@@ -22,7 +22,7 @@ function makeMap() {
         .on("click", () => zoom.scaleBy(svg, 1.2))
         .on("dblclick", function(event) {
             event.stopPropagation(); // Prevent zoom in behind the button
-        })    
+        })
         .call(button => {
             button.append("circle")
                 .attr("class", "zoom-button-bg")
@@ -41,7 +41,7 @@ function makeMap() {
         .on("click", () => zoom.scaleBy(svg.transition().duration(50), 0.8))
         .on("dblclick", function(event) {
             event.stopPropagation(); // Prevent zoom in behind the button
-        })    
+        })
         .call(button => {
             button.append("circle")
                 .attr("class", "zoom-button-bg")
@@ -52,7 +52,7 @@ function makeMap() {
                 .attr("dy", "0.3em")
                 .text("-");
         });
-        
+
     const projection = d3.geoMercator()
         .center([15, 52])  // Initial center
         .scale(200)
@@ -77,10 +77,10 @@ function makeMap() {
         "Austria", "Sweden", "Norway", "Finland", "Denmark", "Switzerland",
         "Ireland", "Hungary", "Greece", "Romania", "Slovakia", "Bulgaria",
         "Croatia", "Serbia", "Slovenia", "Lithuania", "Latvia", "Estonia",
-        "Luxembourg", "Ukraine", "Albania", "Bosnia and Herzegovina", "Russia", 
+        "Luxembourg", "Ukraine", "Albania", "Bosnia and Herzegovina", "Russia",
         "Morocco", "Algeria", "Tunisia","Turkey", "Armenia", "Syria", "Libya",
-        "Egypt", "Israel", "Saudi Arabia", "Iceland", "Cyprus", "Georgia", 
-        "Moldova", "Czechia", "Belarus", "Jordan", "Bosnia and Herz.", 
+        "Egypt", "Israel", "Saudi Arabia", "Iceland", "Cyprus", "Georgia",
+        "Moldova", "Czechia", "Belarus", "Jordan", "Bosnia and Herz.",
         "Montenegro", "Macedonia", "Kosovo", "Lebanon", "Iran", "Armenia",
         "Azerbaijan", "Turkmenistan", "Uzbekistan", "Kazakhstan", "Palestine",
         "Iraq", "Kuwait"

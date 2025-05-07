@@ -4,8 +4,19 @@ let currentTreemapMode = 'category';
 // Function to switch modes and redraw the treemap
 function switchMode(mode) {
     currentTreemapMode = mode;
-    createTreemap('#treemap-area', globalData, mode);
-    
+
+    // Get initial sort column from the catalog header
+    const initialSortColumn = document.querySelector('.sortable[data-column="Livraria"]')
+        ? "Livraria"
+        : "Obra"; // Fallback if not found
+
+    createTreemap('#treemap-area', globalData, mode, (newFilteredData) => {
+        const sortedData = [...newFilteredData].sort((a, b) =>
+            a[initialSortColumn].localeCompare(b[initialSortColumn])
+        );
+        createBooksCatalog(sortedData);
+    });
+
     // Update button styles
     d3.selectAll('.mode-button')
         .classed('active', false);
@@ -21,30 +32,42 @@ function startDashboard() {
     d3.csv("data/dataset.csv")
         .then((data) => {
             globalData = data;
-          
-        // Filter the data if needed
-        makeMap();
 
-        // Default alphabetical sort by library owner
-        const initialSortColumn = "Livraria";
-        const sortedData = [...globalData].sort((a, b) =>
-            a[initialSortColumn].localeCompare(b[initialSortColumn])
-        );
+            let currentData = applyGlobalFilters(globalData);
+            // Default alphabetical sort by library owner
+            const initialSortColumn = "Livraria";
 
-        // Books' Catalog     
-        createBooksCatalog(sortedData);
-        setupSearchBar(sortedData);
-        setupSorting(sortedData, initialSortColumn);
+            // Sort initially
+            let sortedData = [...currentData].sort((a, b) =>
+                a[initialSortColumn].localeCompare(b[initialSortColumn])
+            );
 
-        createTreemap('#treemap-area', globalData, currentTreemapMode);
+            makeMap();
 
-        // Set up mode switch buttons
-        d3.selectAll('.mode-button')
-            .on('click', function() {
-                const mode = this.getAttribute('data-mode');
-                switchMode(mode);
+            // Books' Catalog
+            createBooksCatalog(sortedData);
+            setupSearchBar(globalData);
+            setupSorting(sortedData, initialSortColumn);
+
+            // TO DO: test this
+            createTreemap('#treemap-area', globalData, currentTreemapMode, (newFilteredData) => {
+                // Update current data and re-sort
+                currentData = newFilteredData;
+                sortedData = [...currentData].sort((a, b) =>
+                    a[initialSortColumn].localeCompare(b[initialSortColumn])
+                );
+                createBooksCatalog(sortedData);
             });
-    })
+
+            // Set up mode switch buttons
+            d3.selectAll('.mode-button')
+                .on('click', function() {
+                    const mode = this.getAttribute('data-mode');
+                    clearGlobalFilter('treemap'); // Clear filter on mode change
+                    switchMode(mode);
+                });
+        }
+    )
     .catch((error) => {
         console.error("Error loading the CSV file:", error);
     });

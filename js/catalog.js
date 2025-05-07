@@ -1,3 +1,8 @@
+let currentSort = {
+  column: null,
+  ascending: true
+};
+
 function createBooksCatalog(data) {
 
     const entries = d3.select("#catalog-entries")
@@ -23,9 +28,9 @@ function createBooksCatalog(data) {
     newEntries.append("div")
         .classed("livraria", true)
         .text(d => d.Livraria);
-  
+
 /*to do: se tiver mais de 21, colocar reticencias nos seguintes caracteres */
-  
+
     // Update existing entries (if needed)
     entries.select(".obra").text(d => d.Obra);
     entries.select(".autor").text(d => d.Nome_Autor);
@@ -36,28 +41,37 @@ function createBooksCatalog(data) {
 
 }
 
-function setupSearchBar(data) {
-    const input = document.getElementById("search-input");
-  
-    input.addEventListener("input", () => {
-      const filtered = filterBooks(data, input.value);
-      createBooksCatalog(filtered);
-    });
+function setupSearchBar(rawData) {
+  const input = document.getElementById("search-input");
+
+  input.addEventListener("input", () => {
+    const query = input.value;
+
+    // Update search filter
+    if (query) {
+      setGlobalFilter('search', (book) =>
+        book.Obra.toLowerCase().includes(query.toLowerCase()) ||
+        book.Nome_Autor.toLowerCase().includes(query.toLowerCase()) ||
+        book.Livraria.toLowerCase().includes(query.toLowerCase())
+      );
+    } else {
+      clearGlobalFilter('search');
+    }
+
+    // Apply all filters
+    const filteredData = applyGlobalFilters(rawData);
+    createBooksCatalog(filteredData);
+  });
 }
 
-let currentSort = {
-    column: null,
-    ascending: true
-  };
-  
 function setupSorting(data, defaultColumn = null) {
     const headers = document.querySelectorAll(".sortable");
-  
+
     // If there's a default column, show the up arrow
     if (defaultColumn) {
       currentSort.column = defaultColumn;
       currentSort.ascending = true;
-  
+
       const defaultHeader = document.querySelector(
         `.sortable[data-column="${defaultColumn}"]`
       );
@@ -68,43 +82,40 @@ function setupSorting(data, defaultColumn = null) {
         }
       }
     }
-  
+
     headers.forEach(header => {
       const icon = header.querySelector(".sort-icon");
-  
+
       header.addEventListener("click", () => {
         const column = header.getAttribute("data-column");
-  
+
         if (currentSort.column === column) {
           currentSort.ascending = !currentSort.ascending;
         } else {
           currentSort.column = column;
           currentSort.ascending = true;
         }
-  
+
         const sorted = [...data].sort((a, b) => {
           const aVal = a[column].toLowerCase();
           const bVal = b[column].toLowerCase();
-  
+
           return currentSort.ascending
             ? aVal.localeCompare(bVal)
             : bVal.localeCompare(aVal);
         });
-  
+
         // Reset all icons to neutral
         document.querySelectorAll(".sort-icon").forEach(i => {
           i.src = "icons/sort-neutral.png";
         });
-  
+
         // Set current icon to up/down
         icon.src = currentSort.ascending
           ? "icons/sort-up.png"
           : "icons/sort-down.png";
-  
+
         createBooksCatalog(sorted);
       });
     });
   }
-  
-  
-

@@ -6,3 +6,21 @@ function filterBooks(data, query) {
       book.Livraria.toLowerCase().includes(q)
     );
   }
+
+// Centralized filtering system
+let activeFilters = {};
+
+function applyGlobalFilters(rawData) {
+  return Object.values(activeFilters).reduce(
+    (data, filterFn) => data.filter(filterFn),
+    rawData
+  );
+}
+
+function setGlobalFilter(source, filterFn) {
+  activeFilters[source] = filterFn;
+}
+
+function clearGlobalFilter(source) {
+  delete activeFilters[source];
+}
