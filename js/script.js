@@ -5,23 +5,19 @@ let currentTreemapMode = 'category';
 function switchMode(mode) {
     currentTreemapMode = mode;
 
-    // Get initial sort column from the catalog header
-    const initialSortColumn = document.querySelector('.sortable[data-column="Livraria"]')
-        ? "Livraria"
-        : "Obra"; // Fallback if not found
+    const filteredData = applyGlobalFilters(globalData);
 
-    createTreemap('#treemap-area', globalData, mode, (newFilteredData) => {
-        const sortedData = [...newFilteredData].sort((a, b) =>
-            a[initialSortColumn].localeCompare(b[initialSortColumn])
+    // redraw the treemap on the filtered set
+    createTreemap('#treemap-area', filteredData, mode, newFiltered => {
+        const sorted = [...newFiltered].sort((a, b) =>
+            a.Livraria.localeCompare(b.Livraria)
         );
-        createBooksCatalog(sortedData);
+        createBooksCatalog(sorted);
+        createNetworkGraph('#network-graph', newFiltered);
     });
 
-    // Update button styles
-    d3.selectAll('.mode-button')
-        .classed('active', false);
-    d3.select(`.mode-button[data-mode="${mode}"]`)
-        .classed('active', true);
+    d3.selectAll('.mode-button').classed('active', false);
+    d3.select(`.mode-button[data-mode="${mode}"]`).classed('active', true);
 }
 
 // Function to initiate the dashboard and load the data
@@ -49,7 +45,6 @@ function startDashboard() {
             setupSearchBar(globalData);
             setupSorting(sortedData, initialSortColumn);
 
-            // TO DO: test this
             createTreemap('#treemap-area', globalData, currentTreemapMode, (newFilteredData) => {
                 // Update current data and re-sort
                 currentData = newFilteredData;
@@ -57,15 +52,16 @@ function startDashboard() {
                     a[initialSortColumn].localeCompare(b[initialSortColumn])
                 );
                 createBooksCatalog(sortedData);
+                createNetworkGraph('#network-graph', newFilteredData);
             });
 
             // Set up mode switch buttons
             d3.selectAll('.mode-button')
-                .on('click', function() {
-                    const mode = this.getAttribute('data-mode');
-                    clearGlobalFilter('treemap'); // Clear filter on mode change
-                    switchMode(mode);
-                });
+            .on('click', function() {
+            const mode = this.getAttribute('data-mode');
+            switchMode(mode);
+            });
+
         }
     )
     .catch((error) => {

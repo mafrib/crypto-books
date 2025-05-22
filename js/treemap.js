@@ -1,9 +1,8 @@
-
 function createTreemap(selector, data, mode = 'category', onUpdate) {
 
     // Cleanup before redraw
     const container = d3.select(selector);
-    container.selectAll("*").remove(); // Remove all previous elements
+    container.selectAll("svg").remove(); // Remove all previous elements
 
     const color = "#16404D";
 
@@ -11,7 +10,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     const rootData = (() => {
         if (mode === 'category') {
             return {
-                name: "Literary categories",
+                name: "Literary Categories",
                 children: Array.from(
                     d3.group(data, d => d.CatLit_Descricao, d => d.GenLit_Descricao),
                     ([category, genres]) => ({
@@ -90,7 +89,6 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     }
 
     function zoom(node) {
-        // Unified logic: wrap leaf nodes as single-child hierarchies
         const childData = node.children
             ? node.children.map(d => d.data)
             : [node.data];
@@ -144,39 +142,111 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         const cellEnter = cell.enter().append("g")
             .classed("cell", true)
             .on("click", (event, d) => {
+
                 event.stopPropagation();
 
-                const isLeaf =
-                    (currentTreemapMode === 'category' && d.depth === 2) ||
-                    (currentTreemapMode === 'tradition' && d.depth === 1);
+                // When a rectangle is already fully expanded, do nothing
+                if (d.x0 === 0 && d.y0 === 0 && d.x1 === width && d.y1 === height) return;
+
+                const isLeaf = !d.children;
 
                 if (isLeaf) {
+                    // Determine and apply the filter for this leaf
                     const filterFn = currentTreemapMode === 'category'
-                        ? book => book.CatLit_Descricao === d.parent.data.name && book.GenLit_Descricao === d.data.name
+                        ? book =>
+                            book.CatLit_Descricao === d.parent.data.name &&
+                            book.GenLit_Descricao === d.data.name
                         : book => book.TradicaoIntelectual_Obra === d.data.name;
                     setGlobalFilter('treemap', filterFn);
 
-                    // Update breadcrumbs
-                    const rootLabel = currentTreemapMode === 'category'
-                        ? 'Literary Categories'
-                        : 'Intellectual Tradition';
-                    d3.select("#treemap-breadcrumbs")
-                        .html(`
-                            <span style="cursor:pointer; font-weight:normal;">${rootLabel}</span>
-                            &nbsp;>&nbsp;
-                            <span style="font-weight:bold;">${d.data.name}</span>
-                        `)
-                        .select("span")
-                        .on("click", () => {
-                            zoom(root);
-                            clearGlobalFilter('treemap');
-                            if (onUpdate) onUpdate(applyGlobalFilters(data));
-                        });
-
+                    // Zoom into the leaf
                     zoom(d);
+
+                    // Rebuild breadcrumbs depending on mode
+                    if (currentTreemapMode === 'category') {
+                        // Literary Categories > Category > Genre
+                        const rootLabel = 'Literary categories';
+                        d3.select("#treemap-breadcrumbs").html(`
+                            <span class="crumb-root" style="cursor:pointer; font-weight:normal;">
+                              ${rootLabel}
+                            </span>
+                            &nbsp;>&nbsp;
+                            <span class="crumb-category" style="cursor:pointer; font-weight:normal;">
+                              ${d.parent.data.name}
+                            </span>
+                            &nbsp;>&nbsp;
+                            <span class="crumb-genre" style="font-weight:bold;">
+                              ${d.data.name}
+                            </span>
+                        `);
+
+                        // Root crumb: back to top
+                        d3.select("#treemap-breadcrumbs .crumb-root")
+                            .on("click", () => {
+                                zoom(root);
+                                clearGlobalFilter('treemap');
+                                if (onUpdate) onUpdate(applyGlobalFilters(data));
+                            });
+
+                        // Category crumb: zoom to the category level
+                        d3.select("#treemap-breadcrumbs .crumb-category")
+                            .on("click", () => {
+                                // Zoom to the category
+                                zoom(d.parent);
+
+                                // Apply only the category filter
+                                setGlobalFilter('treemap',
+                                    book => book.CatLit_Descricao === d.parent.data.name
+                                );
+
+                                // Rebuild breadcrumbs: Literary categories > Category
+                                d3.select("#treemap-breadcrumbs").html(`
+                                    <span class="crumb-root" style="cursor:pointer; font-weight:normal;">
+                                      ${rootLabel}
+                                    </span>
+                                    &nbsp;>&nbsp;
+                                    <span class="crumb-category" style="font-weight:bold;">
+                                      ${d.parent.data.name}
+                                    </span>
+                                `);
+
+                                // Re-attach click on root crumb to reset
+                                d3.select("#treemap-breadcrumbs .crumb-root")
+                                    .on("click", () => {
+                                        zoom(root);
+                                        clearGlobalFilter('treemap');
+                                        if (onUpdate) onUpdate(applyGlobalFilters(data));
+                                    });
+
+                                // Trigger update callback
+                                if (onUpdate) onUpdate(applyGlobalFilters(data));
+                            });
+
+                    } else {
+                        // Intellectual Tradition > TraditionName
+                        d3.select("#treemap-breadcrumbs").html(`
+                            <span class="crumb-root" style="cursor:pointer; font-weight:normal;">
+                              Intellectual Tradition
+                            </span>
+                            &nbsp;>&nbsp;
+                            <span class="crumb-tradition" style="font-weight:bold;">
+                              ${d.data.name}
+                            </span>
+                        `);
+
+                        // Root crumb: back to top
+                        d3.select("#treemap-breadcrumbs .crumb-root")
+                            .on("click", () => {
+                                zoom(root);
+                                clearGlobalFilter('treemap');
+                                if (onUpdate) onUpdate(applyGlobalFilters(data));
+                            });
+                    }
+
                     if (onUpdate) onUpdate(applyGlobalFilters(data));
                     return;
                 }
+
 
                 if (d.children) {
                     zoom(d);
@@ -197,19 +267,19 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
 
                     if (onUpdate) onUpdate(applyGlobalFilters(data));
                 }
-            })
-            .on("dblclick", (event, d) => {
-                event.stopPropagation();
-                if (d.originalParent) zoom(d.originalParent);
             });
 
         cellEnter.append("rect")
             .attr("fill", color)
             .on("mousemove", (event, d) => {
+                const treemapRect = d3.select("#treemap").node().getBoundingClientRect();
+                const x = event.pageX - treemapRect.left - window.scrollX;
+                const y = event.pageY - treemapRect.top - window.scrollY;
+
                 tooltip
                     .html(`<strong>${d.data.name}</strong><br>${d.value} books`)
-                    .style("top", (event.pageY + 10) + "px")
-                    .style("left", (event.pageX + 10) + "px")
+                    .style("left", `${x + 10}px`)
+                    .style("top", `${y + 10}px`)
                     .style("visibility", "visible");
             })
             .on("mouseout", () => {

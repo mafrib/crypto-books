@@ -58,7 +58,7 @@ function setupSearchBar(rawData) {
       clearGlobalFilter('search');
     }
 
-    // Apply all filters
+    // TO DO: highlight occurences in other idioms during search
     const filteredData = applyGlobalFilters(rawData);
     createBooksCatalog(filteredData);
   });

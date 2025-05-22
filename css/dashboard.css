@@ -5,7 +5,8 @@
 
 h1,
 a,
-body
+body,
+.tooltip,
 .dashboard {
   font-family: Inter, Helvetica, sans-serif;
 }
@@ -42,10 +43,10 @@ html, body {
   padding: 10px;
 }
 
-a { 
-  color: inherit; 
+a {
+  color: inherit;
   text-decoration: none;
-} 
+}
 
 .dashboard {
   display: grid;
@@ -89,6 +90,62 @@ a {
 .zoom-button:hover .zoom-icon {
   font-weight: 900;
 }
+
+/* --- NETWORK GRAPH --- */
+
+#network-graph {
+  background: #F5ECD5;
+  border-radius: 24px;
+  overflow: visible;
+  display: inline-block;
+  width: 100%;
+}
+
+.network-wrapper {
+  margin: 20px;
+}
+
+.link {
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+}
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.links .link {
+  fill: none;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.links .link.book {
+  stroke: #A6CDC6;
+}
+.links .link.author {
+  stroke: #578E7E;
+}
+
+.nodes .node circle {
+  fill: #FFFAEC;
+  stroke: #16404D;
+  stroke-width: 1px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+.nodes .node text {
+  font-size: 8px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
 
 /* ---- TREEMAP ---- */
 
@@ -137,7 +194,7 @@ a {
 }
 
 #tooltip {
-  position: fixed;
+  position: absolute;
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 3px 6px;
