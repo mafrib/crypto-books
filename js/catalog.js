@@ -64,58 +64,51 @@ function setupSearchBar(rawData) {
   });
 }
 
-function setupSorting(data, defaultColumn = null) {
-    const headers = document.querySelectorAll(".sortable");
+function setupSorting(rawData, defaultColumn = null) {
+  const headers = document.querySelectorAll(".sortable");
 
-    // If there's a default column, show the up arrow
-    if (defaultColumn) {
-      currentSort.column = defaultColumn;
-      currentSort.ascending = true;
-
-      const defaultHeader = document.querySelector(
-        `.sortable[data-column="${defaultColumn}"]`
-      );
-      if (defaultHeader) {
-        const defaultIcon = defaultHeader.querySelector(".sort-icon");
-        if (defaultIcon) {
-          defaultIcon.src = "icons/sort-up.png";
-        }
-      }
+  // Initialize default sort column and icon
+  if (defaultColumn) {
+    currentSort.column = defaultColumn;
+    currentSort.ascending = true;
+    const defaultHeader = document.querySelector(`.sortable[data-column="${defaultColumn}"]`);
+    const defaultIcon = defaultHeader && defaultHeader.querySelector(".sort-icon");
+    if (defaultIcon) {
+      defaultIcon.src = "icons/sort-up.png";
     }
-
-    headers.forEach(header => {
-      const icon = header.querySelector(".sort-icon");
-
-      header.addEventListener("click", () => {
-        const column = header.getAttribute("data-column");
-
-        if (currentSort.column === column) {
-          currentSort.ascending = !currentSort.ascending;
-        } else {
-          currentSort.column = column;
-          currentSort.ascending = true;
-        }
-
-        const sorted = [...data].sort((a, b) => {
-          const aVal = a[column].toLowerCase();
-          const bVal = b[column].toLowerCase();
-
-          return currentSort.ascending
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
-        });
-
-        // Reset all icons to neutral
-        document.querySelectorAll(".sort-icon").forEach(i => {
-          i.src = "icons/sort-neutral.png";
-        });
-
-        // Set current icon to up/down
-        icon.src = currentSort.ascending
-          ? "icons/sort-up.png"
-          : "icons/sort-down.png";
-
-        createBooksCatalog(sorted);
-      });
-    });
   }
+
+  headers.forEach(header => {
+    const icon = header.querySelector(".sort-icon");
+    header.addEventListener("click", () => {
+      const column = header.getAttribute("data-column");
+
+      // Toggle direction if same column, otherwise reset to ascending
+      if (currentSort.column === column) {
+        currentSort.ascending = !currentSort.ascending;
+      } else {
+        currentSort.column = column;
+        currentSort.ascending = true;
+      }
+
+      const filtered = applyGlobalFilters(rawData);
+
+      const sorted = [...filtered].sort((a, b) => {
+        const aVal = a[column].toLowerCase();
+        const bVal = b[column].toLowerCase();
+        return currentSort.ascending
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      });
+
+      // Reset all icons, then set this one to up/down
+      document.querySelectorAll(".sort-icon")
+        .forEach(i => i.src = "icons/sort-neutral.png");
+      icon.src = currentSort.ascending
+        ? "icons/sort-up.png"
+        : "icons/sort-down.png";
+
+      createBooksCatalog(sorted);
+    });
+  });
+}
