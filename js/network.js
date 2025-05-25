@@ -1,4 +1,6 @@
 let svg, linkGroup, nodeGroup, simulation, tooltip;
+const selectedLinks = new Set();
+const linkKey = d => `${d.source.id || d.source}|${d.target.id || d.target}|${d.type}`;
 
 function wrapText(textSelection, diameter) {
     const words = textSelection.text().split(/\s+/).reverse();
@@ -207,75 +209,47 @@ function createNetworkGraph(containerSelector, data) {
                 .style('font-weight', null)
         })
         .on('click', function(event, d) {
-            const linkIsActive = d3.select(this).classed('active');
+            const k = linkKey(d);
+            selectedLinks.has(k) ? selectedLinks.delete(k) : selectedLinks.add(k);
 
-            // reset all styles
+            // update styling of every link
             svg.selectAll('.link')
-            .classed('active', false)
-            .style('stroke', l => l.type === 'book' ? '#A6CDC6' : '#578E7E');
-            svg.selectAll('.node.selected')
-            .classed('selected', false)
-            .select('circle')
-                .style('fill', '#FFFAEC')
-                .style('stroke', '#16404D');
-            svg.selectAll('.node.selected text')
-            .style('fill', '#16404D');
+                .classed('active',   l => selectedLinks.has(linkKey(l)))
+                .style('stroke',     l => selectedLinks.has(linkKey(l))
+                                    ? '#16404D'
+                                    : (l.type === 'book' ? '#A6CDC6' : '#578E7E'));
 
-            if (!linkIsActive) {
-            // highlight the clicked link + its two nodes
-            d3.select(this)
-                .classed('active', true)
-                .style('stroke', '#16404D');
-            const endIds = [d.source.id, d.target.id];
-            svg.selectAll('.node')
-                .filter(n => endIds.includes(n.id))
-                .classed('selected', true)
-                .select('circle')
-                .style('fill', '#16404D');
-            svg.selectAll('.node.selected text')
-                .style('fill', '#FFFAEC');
-
-            // compute common items (books or authors)
-            const libMap = d3.group(data, row => row.Livraria);
-            const listA = libMap.get(d.source.id), listB = libMap.get(d.target.id);
-            const key = d.type === 'book' ? 'Obra' : 'Nome_Autor';
-            const setA = new Set(listA.map(r => r[key]));
-            const setB = new Set(listB.map(r => r[key]));
-            const commonItems = [...setA].filter(x => setB.has(x));
-
-            // install a NETWORK filter: must be from one of the two libraries AND in commonItems
-            setGlobalFilter('network', row =>
-                (row.Livraria === d.source.id || row.Livraria === d.target.id)
-                && commonItems.includes(row[key])
+            // highlight nodes that belongs to at least one active link
+            svg.selectAll('.node').classed('selected', n =>
+                Array.from(selectedLinks).some(k => k.startsWith(n.id + '|') || k.includes('|' + n.id + '|'))
             );
-
-            // re‐draw treemap + catalog using only the filtered rows
-            const filtered = applyGlobalFilters(globalData);
-            createTreemap('#treemap-area', filtered, currentTreemapMode, newData => {
-                createBooksCatalog(applyGlobalFilters(globalData));
-            });
-            createBooksCatalog(filtered);
-
-            } else {
-            // click again to clear the NETWORK filter
-            clearGlobalFilter('network');
-
-            // reset styles
-            svg.selectAll('.link')
-                .style('stroke', l => l.type === 'book' ? '#A6CDC6' : '#578E7E');
-            svg.selectAll('.node.selected')
-                .classed('selected', false)
-                .select('circle')
-                .style('fill', '#FFFAEC');
+            svg.selectAll('.node circle')
+                .style('fill', n => d3.select(this.parentNode).classed('selected') ? '#16404D' : '#FFFAEC');
             svg.selectAll('.node text')
-                .style('fill', '#16404D');
+                .style('fill', n => d3.select(this.parentNode).classed('selected') ? '#FFFAEC' : '#16404D');
 
-            // redraw treemap + catalog with the full data
-            createTreemap('#treemap-area', globalData, currentTreemapMode, newData => {
-                createBooksCatalog(applyGlobalFilters(globalData));
-            });
-            createBooksCatalog(globalData);
+            if (selectedLinks.size) {
+                const libMap = d3.group(data, row => row.Livraria);
+                const filters = [];
+                selectedLinks.forEach(k => {
+                const [a, b, type] = k.split('|');
+                const key   = type === 'book' ? 'Obra' : 'Nome_Autor';
+                const setA  = new Set(libMap.get(a).map(r => r[key]));
+                const setB  = new Set(libMap.get(b).map(r => r[key]));
+                const common = new Set([...setA].filter(x => setB.has(x)));
+                filters.push(row =>
+                    (row.Livraria === a || row.Livraria === b) && common.has(row[key])
+                );
+                });
+                setGlobalFilter('network', row => filters.some(f => f(row)));
+            } else {
+                clearGlobalFilter('network');
             }
+
+            const filtered = applyGlobalFilters(globalData);
+            createTreemap('#treemap-area', filtered, currentTreemapMode, () =>
+                createBooksCatalog(applyGlobalFilters(globalData)));
+            createBooksCatalog(filtered);
         });
 
     linkEnter.merge(linkSel);
