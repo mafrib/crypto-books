@@ -161,7 +161,7 @@ function createNetworkGraph(containerSelector, data) {
                     ? [minW - 1, maxW + 1]
                     : [minW, maxW]
         )
-        .range([1, 8]);
+        .range([3, 10]);
 
     const linkSel = linkGroup.selectAll('path').data(edges, d => `${d.source}|${d.target}|${d.type}`);
     linkSel.exit().remove();
