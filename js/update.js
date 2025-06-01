@@ -1,1 +1,0 @@
-// Functions to update visualizations according to the current selection/active filters

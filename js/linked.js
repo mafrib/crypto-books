@@ -1,1 +1,0 @@
-// Functions for mouse over/out and mouse click
