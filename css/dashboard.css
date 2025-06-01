@@ -122,28 +122,73 @@ a {
   z-index: 10;
 }
 
-.links .link {
-  fill: none;
-  pointer-events: stroke;
-  cursor: pointer;
-}
-.links .link.book {
-  stroke: #A6CDC6;
-}
-.links .link.author {
-  stroke: #578E7E;
-}
-
-.nodes .node circle {
+.node circle {
   fill: #FFFAEC;
   stroke: #16404D;
   stroke-width: 1px;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
-.nodes .node text {
+.node text {
   font-size: 8px;
   text-anchor: middle;
   pointer-events: none;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node.active circle {
+  fill: #16404D;
+}
+
+.node.active text {
+  fill: #FFFAEC;
+  font-weight: 600;
+}
+
+.node.hovered circle {
+  stroke-width: 2px;
+}
+
+.node.hovered text {
+  font-weight: 600;
+}
+
+.link {
+  fill: none;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.link.book {
+  stroke: #A6CDC6;
+}
+
+.link.author {
+  stroke: #578E7E;
+}
+
+.link.active.book {
+  opacity: 1;
+}
+
+.link.active.author {
+  stroke: #467265;
+  opacity: 1;
+}
+
+.node-active-mode .node:not(.active) circle {
+  fill: #F0EEE9;
+  stroke-opacity: 0.37;
+}
+
+.node-active-mode .node:not(.active) text {
+  opacity: 0.37;
+}
+
+.node-active-mode .link {
+  opacity: 0.6;
 }
 
 

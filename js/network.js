@@ -1,5 +1,6 @@
 let svg, linkGroup, nodeGroup, simulation, tooltip;
 const selectedLinks = new Set();
+const selectedNodes = new Set();
 const linkKey = d => `${d.source.id || d.source}|${d.target.id || d.target}|${d.type}`;
 
 function wrapText(textSelection, diameter) {
@@ -27,55 +28,84 @@ function wrapText(textSelection, diameter) {
     }
 }
 
+function isAnonymous(name) {
+    if (!name) return true;
+
+    const norm = name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .trim();
+    // treat any variant of “anónimo …”  or  “por classificar” as anonymous
+    return norm === 'por classificar' ||
+            norm.includes('anonimo');
+}
+
 function processNodes(data) {
     const grouped = d3.group(data, d => d.Livraria);
     return Array.from(grouped, ([key, vals]) => ({ id: key, size: vals.length }));
 }
 
 function processEdges(data) {
-    const libs = d3.group(data, d => d.Livraria);
+    const libs   = d3.group(data, d => d.Livraria);
     const libMap = new Map();
-    const edges = [];
+    const edges  = [];
 
-    libs.forEach((vals, libA) => {
-      const clean = vals.filter(d =>
-        d.Obra?.trim() &&
-        d.Obra.toLowerCase()   !== "por classificar" &&
-        d.Nome_Autor?.trim() &&
-        d.Nome_Autor.toLowerCase() !== "por classificar" &&
-        d.Nome_Autor.toLowerCase() !== "anónimo"
-      );
+    libs.forEach((rows, lib) => {
 
-      const books   = new Set(clean.map(d => d.Obra));
-      const authors = new Set(clean.map(d => d.Nome_Autor));
+        const books = new Set(
+            rows
+                .filter(r => {
+                    const t = r.Obra?.trim().toLowerCase();
+                    return t && t !== 'por classificar'; // keep only meaningful titles
+                })
+                .map(r => r.Obra)
+        );
 
-      libMap.set(libA, { books, authors });
+        const authors = new Set(
+            rows
+                .filter(r => !isAnonymous(r.Nome_Autor)) // drop “anónimo” and “por classificar”
+                .map(r => r.Nome_Autor)
+        );
+
+        libMap.set(lib, { books, authors });
     });
 
-    const names = Array.from(libMap.keys());
-    for (let i = 0; i < names.length; i++) {
-      for (let j = i + 1; j < names.length; j++) {
-        const a = libMap.get(names[i]);
-        const b = libMap.get(names[j]);
+    // ---------- LINKS ----------
+    const libsArr = Array.from(libMap.keys());
+    for (let i = 0; i < libsArr.length; i++) {
+        for (let j = i + 1; j < libsArr.length; j++) {
+            const A = libMap.get(libsArr[i]);
+            const B = libMap.get(libsArr[j]);
 
-        const commonBooks   = [...a.books].filter(x => b.books.has(x)).length;
-        const commonAuthors = [...a.authors].filter(x => b.authors.has(x)).length;
+            const commonBooks   = [...A.books].filter(x => B.books.has(x)).length;
+            const commonAuthors = [...A.authors].filter(x => B.authors.has(x)).length;
 
-        if (commonBooks)   edges.push({ source: names[i], target: names[j], type: 'book',   weight: commonBooks });
-        if (commonAuthors) edges.push({ source: names[i], target: names[j], type: 'author', weight: commonAuthors });
-      }
+            if (commonBooks)
+                edges.push({
+                    source: libsArr[i],
+                    target: libsArr[j],
+                    type: 'book',
+                    weight: commonBooks
+                });
+            if (commonAuthors)
+                edges.push({
+                    source: libsArr[i],
+                    target: libsArr[j],
+                    type: 'author',
+                    weight: commonAuthors
+                });
+        }
     }
-
     return edges;
-  }
-
+}
 
 function ticked() {
     linkGroup.selectAll('path')
         .attr('d', d => {
             const dx = d.target.x - d.source.x;
             const dy = d.target.y - d.source.y;
-            const dr = Math.sqrt(dx*dx + dy*dy);
+            const dr = Math.sqrt(dx * dx + dy * dy);
             const sweep = d.type === 'book' ? 1 : 0;
             return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,${sweep} ${d.target.x},${d.target.y}`;
         });
@@ -103,36 +133,33 @@ function initNetwork(containerSelector) {
     const orbitR = Math.min(w, h) * 0.35;
 
     svg = container.append('svg')
-      .attr('viewBox', `0 0 ${w} ${h}`)
-      .style('width','100%')
-      .style('height','auto');
+        .attr('viewBox', `0 0 ${w} ${h}`)
+        .style('width', '100%')
+        .style('height', 'auto');
 
-    linkGroup = svg.append('g').attr('class','links');
-    nodeGroup = svg.append('g').attr('class','nodes');
+    linkGroup = svg.append('g').attr('class', 'links');
+    nodeGroup = svg.append('g').attr('class', 'nodes');
     tooltip   = d3.select('body').selectAll('.tooltip')
-                  .data([null]).join(
-                    enter => enter.append('div').attr('class','tooltip'),
-                    update => update,
-                    exit  => exit.remove()
-                  );
+        .data([null]).join(
+            enter => enter.append('div').attr('class', 'tooltip'),
+            update => update,
+            exit  => exit.remove()
+        );
 
     simulation = d3.forceSimulation()
-      .force('link',    d3.forceLink().id(d=>d.id).distance(400).strength(0.1))
-      .force('charge',  d3.forceManyBody().strength(-700))
-      .force('collide', d3.forceCollide().radius(d=>Math.sqrt(d.size)*8+4).strength(1))
-      .force('center',  d3.forceCenter(cx, cy))
-      .force('x',       d3.forceX(cx).strength(0.05))
-      .force('y',       d3.forceY(cy).strength(0.05))
-
-      // radial force for isolates
-      .force('radial',
-        d3.forceRadial(d => d.degree === 0 ? orbitR : 0, cx, cy)
-          .strength(0.2)
-      )
-
-      .on('tick', ticked);
-  }
-
+        .force('link',    d3.forceLink().id(d => d.id).distance(500).strength(0.1))
+        .force('charge',  d3.forceManyBody().strength(-700))
+        .force('collide', d3.forceCollide().radius(d => Math.sqrt(d.size) * 8 + 4).strength(1))
+        .force('center',  d3.forceCenter(cx, cy))
+        .force('x',       d3.forceX(cx).strength(0.001))
+        .force('y',       d3.forceY(cy).strength(0.2))
+        // radial force for isolates
+        .force('radial',
+            d3.forceRadial(d => d.degree === 0 ? orbitR : 0, cx, cy)
+                .strength(0.6)
+        )
+        .on('tick', ticked);
+}
 
 function createNetworkGraph(containerSelector, data) {
     if (!svg) initNetwork(containerSelector);
@@ -165,8 +192,10 @@ function createNetworkGraph(containerSelector, data) {
         )
         .range([3, 10]);
 
-    const linkSel = linkGroup.selectAll('path').data(edges, d => `${d.source}|${d.target}|${d.type}`);
+    const linkSel = linkGroup.selectAll('path')
+        .data(edges, d => `${d.source}|${d.target}|${d.type}`);
     linkSel.exit().remove();
+
     const linkEnter = linkSel.enter().append('path')
         .attr('class', d => `link ${d.type}`)
         .attr('stroke-width', d => widthScale(+d.weight))
@@ -180,15 +209,10 @@ function createNetworkGraph(containerSelector, data) {
             d3.select(this).style('opacity', 1);
             const sourceId = d.source.id || d.source;
             const targetId = d.target.id || d.target;
-            nodeGroup.selectAll('g.node circle')
-                .filter(n => n.id === sourceId || n.id === targetId)
-                .style('stroke-width', '3px')
-                .style('stroke', '#45646A')
-                .style('fill', '#45646A');
-            nodeGroup.selectAll('g.node text')
-                .filter(n => n.id === sourceId || n.id === targetId)
-                .style('fill', '#FFFAEC')
-                .style('font-weight', '600');
+            nodeGroup.selectAll('g.node')
+                .classed('hovered',
+                    n => (n.id === sourceId || n.id === targetId)
+                );
         })
         .on('mousemove', event => {
             tooltip.style('left', (event.pageX + 10) + 'px')
@@ -196,17 +220,15 @@ function createNetworkGraph(containerSelector, data) {
         })
         .on('mouseout', function(event, d) {
             tooltip.style('opacity', 0);
-            d3.select(this).style('opacity', 0.6);
+            if (selectedLinks.has(linkKey(d))) {
+                d3.select(this).style('opacity', 1);
+            } else {
+                d3.select(this).style('opacity', 0.6);
+            }
             const sourceId = d.source.id || d.source;
             const targetId = d.target.id || d.target;
-            nodeGroup.selectAll('g.node circle')
-                .filter(n => n.id === sourceId || n.id === targetId)
-                .style('stroke-width', '1px')
-                .style('fill', null);
-            nodeGroup.selectAll('g.node text')
-                .filter(n => n.id === sourceId || n.id === targetId)
-                .style('fill', null)
-                .style('font-weight', null)
+            nodeGroup.selectAll('g.node')
+                .classed('hovered', false);
         })
         .on('click', function(event, d) {
             const k = linkKey(d);
@@ -214,33 +236,64 @@ function createNetworkGraph(containerSelector, data) {
 
             // update styling of every link
             svg.selectAll('.link')
-                .classed('active',   l => selectedLinks.has(linkKey(l)))
-                .style('stroke',     l => selectedLinks.has(linkKey(l))
-                                    ? '#16404D'
-                                    : (l.type === 'book' ? '#A6CDC6' : '#578E7E'));
+                .classed('active', l => selectedLinks.has(linkKey(l)));
 
-            // highlight nodes that belongs to at least one active link
-            svg.selectAll('.node').classed('selected', n =>
-                Array.from(selectedLinks).some(k => k.startsWith(n.id + '|') || k.includes('|' + n.id + '|'))
-            );
-            svg.selectAll('.node circle')
-                .style('fill', n => d3.select(this.parentNode).classed('selected') ? '#16404D' : '#FFFAEC');
-            svg.selectAll('.node text')
-                .style('fill', n => d3.select(this.parentNode).classed('selected') ? '#FFFAEC' : '#16404D');
+            // highlight nodes that belong to at least one active link
+            svg.selectAll('g.node')
+                .classed('selected-by-link', n =>
+                    Array.from(selectedLinks).some(k =>
+                        k.startsWith(n.id + '|') || k.includes('|' + n.id + '|')
+                    )
+                );
 
             if (selectedLinks.size) {
                 const libMap = d3.group(data, row => row.Livraria);
                 const filters = [];
+
+                // ── Apply filtering logic for each selected link ──
                 selectedLinks.forEach(k => {
-                const [a, b, type] = k.split('|');
-                const key   = type === 'book' ? 'Obra' : 'Nome_Autor';
-                const setA  = new Set(libMap.get(a).map(r => r[key]));
-                const setB  = new Set(libMap.get(b).map(r => r[key]));
-                const common = new Set([...setA].filter(x => setB.has(x)));
-                filters.push(row =>
-                    (row.Livraria === a || row.Livraria === b) && common.has(row[key])
-                );
+                    const [a, b, type] = k.split('|');
+
+                    let setA, setB;
+                    if (type === 'book') {
+                        // Only include non-empty titles ≠ "por classificar"
+                        setA = new Set(
+                            libMap.get(a)
+                                .filter(r => {
+                                    const t = r.Obra?.trim().toLowerCase();
+                                    return t && t !== 'por classificar';
+                                })
+                                .map(r => r.Obra)
+                        );
+                        setB = new Set(
+                            libMap.get(b)
+                                .filter(r => {
+                                    const t = r.Obra?.trim().toLowerCase();
+                                    return t && t !== 'por classificar';
+                                })
+                                .map(r => r.Obra)
+                        );
+                    } else {
+                        // type === 'author': only include non-anonymous authors
+                        setA = new Set(
+                            libMap.get(a)
+                                .filter(r => !isAnonymous(r.Nome_Autor))
+                                .map(r => r.Nome_Autor)
+                        );
+                        setB = new Set(
+                            libMap.get(b)
+                                .filter(r => !isAnonymous(r.Nome_Autor))
+                                .map(r => r.Nome_Autor)
+                        );
+                    }
+
+                    const common = new Set([...setA].filter(x => setB.has(x)));
+                    filters.push(row =>
+                        (row.Livraria === a || row.Livraria === b) &&
+                        common.has(type === 'book' ? row.Obra : row.Nome_Autor)
+                    );
                 });
+
                 setGlobalFilter('network', row => filters.some(f => f(row)));
             } else {
                 clearGlobalFilter('network');
@@ -248,7 +301,8 @@ function createNetworkGraph(containerSelector, data) {
 
             const filtered = applyGlobalFilters(globalData);
             createTreemap('#treemap-area', filtered, currentTreemapMode, () =>
-                createBooksCatalog(applyGlobalFilters(globalData)));
+                createBooksCatalog(applyGlobalFilters(globalData))
+            );
             createBooksCatalog(filtered);
         });
 
@@ -262,7 +316,58 @@ function createNetworkGraph(containerSelector, data) {
             .on('start', dragstarted)
             .on('drag', dragged)
             .on('end', dragended)
-        );
+        )
+        .on('click', function(event, d) {
+            if (selectedNodes.has(d.id)) {
+                selectedNodes.delete(d.id);
+            } else {
+                selectedNodes.add(d.id);
+            }
+
+            nodeGroup.selectAll('g.node')
+                .classed('active', n => selectedNodes.has(n.id));
+
+            if (selectedNodes.size > 0) {
+                svg.classed('node-active-mode', true);
+            } else {
+                svg.classed('node-active-mode', false);
+            }
+
+            const libMap = d3.group(data, row => row.Livraria);
+            const filters = [];
+
+            // Retain any filters from selected links
+            selectedLinks.forEach(key => {
+                const [a, b, type] = key.split('|');
+                const field = type === 'book' ? 'Obra' : 'Nome_Autor';
+                const setA = new Set(libMap.get(a).map(r => r[field]));
+                const setB = new Set(libMap.get(b).map(r => r[field]));
+                const common = new Set([...setA].filter(x => setB.has(x)));
+                filters.push(row =>
+                    (row.Livraria === a || row.Livraria === b) && common.has(row[field])
+                );
+            });
+
+            // Add filters for selected nodes
+            selectedNodes.forEach(nodeId => {
+                filters.push(row => row.Livraria === nodeId);
+            });
+
+            if (filters.length) {
+                setGlobalFilter('network', row => filters.some(fn => fn(row)));
+            } else {
+                clearGlobalFilter('network');
+            }
+
+            const filtered = applyGlobalFilters(globalData);
+            createTreemap(
+                '#treemap-area',
+                filtered,
+                currentTreemapMode,
+                () => createBooksCatalog(applyGlobalFilters(globalData))
+            );
+            createBooksCatalog(filtered);
+        });
     nodeEnter.append('circle')
         .attr('r', d => Math.sqrt(d.size) * 6)
         .attr('stroke-width', 1);
