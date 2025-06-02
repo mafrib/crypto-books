@@ -1,4 +1,5 @@
 let svg, linkGroup, nodeGroup, simulation, tooltip;
+let nodes, edges;
 const selectedLinks = new Set();
 const selectedNodes = new Set();
 const linkKey = d => `${d.source.id || d.source}|${d.target.id || d.target}|${d.type}`;
@@ -36,7 +37,7 @@ function isAnonymous(name) {
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')
         .trim();
-    // treat any variant of “anónimo …”  or  “por classificar” as anonymous
+    // Treat any variant of “anónimo …” or “por classificar” as anonymous
     return norm === 'por classificar' ||
             norm.includes('anonimo');
 }
@@ -57,21 +58,20 @@ function processEdges(data) {
             rows
                 .filter(r => {
                     const t = r.Obra?.trim().toLowerCase();
-                    return t && t !== 'por classificar'; // keep only meaningful titles
+                    return t && t !== 'por classificar'; // only meaningful titles
                 })
                 .map(r => r.Obra)
         );
 
         const authors = new Set(
             rows
-                .filter(r => !isAnonymous(r.Nome_Autor)) // drop “anónimo” and “por classificar”
+                .filter(r => !isAnonymous(r.Nome_Autor))
                 .map(r => r.Nome_Autor)
         );
 
         libMap.set(lib, { books, authors });
     });
 
-    // ---------- LINKS ----------
     const libsArr = Array.from(libMap.keys());
     for (let i = 0; i < libsArr.length; i++) {
         for (let j = i + 1; j < libsArr.length; j++) {
@@ -164,11 +164,11 @@ function initNetwork(containerSelector) {
 function createNetworkGraph(containerSelector, data) {
     if (!svg) initNetwork(containerSelector);
 
-    const nodes = processNodes(data);
-    const edges = processEdges(data);
+    nodes = processNodes(data);
+    edges = processEdges(data);
 
-    const degree = new Map();
     // count links for each node
+    const degree = new Map();
     edges.forEach(e => {
         degree.set(e.source,  (degree.get(e.source)  || 0) + 1);
         degree.set(e.target,  (degree.get(e.target)  || 0) + 1);
@@ -256,7 +256,6 @@ function createNetworkGraph(containerSelector, data) {
 
                     let setA, setB;
                     if (type === 'book') {
-                        // Only include non-empty titles ≠ "por classificar"
                         setA = new Set(
                             libMap.get(a)
                                 .filter(r => {
@@ -274,7 +273,6 @@ function createNetworkGraph(containerSelector, data) {
                                 .map(r => r.Obra)
                         );
                     } else {
-                        // type === 'author': only include non-anonymous authors
                         setA = new Set(
                             libMap.get(a)
                                 .filter(r => !isAnonymous(r.Nome_Autor))
@@ -379,4 +377,53 @@ function createNetworkGraph(containerSelector, data) {
     simulation.nodes(nodes);
     simulation.force('link').links(edges);
     simulation.alpha(0.5).restart();
+}
+
+function updateNetworkStyles(allowedSet) {
+    if (typeof svg === 'undefined' || svg === null) {
+        return;
+    }
+
+    const totalNodes = nodeGroup.selectAll('g.node').size();
+
+    // If user explicitly clicked every node, fill them all blue
+    if (selectedNodes.size === totalNodes) {
+        svg.classed('node-active-mode', true);
+        nodeGroup.selectAll('g.node')
+            .classed('active', true);
+        linkGroup.selectAll('.link')
+            .style('opacity', d => 1);
+        return;
+    }
+
+    // If allowedSet includes every node and no nodes were clicked, revert to default
+    if (allowedSet && allowedSet.size === totalNodes && selectedNodes.size === 0) {
+        svg.classed('node-active-mode', false);
+        nodeGroup.selectAll('g.node')
+            .classed('active', false);
+        linkGroup.selectAll('.link')
+            .style('opacity', null);
+        return;
+    }
+
+    if (allowedSet && allowedSet.size > 0) {
+        svg.classed('node-active-mode', true);
+    } else {
+        svg.classed('node-active-mode', false);
+    }
+
+    nodeGroup.selectAll('g.node')
+        .classed('active', d => Boolean(allowedSet && allowedSet.has(d.id)));
+
+    linkGroup.selectAll('.link')
+        .style('opacity', d => {
+            const sourceId = d.source.id || d.source;
+            const targetId = d.target.id || d.target;
+            if (!allowedSet ||
+                (allowedSet.has(sourceId) && allowedSet.has(targetId))
+            ) {
+                return 1;
+            }
+            return 0.6;
+        });
 }
