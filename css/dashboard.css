@@ -99,6 +99,7 @@ a {
   overflow: visible;
   display: inline-block;
   width: 100%;
+  position: relative;
 }
 
 .network-wrapper {
@@ -191,6 +192,54 @@ a {
   opacity: 0.6;
 }
 
+.legend {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+}
+
+.legend-item::before {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border-radius: 5px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.legend-item.author::before {
+  background-color: #578E7E;
+}
+
+.legend-item.book::before {
+  background-color: #A6CDC6;
+}
+
+.legend-item.author::after {
+  content: "Authors in common";
+}
+
+.legend-item.book::after {
+  content: "Books in common";
+}
+
+.legend-item::after {
+  color: #16404D;
+  font-family: Inter, Helvetica, sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  line-height: 1;
+}
 
 /* ---- TREEMAP ---- */
 
