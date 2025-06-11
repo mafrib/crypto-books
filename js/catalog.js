@@ -7,7 +7,7 @@ function createBooksCatalog(data) {
 
     const entries = d3.select("#catalog-entries")
         .selectAll(".catalog-entry")
-        .data(data);
+        .data(data, d => d.id || d.__index__);
 
     // Remove entries not in the filtered set
     entries.exit().remove();
@@ -29,7 +29,13 @@ function createBooksCatalog(data) {
         .classed("livraria", true)
         .text(d => d.Livraria);
 
-/*to do: se tiver mais de 21, colocar reticencias nos seguintes caracteres */
+    newEntries.merge(entries)
+        .classed("male",   d => genderGraphActive && !isFemaleLibrary(d.Livraria))
+        .classed("female", d => genderGraphActive &&  isFemaleLibrary(d.Livraria))
+        .select(".obra").text(d => d.Obra);
+
+    newEntries.merge(entries).select(".autor").text(d => d.Nome_Autor);
+    newEntries.merge(entries).select(".livraria").text(d => d.Livraria);
 
     // Update existing entries (if needed)
     entries.select(".obra").text(d => d.Obra);

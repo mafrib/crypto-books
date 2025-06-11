@@ -106,11 +106,6 @@ a {
   margin: 20px;
 }
 
-.link {
-  mix-blend-mode: multiply;
-  opacity: 0.6;
-}
-
 .tooltip {
   position: absolute;
   pointer-events: none;
@@ -123,12 +118,22 @@ a {
   z-index: 10;
 }
 
-.node circle {
+.node circle,
+.gender-circle {
   fill: #FFFAEC;
   stroke: #16404D;
   stroke-width: 1px;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
+
+.gender-circle.female {
+  fill: #dd9298;
+}
+
+.gender-circle.male {
+  fill: #d0a07d;
+}
+
 .node text {
   font-size: 8px;
   text-anchor: middle;
@@ -156,7 +161,53 @@ a {
   font-weight: 600;
 }
 
+.node:hover circle {
+  fill: #375A61;
+}
+
+.gender-label {
+  fill: #FFFAEC;
+}
+
+.node text.gender-label {
+  font-size: 14px;
+}
+
+#network-graph:not(.node-active-mode) .node:hover text {
+  fill: #FFFAEC;
+  fill-opacity: 1;
+}
+
+.node-active-mode .node:not(.active):hover text {
+  fill-opacity: 0.45;
+}
+
+.node-active-mode .node.active:hover text {
+  fill: #FFFAEC;
+  fill-opacity: 1;
+  font-weight: 600;
+}
+
+.gender-circle.female:hover {
+  fill: #D1848A;
+  cursor: pointer;
+}
+
+.gender-circle.male:hover {
+  fill: #C3957A;
+  cursor: pointer;
+}
+
+.node.active .gender-circle.female {
+  fill: #DB6D76;
+}
+.node.active .gender-circle.male {
+  fill: #D79260;
+}
+
 .link {
+  mix-blend-mode: multiply;
+  opacity: 0.6;
   fill: none;
   pointer-events: stroke;
   cursor: pointer;
@@ -170,7 +221,8 @@ a {
   stroke: #578E7E;
 }
 
-.link.active.book {
+.link.active.book,
+.link.hovered {
   opacity: 1;
 }
 
@@ -186,6 +238,11 @@ a {
 
 .node-active-mode .node:not(.active) text {
   opacity: 0.37;
+}
+
+.node-active-mode .node:not(.active) .gender-label {
+  opacity: 0.37;
+  fill:#16404D;
 }
 
 .node-active-mode .link {
@@ -239,6 +296,70 @@ a {
   font-weight: 400;
   white-space: nowrap;
   line-height: 1;
+}
+
+.group-toggle {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-label {
+  color: #16404D;
+  font-family: Inter, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.switch {
+  position: relative;
+  width: 38px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.switch::before {
+  content: '';
+  position: absolute;
+  top: 0.5px;
+  left: 0.5px;
+  width: 37px;
+  height: 17px;
+  background: rgba(225, 216, 192, 0.66);
+  border: 1px solid #16404D;
+  border-radius: 8.5px;
+  box-sizing: border-box;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  width: 17px;
+  height: 17px;
+  background: #FAF7F4;
+  border: 1px solid #16404D;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+}
+
+.switch:hover::before {
+  background: rgba(225, 216, 192, 0.8);
+}
+
+.switch[aria-pressed="true"]::before {
+  background: #16404D;
+}
+
+.switch[aria-pressed="true"]::after {
+  left: 29px;
+  top: 9px;
 }
 
 /* ---- TREEMAP ---- */
@@ -370,6 +491,16 @@ a {
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   font-size: 0.75rem;
   align-items: center;
+}
+
+.catalog-entry.male   {
+  background:#D0A07D;
+  color:#FFFAEC;
+}
+
+.catalog-entry.female {
+  background:#DD9298;
+  color:#FFFAEC;
 }
 
 /* Scrollbar styling */
