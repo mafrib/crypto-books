@@ -173,13 +173,13 @@ a {
   font-size: 14px;
 }
 
-#network-graph:not(.node-active-mode) .node:hover text {
+svg:not(.node-active-mode) .node:hover text {
   fill: #FFFAEC;
   fill-opacity: 1;
 }
 
 .node-active-mode .node:not(.active):hover text {
-  fill-opacity: 0.45;
+  opacity: 0.65;
 }
 
 .node-active-mode .node.active:hover text {
