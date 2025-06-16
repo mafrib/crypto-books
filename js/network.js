@@ -88,6 +88,52 @@ function handleLinkClick(d, allData) {
 
 }
 
+function distPointToSegment(px, py, x1, y1, x2, y2) {
+    const A = px - x1,  B = py - y1;
+    const C = x2 - x1,  D = y2 - y1;
+    const dot   = A * C + B * D;
+    const lenSq = C * C + D * D;
+    const t = Math.max(0, Math.min(1, dot / lenSq));
+    const ex = x1 + t * C,  ey = y1 + t * D;
+    return Math.hypot(px - ex, py - ey);
+}
+
+function routedLink(d) {
+    const sx = d.source.x, sy = d.source.y;
+    const tx = d.target.x, ty = d.target.y;
+
+    const midx = (sx + tx) / 2;
+    const midy = (sy + ty) / 2;
+    const vx   = tx - sx, vy = ty - sy;
+    const len  = Math.hypot(vx, vy) || 1;
+    const nx   = -vy / len, ny = vx / len;
+    const offset = (d.parallelIndex || 0) * (d.parallelGap || 10);
+    const cx = midx + nx * offset;
+    const cy = midy + ny * offset;
+
+    return `M${sx},${sy}Q${cx},${cy} ${tx},${ty}`;
+}
+
+function addParallelMetadata(edges, gap) {
+    const byPair = d3.group(
+        edges,
+        e => {
+        const a = e.source.id || e.source,
+                b = e.target.id || e.target;
+        return a < b ? `${a}|${b}` : `${b}|${a}`;
+        }
+    );
+
+    byPair.forEach(list => {
+        const mid = (list.length - 1) / 2;
+        list.forEach((e, i) => {
+        e.parallelIndex  = i - mid;
+        e.parallelTotal  = list.length;
+        e.parallelGap    = gap;
+        });
+    });
+}
+
 function applyNetworkFilter(allowedSet, data) {
     // set or clear the global filter
     if (allowedSet && allowedSet.size > 0) {
@@ -245,13 +291,7 @@ function processEdges(data) {
 
 function ticked() {
     linkGroup.selectAll('path')
-        .attr('d', d => {
-            const dx = d.target.x - d.source.x;
-            const dy = d.target.y - d.source.y;
-            const dr = Math.sqrt(dx * dx + dy * dy);
-            const sweep = d.type === 'book' ? 1 : 0;
-            return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,${sweep} ${d.target.x},${d.target.y}`;
-        });
+        .attr('d', d => routedLink(d, nodes));
     nodeGroup.selectAll('g.node')
         .attr('transform', d => `translate(${d.x},${d.y})`);
 }
@@ -290,13 +330,13 @@ function initNetwork(containerSelector) {
         );
 
     simulation = d3.forceSimulation()
-        .force('link',    d3.forceLink().id(d => d.id).distance(500).strength(0.1))
+        .force('link',    d3.forceLink().id(d => d.id).distance(200).strength(0.15))
         .force('charge',  d3.forceManyBody().strength(-700))
         .force('collide', d3.forceCollide().radius(d => Math.sqrt(d.size) * 8 + 4).strength(1))
         .force('center',  d3.forceCenter(cx, cy))
-        .force('x',       d3.forceX(cx).strength(0.001))
+        .force('x',       d3.forceX(cx).strength(0.2))
         .force('y',       d3.forceY(cy).strength(0.2))
-        .force('radial',  d3.forceRadial(d => d.degree === 0 ? orbitR : 0, cx, cy).strength(0.6))
+        .force('radial',  d3.forceRadial(orbitR, cx, cy).strength(0.8))
         .on('tick', ticked);
 }
 
@@ -305,6 +345,7 @@ function createNetworkGraph(containerSelector, data) {
 
     nodes = processNodes(data);
     edges = processEdges(data);
+    addParallelMetadata(edges,60);
 
     // count links for each node
     const degree = new Map();
@@ -337,7 +378,8 @@ function createNetworkGraph(containerSelector, data) {
 
     const linkEnter = linkSel.enter().append('path')
         .attr('class', d => `link ${d.type}`)
-        .attr('stroke-width', d => widthScale(+d.weight));
+        .attr('stroke-width', d => widthScale(+d.weight))
+        .attr('d', d => routedLink(d, nodes));
 
     attachLinkTooltip(linkEnter);
 
@@ -572,6 +614,7 @@ function createGenderGraph(containerSelector, fullData) {
         }
     ];
 
+    addParallelMetadata(edges, 150);
     linkGroup.selectAll('path').remove();
     nodeGroup.selectAll('g.node').remove();
 
