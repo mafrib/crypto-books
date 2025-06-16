@@ -83,9 +83,26 @@ function handleLinkClick(d, allData) {
         );
     });
 
-    const allowed = buildAllowedFromSelection(selectedNodes, selectedLinks);
-    applyNetworkFilter(allowed, allData);
+    if (filters.length > 0) {
+    setGlobalFilter('network',
+        row => filters.some(fn => fn(row))
+    );
+    } else {
+    clearGlobalFilter('network');
+    }
 
+    const filtered = applyGlobalFilters(allData);
+    createTreemap(
+    '#treemap-area',
+    filtered,
+    currentTreemapMode,
+    () => createBooksCatalog(applyGlobalFilters(allData))
+    );
+    createBooksCatalog(filtered);
+
+    updateNetworkStyles(
+    buildAllowedFromSelection(selectedNodes, selectedLinks)
+    );
 }
 
 function distPointToSegment(px, py, x1, y1, x2, y2) {
