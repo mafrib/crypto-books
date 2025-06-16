@@ -346,10 +346,12 @@ function dragended(event, d) {
 
 function initNetwork(containerSelector) {
     const container = d3.select(containerSelector);
-    const w = container.node().getBoundingClientRect().width;
+    const w = container.node().clientWidth;
     const h = w * 0.6;
     const cx = w / 2, cy = h / 2;
     const orbitR = Math.min(w, h) * 0.35;
+
+    container.selectAll('svg').remove();
 
     svg = container.append('svg')
         .attr('viewBox', `0 0 ${w} ${h}`)
@@ -391,8 +393,8 @@ function createNetworkGraph(containerSelector, data) {
     });
     nodes.forEach(n => n.degree = degree.get(n.id) || 0);
 
-    const bbox = d3.select(containerSelector).node().getBoundingClientRect();
-    const width = bbox.width;
+    const containerEl = d3.select(containerSelector).node();
+    const width     = containerEl.clientWidth;
     const height = width * 0.6;
     svg.attr('viewBox', `0 0 ${width} ${height}`);
 

@@ -25,52 +25,53 @@
         <li><a>Database</a></li>
       </div>
     </nav>
-
-    <div class="dashboard">
-      <div class="visualization">
-        <svg id="map"></svg>
-        <div class="map-legend"></div>
-      </div>
-      <div class="visualization" id="network-graph">
-        <div class="legend">
-          <div class="legend-item author"></div>
-          <div class="legend-item book"></div>
+    <div class="dashboard-wrap">
+      <div class="dashboard">
+        <div class="visualization">
+          <svg id="map"></svg>
+          <div class="map-legend"></div>
         </div>
-        <div class="group-toggle">
-          <div class="toggle-label">Group by gender</div>
-          <div class="switch" role="button" aria-pressed="false" tabindex="0"></div>
+        <div class="visualization" id="network-graph">
+          <div class="legend">
+            <div class="legend-item author"></div>
+            <div class="legend-item book"></div>
+          </div>
+          <div class="group-toggle">
+            <div class="toggle-label">Group by gender</div>
+            <div class="switch" role="button" aria-pressed="false" tabindex="0"></div>
+          </div>
         </div>
-      </div>
-      <div class="visualization" id="treemap">
-        <div id="treemap-breadcrumbs"></div>
-        <div id="treemap-controls">
-          <button class="mode-button active" data-mode="category">Literary Categories</button>
-          <button class="mode-button" data-mode="tradition">Intellectual Tradition</button>
+        <div class="visualization" id="treemap">
+          <div id="treemap-breadcrumbs"></div>
+          <div id="treemap-controls">
+            <button class="mode-button active" data-mode="category">Literary Categories</button>
+            <button class="mode-button" data-mode="tradition">Intellectual Tradition</button>
+          </div>
+          <div id="treemap-area"></div>
+          <div id="tooltip"></div>
         </div>
-        <div id="treemap-area"></div>
-        <div id="tooltip"></div>
-      </div>
-      <div class="visualization" id="catalog">
-        <div class="search-container">
-          <input type="text" id="search-input" placeholder="Search for a book, author or library...">
-          <img src="../icons/search.svg" id="search-icon"></img>
+        <div class="visualization" id="catalog">
+          <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search for a book, author or library...">
+            <img src="../icons/search.svg" id="search-icon"></img>
+          </div>
+          <div class="catalog-header">
+            <h5 class="sortable" data-column="Obra">
+              Title
+              <img class="sort-icon" src="icons/sort-neutral.png"/>
+            </h5>
+            <h5 class="sortable" data-column="Nome_Autor">
+              Author
+              <img class="sort-icon" src="icons/sort-neutral.png"/>
+            </h5>
+            <h5 class="sortable" data-column="Livraria">
+              Library
+              <img class="sort-icon" src="icons/sort-up.png"/>
+            </h5>
         </div>
-        <div class="catalog-header">
-          <h5 class="sortable" data-column="Obra">
-            Title
-            <img class="sort-icon" src="icons/sort-neutral.png"/>
-          </h5>
-          <h5 class="sortable" data-column="Nome_Autor">
-            Author
-            <img class="sort-icon" src="icons/sort-neutral.png"/>
-          </h5>
-          <h5 class="sortable" data-column="Livraria">
-            Library
-            <img class="sort-icon" src="icons/sort-up.png"/>
-          </h5>
-       </div>
-        <div id="catalog-entries"></div>
-        <div id="book-count"></div>
+          <div id="catalog-entries"></div>
+          <div id="book-count"></div>
+        </div>
       </div>
     </div>
 

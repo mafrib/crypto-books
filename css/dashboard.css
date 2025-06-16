@@ -18,6 +18,10 @@ html, body {
   padding: 0;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 .navbar {
   background-color: #16404D;
   display: flex;
@@ -48,12 +52,21 @@ a {
   text-decoration: none;
 }
 
+
+.dashboard-wrap {
+  width: 100vw;
+  height: calc(100vh - 2.8rem);
+  overflow: hidden;
+  position: relative;
+}
+
 .dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0,max-content));
-  grid-auto-rows: minmax(min-content, auto);
+  grid-template-columns: 30rem 1fr;
+  grid-template-rows: auto 245px;
   gap: 15px;
   padding: 10px;
+  transform-origin: top left;
 }
 
 .visualization {
@@ -379,14 +392,11 @@ svg:not(.node-active-mode) .node:hover text {
 }
 
 #treemap {
-  grid-column: 1;
-  grid-row: 2;
-  width: 31.25rem;
   display: flex;
   flex-direction: column;
   padding: 0.75rem 1.25rem;
   color: #16404D;
-  max-width: 500px;
+  width: 100%;
   position: relative;
 }
 
@@ -398,6 +408,7 @@ svg:not(.node-active-mode) .node:hover text {
 
 #treemap-area {
   flex: 1;
+  position: relative;
   width: 100%;
   margin-top: 10px;
 }
@@ -427,7 +438,6 @@ svg:not(.node-active-mode) .node:hover text {
 #catalog {
   grid-column: 2;
   grid-row: 2;
-  height: 245px;
   display: flex; /* Limit the entries to the catalog area*/
   flex-direction: column;
   padding: 0.75rem 1.25rem;
@@ -478,6 +488,7 @@ svg:not(.node-active-mode) .node:hover text {
 }
 
 #catalog-entries {
+  flex: 1 1 auto;
   overflow-y: auto; /* Enable vertical scroll */
   margin-bottom: 0.5rem;
 }

@@ -1,6 +1,23 @@
 let globalData;
+let baselineW, baselineH;
 let currentTreemapMode = 'category';
 let genderGraphActive = false;
+
+function captureBaselineSize() {
+  const dash = document.querySelector('.dashboard');
+  dash.style.transform = 'none';
+  baselineW = dash.scrollWidth;
+  baselineH = dash.scrollHeight;
+  fitDashboard();
+}
+
+function fitDashboard() {
+  const wrap   = document.querySelector('.dashboard-wrap');
+  const dash   = document.querySelector('.dashboard');
+  const scale  = Math.min(wrap.clientWidth / baselineW,
+                          wrap.clientHeight / baselineH);
+  dash.style.transform = `scale(${scale})`;
+}
 
 function switchMode(mode) {
     currentTreemapMode = mode;
@@ -17,6 +34,8 @@ function switchMode(mode) {
         const allowedSet = new Set(newFiltered.map(r => r.Livraria));
         updateNetworkStyles(allowedSet);
     });
+
+    fitDashboard();
 
     d3.selectAll('.mode-button').classed('active', false);
     d3.select(`.mode-button[data-mode="${mode}"]`).classed('active', true);
@@ -69,6 +88,8 @@ function startDashboard() {
                     createNetworkGraph('#network-graph', globalData);
                 }
 
+                requestAnimationFrame(fitDashboard);
+
                 const filtered = applyGlobalFilters(globalData);
                 createBooksCatalog(filtered);
 
@@ -93,10 +114,14 @@ function startDashboard() {
                 updateNetworkStyles(allowedSet);
             });
 
+            requestAnimationFrame(captureBaselineSize);
+            window.addEventListener('resize', fitDashboard);
+
             d3.selectAll('.mode-button')
                 .on('click', function() {
                     const mode = this.getAttribute('data-mode');
                     switchMode(mode);
+                    requestAnimationFrame(fitDashboard);
                 });
         })
         .catch((error) => {

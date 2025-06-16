@@ -43,7 +43,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     const path = d3.select("#treemap-breadcrumbs");
     path.html(root.data.name); // Set root of path based on mode
 
-    const { width, height } = container.node().getBoundingClientRect();
+    const containerEl = container.node();
+    const width       = containerEl.clientWidth;
+    const height      = containerEl.clientHeight;
 
     d3.treemap()
         .size([width, height])
