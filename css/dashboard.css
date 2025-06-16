@@ -114,6 +114,8 @@ a {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 10px;
+  opacity: 0;
+  visibility: hidden;
   transition: opacity 0.2s ease;
   z-index: 10;
 }
@@ -154,11 +156,11 @@ a {
 }
 
 .node.hovered circle {
-  stroke-width: 2px;
+  stroke-width: 1.5px;
 }
 
 .node.hovered text {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .node:hover circle {

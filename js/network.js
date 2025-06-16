@@ -208,22 +208,26 @@ function buildAllowedFromSelection(nodesSet, linksSet) {
 
 function attachLinkTooltip(selection) {
     selection
-        .on('mouseover', function(event, d) {
-        tooltip.style('opacity', 1)
+        .on('mouseover.tooltip', function(event, d) {
+        tooltip
+            .style('visibility', 'visible')
+            .style('opacity', 1)
             .html(
-            d.type === 'book'
-                ? `${d.weight} book${d.weight>1?'s':''} in common`
-                : `${d.weight} author${d.weight>1?'s':''} in common`
+                d.type === 'book'
+                    ? `${d.weight} book${d.weight>1?'s':''} in common`
+                    : `${d.weight} author${d.weight>1?'s':''} in common`
             );
-        d3.select(this).style('opacity', 1);
+            d3.select(this).style('opacity', 1);
         })
-        .on('mousemove', event => {
+        .on('mousemove.tooltip', event => {
         tooltip
             .style('left', (event.pageX+10)+'px')
             .style('top',  (event.pageY-10)+'px');
         })
-        .on('mouseout', function(event, d) {
-        tooltip.style('opacity', 0);
+        .on('mouseout.tooltip', function(event, d) {
+        tooltip
+            .style('opacity', 0)
+            .style('visibility', 'hidden');
         d3.select(this)
             .style('opacity', selectedLinks.has(linkKey(d)) ? 1 : 0.6);
         });
@@ -417,7 +421,17 @@ function createNetworkGraph(containerSelector, data) {
 
     linkEnter
         .merge(linkSel)
-        .on('click', (event, d) => handleLinkClick(d, data));
+        .on('click', (event, d) => handleLinkClick(d, data))
+        .on('mouseover', (event, d) => {
+            svg.selectAll('g.node')
+            .classed('hovered', n =>
+                n.id === (d.source.id || d.source) ||
+                n.id === (d.target.id || d.target)
+            );
+        })
+        .on('mouseout',  (event, d) => {
+            svg.selectAll('g.node').classed('hovered', false);
+        });
 
     const nodeSel = nodeGroup.selectAll('g.node').data(nodes, d => d.id);
     nodeSel.exit().remove();
