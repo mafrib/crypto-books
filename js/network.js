@@ -98,18 +98,33 @@ function distPointToSegment(px, py, x1, y1, x2, y2) {
     return Math.hypot(px - ex, py - ey);
 }
 
-function routedLink(d) {
+function routedLink(d, nodes) {
     const sx = d.source.x, sy = d.source.y;
     const tx = d.target.x, ty = d.target.y;
 
-    const midx = (sx + tx) / 2;
-    const midy = (sy + ty) / 2;
-    const vx   = tx - sx, vy = ty - sy;
-    const len  = Math.hypot(vx, vy) || 1;
-    const nx   = -vy / len, ny = vx / len;
-    const offset = (d.parallelIndex || 0) * (d.parallelGap || 10);
-    const cx = midx + nx * offset;
-    const cy = midy + ny * offset;
+    const vx = tx - sx,  vy = ty - sy;
+    const len = Math.hypot(vx, vy) || 1;
+    const nx = -vy / len, ny =  vx / len;
+
+    let offset = (d.parallelIndex || 0) * (d.parallelGap || 10);
+
+    const margin = 20;
+    nodes.forEach(n => {
+        if (n === d.source || n === d.target) return;
+
+        const radius = Math.sqrt(n.size) * 10;
+        const dist   = distPointToSegment(n.x, n.y, sx, sy, tx, ty);
+
+        if (dist < radius + margin) {
+            const cross = (n.x - sx) * vy - (n.y - sy) * vx;
+            const side  = cross >= 0 ? 1 : -1;
+            const needed = radius + margin - dist;
+            offset += side * needed;
+        }
+    });
+
+    const cx = (sx + tx) / 2 + nx * offset;
+    const cy = (sy + ty) / 2 + ny * offset;
 
     return `M${sx},${sy}Q${cx},${cy} ${tx},${ty}`;
 }
@@ -345,7 +360,7 @@ function createNetworkGraph(containerSelector, data) {
 
     nodes = processNodes(data);
     edges = processEdges(data);
-    addParallelMetadata(edges,60);
+    addParallelMetadata(edges, 80);
 
     // count links for each node
     const degree = new Map();
