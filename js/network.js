@@ -347,7 +347,7 @@ function dragended(event, d) {
 function initNetwork(containerSelector) {
     const container = d3.select(containerSelector);
     const w = container.node().clientWidth;
-    const h = w * 0.6;
+    const h = w * 0.55;
     const cx = w / 2, cy = h / 2;
     const orbitR = Math.min(w, h) * 0.35;
 
@@ -372,14 +372,14 @@ function initNetwork(containerSelector) {
         .force('charge',  d3.forceManyBody().strength(-700))
         .force('collide', d3.forceCollide().radius(d => Math.sqrt(d.size) * 8 + 4).strength(1))
         .force('center',  d3.forceCenter(cx, cy))
-        .force('x',       d3.forceX(cx).strength(0.2))
+        .force('x',       d3.forceX(cx).strength(0.002))
         .force('y',       d3.forceY(cy).strength(0.2))
         .force('radial',  d3.forceRadial(orbitR, cx, cy).strength(0.8))
         .on('tick', ticked);
 }
 
 function createNetworkGraph(containerSelector, data) {
-    if (!svg) initNetwork(containerSelector);
+    initNetwork(containerSelector);
 
     nodes = processNodes(data);
     edges = processEdges(data);
@@ -395,8 +395,10 @@ function createNetworkGraph(containerSelector, data) {
 
     const containerEl = d3.select(containerSelector).node();
     const width     = containerEl.clientWidth;
-    const height = width * 0.6;
+    const rawHeight = containerEl.clientHeight;
+    const height    = rawHeight * 0.8;
     svg.attr('viewBox', `0 0 ${width} ${height}`);
+    simulation.force('center', d3.forceCenter(width/2, height/2));
 
     const weights = edges.map(e => +e.weight);
     const [minW, maxW] = d3.extent(weights);

@@ -70,35 +70,35 @@ function startDashboard() {
             const toggle = document.querySelector('.switch');
             if (toggle) {
                 toggle.addEventListener('click', () => {
-                const isOn = toggle.getAttribute('aria-pressed') === 'true';
-                toggle.setAttribute('aria-pressed', isOn ? 'false' : 'true');
+                    const isOn = toggle.getAttribute('aria-pressed') === 'true';
+                    toggle.setAttribute('aria-pressed', isOn ? 'false' : 'true');
 
-                selectedNodes.clear();
-                clickedLinks.clear();
-                selectedLinks.clear();
-                svg.classed('node-active-mode', false);
-                nodeGroup.selectAll('g.node').classed('active', false).classed('selected-by-link', false);
-                linkGroup.selectAll('.link').classed('active', false).style('opacity', null);
+                    selectedNodes.clear();
+                    clickedLinks.clear();
+                    selectedLinks.clear();
+                    svg.classed('node-active-mode', false);
+                    nodeGroup.selectAll('g.node').classed('active', false).classed('selected-by-link', false);
+                    linkGroup.selectAll('.link').classed('active', false).style('opacity', null);
 
-                if (!isOn) {
-                    genderGraphActive = true;
-                    createGenderGraph('#network-graph', globalData);
-                } else {
-                    genderGraphActive = false;
-                    createNetworkGraph('#network-graph', globalData);
-                }
+                    if (!isOn) {
+                        genderGraphActive = true;
+                        createGenderGraph('#network-graph', globalData);
+                    } else {
+                        genderGraphActive = false;
+                        createNetworkGraph('#network-graph', globalData);
+                    }
 
-                requestAnimationFrame(fitDashboard);
+                    requestAnimationFrame(fitDashboard);
 
-                const filtered = applyGlobalFilters(globalData);
-                createBooksCatalog(filtered);
+                    const filtered = applyGlobalFilters(globalData);
+                    createBooksCatalog(filtered);
 
                 });
                 toggle.addEventListener('keydown', e => {
-                if (e.key === ' ' || e.key === 'Enter') {
-                    e.preventDefault();
-                    toggle.click();
-                }
+                    if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        toggle.click();
+                    }
                 });
             }
 

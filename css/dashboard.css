@@ -58,12 +58,15 @@ a {
   height: calc(100vh - 2.8rem);
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard {
   display: grid;
   grid-template-columns: 30rem 1fr;
-  grid-template-rows: auto 245px;
+  height: 100%;
+  grid-template-rows: 1fr 245px;
   gap: 15px;
   padding: 10px;
   transform-origin: top left;
@@ -107,16 +110,22 @@ a {
 /* --- NETWORK GRAPH --- */
 
 #network-graph {
-  background: #F5ECD5;
-  border-radius: 24px;
   overflow: visible;
-  display: inline-block;
-  width: 100%;
+  display: flex;
   position: relative;
+  padding: 20px;
+  height: 100%;
+}
+
+#network-graph svg {
+  overflow: visible;
+  flex: 1 1 auto;
+  width:  100%;
+  height: 100%;
 }
 
 .network-wrapper {
-  margin: 20px;
+  margin: 0;
 }
 
 .tooltip {
