@@ -52,14 +52,13 @@ a {
   text-decoration: none;
 }
 
-
 .dashboard-wrap {
-  width: 100vw;
-  height: calc(100vh - 2.8rem);
+  position: absolute;
+  top: 2.8rem;
+  left: 0;
+  right: 0;
+  bottom: 10px;
   overflow: hidden;
-  position: relative;
-  display: flex;
-  flex-direction: column;
 }
 
 .dashboard {
