@@ -32,6 +32,7 @@
           <div class="map-legend"></div>
         </div>
         <div class="visualization" id="network-graph">
+          <div class="network-wrapper"></div>
           <div class="legend">
             <div class="legend-item author"></div>
             <div class="legend-item book"></div>
@@ -39,6 +40,21 @@
           <div class="group-toggle">
             <div class="toggle-label">Group by gender</div>
             <div class="switch" role="button" aria-pressed="false" tabindex="0"></div>
+          </div>
+        </div>
+         <div id="side-menu">
+          <div class="button-group">
+            <button id="filter-btn">
+              <span>Filter</span>
+              <img src="../icons/search.svg" id="search-icon"></img>
+            </button>
+            <button id="clear-btn">
+              <span>Clear</span>
+              <img src="../icons/search.svg" id="search-icon"></img>
+            </button>
+          </div>
+          <div id="hover-details" class="details-panel">
+            <p>Click or hover on elements to see more details here.</p>
           </div>
         </div>
         <div class="visualization" id="treemap">

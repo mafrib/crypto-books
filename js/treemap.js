@@ -288,7 +288,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         cellEnter.append("text")
             .attr("pointer-events", "none")
             .attr("fill", "white")
-            .attr("font-size", "10px")
+            .attr("font-size", "0.6rem")
             .text(d => d.data.name)
             .call(wrapText, d => d.x1 - d.x0 - 8);
 

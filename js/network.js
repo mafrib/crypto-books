@@ -347,16 +347,15 @@ function dragended(event, d) {
 function initNetwork(containerSelector) {
     const container = d3.select(containerSelector);
     const w = container.node().clientWidth;
-    const h = w * 0.55;
+    const h = container.node().clientHeight;
     const cx = w / 2, cy = h / 2;
     const orbitR = Math.min(w, h) * 0.35;
 
     container.selectAll('svg').remove();
 
     svg = container.append('svg')
-        .attr('viewBox', `0 0 ${w} ${h}`)
         .style('width', '100%')
-        .style('height', 'auto');
+        .style('height', '100%');
 
     linkGroup = svg.append('g').attr('class', 'links');
     nodeGroup = svg.append('g').attr('class', 'nodes');
@@ -368,7 +367,7 @@ function initNetwork(containerSelector) {
         );
 
     simulation = d3.forceSimulation()
-        .force('link',    d3.forceLink().id(d => d.id).distance(200).strength(0.15))
+        .force('link',    d3.forceLink().id(d => d.id).distance(160).strength(0.15))
         .force('charge',  d3.forceManyBody().strength(-700))
         .force('collide', d3.forceCollide().radius(d => Math.sqrt(d.size) * 8 + 4).strength(1))
         .force('center',  d3.forceCenter(cx, cy))
@@ -395,22 +394,23 @@ function createNetworkGraph(containerSelector, data) {
 
     const containerEl = d3.select(containerSelector).node();
     const width     = containerEl.clientWidth;
-    const rawHeight = containerEl.clientHeight;
-    const height    = rawHeight * 0.8;
-    svg.attr('viewBox', `0 0 ${width} ${height}`);
+    const height = containerEl.clientHeight;
+
+    const designW = 554;
+    const designH = 343;
+    const scaleFactor = Math.min(width / designW, height / designH);
+
     simulation.force('center', d3.forceCenter(width/2, height/2));
 
     const weights = edges.map(e => +e.weight);
     const [minW, maxW] = d3.extent(weights);
-    const widthScale = d3.scaleLinear()
-        .domain(
-            weights.length === 0
-                ? [0, 1]
-                : minW === maxW
-                    ? [minW - 1, maxW + 1]
-                    : [minW, maxW]
-        )
-        .range([3, 10]);
+    const strokeScale = d3.scaleLinear()
+        .domain(d3.extent(edges, e => +e.weight))
+        .range([3,10]);
+
+    const radiusScale = d3.scaleSqrt()
+        .domain(d3.extent(nodes, d => d.size))
+        .range([ width * 0.05, width * 0.09 ]);
 
     const linkSel = linkGroup.selectAll('path')
         .data(edges, d => linkKey(d));
@@ -418,7 +418,7 @@ function createNetworkGraph(containerSelector, data) {
 
     const linkEnter = linkSel.enter().append('path')
         .attr('class', d => `link ${d.type}`)
-        .attr('stroke-width', d => widthScale(+d.weight))
+        .attr('stroke-width', d => strokeScale(+d.weight))
         .attr('d', d => routedLink(d, nodes));
 
     attachLinkTooltip(linkEnter);
@@ -495,11 +495,15 @@ function createNetworkGraph(containerSelector, data) {
         });
 
     nodeEnter.append('circle')
-        .attr('r', d => Math.sqrt(d.size) * 6)
+        .attr('r', d => Math.sqrt(d.size) * 6 * scaleFactor)
         .attr('stroke-width', 1);
     nodeEnter.append('text')
         .text(d => d.id)
-        .each(function(d) { wrapText(d3.select(this), Math.sqrt(d.size) * 12); });
+        .style('font-size', `${8 * scaleFactor}px`)
+        .each(function(d) {
+            const dia = Math.sqrt(d.size) * 6 * scaleFactor * 2;
+            wrapText(d3.select(this), dia);
+        });
     nodeEnter.merge(nodeSel);
 
     simulation.nodes(nodes);
@@ -576,6 +580,16 @@ function createGenderGraph(containerSelector, fullData) {
         .classed('active', false)
         .classed('selected-by-link', false);
 
+    const containerEl = d3.select(containerSelector).node();
+    const width  = containerEl.clientWidth;
+    const height = containerEl.clientHeight;
+
+    simulation.force('center', d3.forceCenter(width/2, height/2));
+
+    const designW = 554, designH = 343;
+    const scaleFactor = Math.min(width/designW, height/designH);
+    const rFn = d => Math.sqrt(d.size) * 6 * scaleFactor;
+
     const femaleLibs = new Set();
     const maleLibs   = new Set();
 
@@ -590,12 +604,6 @@ function createGenderGraph(containerSelector, fullData) {
         if (isFemale) femaleLibs.add(lib);
         else maleLibs.add(lib);
     });
-
-    if (!svg) {
-        initNetwork(containerSelector);
-    } else {
-        simulation.stop();
-    }
 
     const groupedByLib = d3.group(fullData, d => d.Livraria.trim());
     const libSizes = new Map();
@@ -670,22 +678,21 @@ function createGenderGraph(containerSelector, fullData) {
 
     const weights = edges.map(e => +e.weight);
     const [minW, maxW] = d3.extent(weights);
-    const widthScale = d3.scaleLinear()
-        .domain(
-        weights.length === 0
-            ? [0, 1]
-            : minW === maxW
-            ? [minW - 1, maxW + 1]
-            : [minW, maxW]
-        )
-        .range([3, 10]);
+    const strokeScale = d3.scaleLinear()
+        .domain(d3.extent(edges, e => +e.weight))
+        .range([3,10]);
+
+    const radiusScale = d3.scaleSqrt()
+        .domain(d3.extent(nodes, d => d.size))
+        .range([ width * 0.05, width * 0.09 ]);
 
     const linkSel = linkGroup.selectAll('path')
         .data(edges, d => `${d.source}|${d.target}|${d.type}`);
 
     const linkEnter = linkSel.enter().append('path')
         .attr('class', d => `link ${d.type}`)
-        .attr('stroke-width', d => widthScale(+d.weight));
+        .attr('stroke-width', d => strokeScale(+d.weight))
+        .attr('d', d => routedLink(d, nodes));;
 
     attachLinkTooltip(linkEnter);
 
@@ -747,12 +754,13 @@ function createGenderGraph(containerSelector, fullData) {
         });
 
     nodeEnter.append('circle')
-        .attr('r', d => Math.sqrt(d.size) * 6)
+        .attr('r', d => rFn(d))
         .attr('class', d => `gender-circle ${d.gender}`);
 
     nodeEnter.append('text')
         .text(d => d.id)
-        .attr('class', 'gender-label');
+        .attr('class', 'gender-label')
+        .style('font-size', `${15 * scaleFactor}px`);
 
     nodeEnter.merge(nodeSel)
         .on('click', (event, d) => {
