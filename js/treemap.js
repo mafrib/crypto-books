@@ -57,6 +57,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         .join("svg")
         .attr("viewBox", `0 0 ${width} ${height}`)
         .attr("preserveAspectRatio", "xMidYMid meet")
+        .attr("width", "100%")
+        .attr("height", "100%")
         .style("font", "10px sans-serif")
         .style("cursor", "pointer");
 
