@@ -29,6 +29,7 @@ function isFemaleLibrary(rawName) {
 }
 
 function startDashboard() {
+    clearDetailsPanel();
     document.getElementById("search-input").value = "";
 
     d3.csv("data/dataset.csv")

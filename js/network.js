@@ -494,6 +494,14 @@ function createNetworkGraph(containerSelector, data) {
             );
         });
 
+    nodeEnter
+        .on('mouseover', (event, d) => {
+            updateDetailsPanel(d.id, globalData);
+        })
+        .on('mouseout',  () => {
+            clearDetailsPanel()
+        });
+
     nodeEnter.append('circle')
         .attr('r', d => Math.sqrt(d.size) * 6 * scaleFactor)
         .attr('stroke-width', 1);

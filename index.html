@@ -14,6 +14,7 @@
     <script src="js/catalog.js"></script>
     <script src="js/filter.js"></script>
     <script src="js/script.js"></script>
+    <script src="js/details-panel.js"></script>
   </head>
 
   <body onload="startDashboard()">
@@ -46,15 +47,22 @@
           <div class="button-group">
             <button id="filter-btn">
               <span>Filter</span>
-              <img src="../icons/slider-filter.png" id="filter-icon"></img>
+              <img src="../img/icons/slider-filter.png" id="filter-icon"></img>
             </button>
             <button id="clear-btn">
               <span>Clear</span>
-              <img src="../icons/clear-filter-inactive.png" id="clear-icon-inactive"></img>
+              <img src="../img/icons/clear-filter-inactive.png" id="clear-icon-inactive"></img>
             </button>
           </div>
           <div id="hover-details" class="details-panel">
-            <p>Click or hover on elements to see more details here.</p>
+            <div class="details-panel__img-wrapper">
+              <img src="" class="details-panel__img"\>
+            </div>
+            <p class="details-panel__placeholder">
+              Click or hover on elements to see more details here.
+            </p>
+            <p class="details-panel__name"></p>
+            <p class="details-panel__books"></p>
           </div>
         </div>
         <div class="visualization" id="treemap">
@@ -69,20 +77,20 @@
         <div class="visualization" id="catalog">
           <div class="search-container">
             <input type="text" id="search-input" placeholder="Search for a book, author or library...">
-            <img src="../icons/search.svg" id="search-icon"></img>
+            <img src="../img/icons/search.svg" id="search-icon"></img>
           </div>
           <div class="catalog-header">
             <h5 class="sortable" data-column="Obra">
               Title
-              <img class="sort-icon" src="icons/sort-neutral.png"/>
+              <img class="sort-icon" src="../img/icons/sort-neutral.png"/>
             </h5>
             <h5 class="sortable" data-column="Nome_Autor">
               Author
-              <img class="sort-icon" src="icons/sort-neutral.png"/>
+              <img class="sort-icon" src="../img/icons/sort-neutral.png"/>
             </h5>
             <h5 class="sortable" data-column="Livraria">
               Library
-              <img class="sort-icon" src="icons/sort-up.png"/>
+              <img class="sort-icon" src="../img/icons/sort-up.png"/>
             </h5>
         </div>
           <div id="catalog-entries"></div>

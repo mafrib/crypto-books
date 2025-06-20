@@ -41,7 +41,7 @@ function updateClearButton() {
   const img = btn.querySelector('img');
   if (img) {
     img.src = isAny
-      ? '../icons/clear-filter-active.png'
-      : '../icons/clear-filter-inactive.png';
+      ? '../img/icons/clear-filter-active.png'
+      : '../img/icons/clear-filter-inactive.png';
   }
 }

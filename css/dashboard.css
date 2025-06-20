@@ -459,23 +459,63 @@ svg:not(.node-active-mode) .node:hover text {
   width: 15px;
 }
 
+#clear-btn:not(.active) {
+  cursor: default;
+}
+
 /* non-active mode*/
 #clear-btn span {
   color: #A6CDC6;
 }
 
-/* to do: active mode*/
-
 .details-panel {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow-y: auto;
-  padding: 12px;
+  padding: 1rem;
   border-radius: 24px;
   background: #D6E5DB;
   box-sizing: border-box;
+}
+
+.details-panel__img-wrapper {
+  aspect-ratio: 3/4;
+  width: 6rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  display: none;
+}
+
+.details-panel__img {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.details-panel__placeholder {
+  font-style: italic;
+  color: #16404D;
+  max-width: 5rem;
+}
+
+.details-panel__name {
+  font-weight: 600;
+  margin: 0.25rem 0 0.125rem;
+  text-align: center;
+}
+
+.details-panel__books {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #555;
+  text-align: center;
 }
 
 .details-panel p {

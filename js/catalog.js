@@ -80,7 +80,7 @@ function setupSorting(rawData, defaultColumn = null) {
     const defaultHeader = document.querySelector(`.sortable[data-column="${defaultColumn}"]`);
     const defaultIcon = defaultHeader && defaultHeader.querySelector(".sort-icon");
     if (defaultIcon) {
-      defaultIcon.src = "icons/sort-up.png";
+      defaultIcon.src = "img/icons/sort-up.png";
     }
   }
 
@@ -109,10 +109,10 @@ function setupSorting(rawData, defaultColumn = null) {
 
       // Reset all icons, then set this one to up/down
       document.querySelectorAll(".sort-icon")
-        .forEach(i => i.src = "icons/sort-neutral.png");
+        .forEach(i => i.src = "img/icons/sort-neutral.png");
       icon.src = currentSort.ascending
-        ? "icons/sort-up.png"
-        : "icons/sort-down.png";
+        ? "img/icons/sort-up.png"
+        : "img/icons/sort-down.png";
 
       createBooksCatalog(sorted);
     });
