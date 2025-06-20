@@ -19,8 +19,29 @@ function applyGlobalFilters(rawData) {
 
 function setGlobalFilter(source, filterFn) {
   activeFilters[source] = filterFn;
+  updateClearButton();
 }
 
 function clearGlobalFilter(source) {
   delete activeFilters[source];
+  updateClearButton();
+}
+
+function clearAllFilters() {
+  activeFilters = {};
+  updateClearButton();
+}
+
+function updateClearButton() {
+  const btn = document.getElementById('clear-btn');
+  if (!btn) return;
+  const isAny = Object.keys(activeFilters).length > 0;
+  btn.classList.toggle('active', isAny);
+
+  const img = btn.querySelector('img');
+  if (img) {
+    img.src = isAny
+      ? '../icons/clear-filter-active.png'
+      : '../icons/clear-filter-inactive.png';
+  }
 }

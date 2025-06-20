@@ -99,6 +99,19 @@ function startDashboard() {
                     const mode = this.getAttribute('data-mode');
                     switchMode(mode);
                 });
+
+            const clearBtn = document.getElementById('clear-btn');
+            clearBtn.addEventListener('click', () => {
+                if (!clearBtn.classList.contains('active')) return;
+
+                clearAllFilters();
+
+                const clean = applyGlobalFilters(globalData);
+
+                createNetworkGraph('#network-graph .network-wrapper', globalData);
+                createTreemap('#treemap-area', clean, currentTreemapMode, /* onUpdate? */);
+                createBooksCatalog(clean);
+            });
         })
         .catch((error) => {
             console.error("Error loading the CSV file:", error);
