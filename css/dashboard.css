@@ -27,7 +27,7 @@ html, body {
   display: flex;
   align-items: center;
   height: 2.8rem;
-  padding-inline: 1rem;
+  padding-inline: 10px;
   border-bottom: 1px solid;
   justify-content: space-between;
 }
@@ -44,7 +44,9 @@ html, body {
   display: inline;
   color: #FAF7F4;
   font-weight: 500;
-  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
 }
 
 a {
