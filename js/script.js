@@ -17,7 +17,7 @@ function switchMode(mode) {
 
         const allowedSet = new Set(newFiltered.map(r => r.Livraria));
         updateNetworkStyles(allowedSet);
-    });
+    }, genderGraphActive);
 
     d3.selectAll('.mode-button').classed('active', false);
     d3.select(`.mode-button[data-mode="${mode}"]`).classed('active', true);
@@ -73,7 +73,19 @@ function startDashboard() {
 
                     const filtered = applyGlobalFilters(globalData);
                     createBooksCatalog(filtered);
-
+                    createTreemap(
+                        '#treemap-area',
+                        filtered,
+                        currentTreemapMode,
+                        () => {
+                        const newFiltered = applyGlobalFilters(globalData);
+                        createBooksCatalog(
+                            [...newFiltered].sort((a,b) => a.Livraria.localeCompare(b.Livraria))
+                        );
+                        updateNetworkStyles(new Set(newFiltered.map(r=>r.Livraria)));
+                        },
+                        genderGraphActive
+                    );
                 });
                 toggle.addEventListener('keydown', e => {
                     if (e.key === ' ' || e.key === 'Enter') {
@@ -93,7 +105,7 @@ function startDashboard() {
 
                 const allowedSet = new Set(newFiltered.map(r => r.Livraria));
                 updateNetworkStyles(allowedSet);
-            });
+            }, genderGraphActive);
 
             d3.selectAll('.mode-button')
                 .on('click', function() {
@@ -105,14 +117,43 @@ function startDashboard() {
             clearBtn.addEventListener('click', () => {
                 if (!clearBtn.classList.contains('active')) return;
 
-                clearAllFilters();
+                Object.keys(activeFilters).forEach(src => clearGlobalFilter(src));
+                updateClearButton();
 
-                const clean = applyGlobalFilters(globalData);
+                selectedNodes.clear();
+                clickedLinks.clear();
+                selectedLinks.clear();
+                svg.classed('node-active-mode', false);
+                nodeGroup.selectAll('g.node')
+                    .classed('active', false)
+                    .classed('selected-by-link', false);
+                linkGroup.selectAll('.link')
+                    .classed('active', false)
+                    .style('opacity', null);
 
-                createNetworkGraph('#network-graph .network-wrapper', globalData);
-                createTreemap('#treemap-area', clean, currentTreemapMode, /* onUpdate? */);
-                createBooksCatalog(clean);
-            });
+                const cleanData = applyGlobalFilters(globalData);
+
+                const networkContainer = '#network-graph .network-wrapper';
+                if (genderGraphActive) {
+                    createGenderGraph(networkContainer, globalData);
+                } else {
+                    createNetworkGraph(networkContainer, globalData);
+                }
+
+                createTreemap(
+                    '#treemap-area',
+                    cleanData,
+                    currentTreemapMode,
+                    () => {
+                    const again = applyGlobalFilters(globalData);
+                    createBooksCatalog(again);
+                    const libs = new Set(again.map(r => r.Livraria));
+                    updateNetworkStyles(libs);
+                    },
+                    genderGraphActive
+                );
+                createBooksCatalog(cleanData);
+                });
         })
         .catch((error) => {
             console.error("Error loading the CSV file:", error);

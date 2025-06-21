@@ -96,7 +96,8 @@ function handleLinkClick(d, allData) {
     '#treemap-area',
     filtered,
     currentTreemapMode,
-    () => createBooksCatalog(applyGlobalFilters(allData))
+    () => createBooksCatalog(applyGlobalFilters(allData)),
+    genderGraphActive
     );
     createBooksCatalog(filtered);
 
@@ -182,7 +183,8 @@ function applyNetworkFilter(allowedSet, data) {
             '#treemap-area',
             filtered,
             currentTreemapMode,
-            () => createBooksCatalog(applyGlobalFilters(data))
+            () => createBooksCatalog(applyGlobalFilters(data)),
+            genderGraphActive
         );
         createBooksCatalog(filtered);
 
@@ -762,7 +764,8 @@ function createGenderGraph(containerSelector, fullData) {
             // propagate into treemap & catalog
             const filtered = applyGlobalFilters(fullData);
             createTreemap('#treemap-area', filtered, currentTreemapMode, () =>
-               createBooksCatalog(applyGlobalFilters(fullData))
+                createBooksCatalog(applyGlobalFilters(fullData)),
+                genderGraphActive
             );
             createBooksCatalog(filtered);
         });

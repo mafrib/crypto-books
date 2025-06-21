@@ -1,4 +1,4 @@
-function createTreemap(selector, data, mode = 'category', onUpdate) {
+function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphActive = false) {
 
     // Cleanup before redraw
     const container = d3.select(selector);
@@ -15,10 +15,17 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                     d3.group(data, d => d.CatLit_Descricao, d => d.GenLit_Descricao),
                     ([category, genres]) => ({
                         name: category,
-                        children: Array.from(genres, ([genre, records]) => ({
-                            name: genre,
-                            value: records.length
-                        }))
+                        children: Array.from(genres, ([genre, records]) => {
+                            const femaleCount = records.filter(r => isFemaleLibrary(r.Livraria)).length;
+                            const maleCount   = records.length - femaleCount;
+
+                            return {
+                                name: genre,
+                                value: records.length,
+                                femaleCount,
+                                maleCount
+                            };
+                        })
                     })
                 )
             };
@@ -27,10 +34,17 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                 name: "Intellectual Tradition",
                 children: Array.from(
                     d3.group(data, d => d.TradicaoIntelectual_Obra),
-                    ([tradition, records]) => ({
-                        name: tradition,
-                        value: records.length
-                    })
+                    ([tradition, records]) => {
+                        const femaleCount = records.filter(r => isFemaleLibrary(r.Livraria)).length;
+                        const maleCount   = records.length - femaleCount;
+
+                        return {
+                            name: tradition,
+                            value: records.length,
+                            femaleCount,
+                            maleCount
+                        };
+                    }
                 )
             };
         }
@@ -271,7 +285,20 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             });
 
         cellEnter.append("rect")
-            .attr("fill", color)
+            .attr("fill", d => {
+                if (genderGraphActive) {
+                    // compute the fraction of female books in this cell
+                    const total   = d.data.femaleCount + d.data.maleCount;
+                    const fracF   = total > 0
+                                 ? d.data.femaleCount / total
+                                 : 0.5;
+                    // pick the female color if >50%, otherwise the male color
+                    return fracF > 0.5
+                        ? "#dd9298"
+                        : "#d0a07d";
+                }
+                return color;
+            })
             .on("mousemove", (event, d) => {
                 const treemapRect = d3.select("#treemap").node().getBoundingClientRect();
                 const x = event.pageX - treemapRect.left - window.scrollX;
