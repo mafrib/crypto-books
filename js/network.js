@@ -101,7 +101,7 @@ function handleLinkClick(d, allData) {
     createBooksCatalog(filtered);
 
     updateNetworkStyles(
-    buildAllowedFromSelection(selectedNodes, selectedLinks)
+        buildAllowedFromSelection(selectedNodes, selectedLinks)
     );
 }
 
@@ -520,61 +520,77 @@ function createNetworkGraph(containerSelector, data) {
 }
 
 function updateNetworkStyles(allowedSet) {
-    if (typeof svg === 'undefined' || svg === null) {
-        return;
-    }
+  if (!svg) return;
 
-    const totalNodes = nodeGroup.selectAll('g.node').size();
+  if (genderGraphActive) {
+    linkGroup.selectAll('.link').style('opacity', null);
 
-    // Case 1: User clicked every node -> fill all circles blue; show all links
-    if (selectedNodes.size === totalNodes) {
-        svg.classed('node-active-mode', true);
-        nodeGroup.selectAll('g.node').classed('active', true);
-        linkGroup.selectAll('.link').style('opacity', 1);
-        return;
-    }
-
-    // Case 2: Treemap filter allows every node and no node clicks -> default
-    if (allowedSet && allowedSet.size === totalNodes && selectedNodes.size === 0) {
-        svg.classed('node-active-mode', false);
-        nodeGroup.selectAll('g.node').classed('active', false);
-        linkGroup.selectAll('.link').style('opacity', null);
-        return;
-    }
-
-    // Case 3: Only links selected (no node clicks) -> preserve node styling; only fade/highlight links
-    if (selectedLinks.size > 0 && selectedNodes.size === 0) {
-        linkGroup.selectAll('.link')
-            .style('opacity', d => selectedLinks.has(linkKey(d)) ? 1 : 0.6);
-        return;
-    }
-
-    // Case 4: Mixed or treemap filtering -> compute node actives, then link opacities
-
-    if (selectedNodes.size > 0) {
-        svg.classed('node-active-mode', true);
-        nodeGroup.selectAll('g.node').classed('active', d => selectedNodes.has(d.id));
-    } else if (allowedSet && allowedSet.size > 0) {
-        svg.classed('node-active-mode', true);
-        nodeGroup.selectAll('g.node').classed('active', d => allowedSet.has(d.id));
+    if (selectedNodes.size === 0) {
+      // no gender node clicked → both base colors, no "active" class
+      svg.classed('node-active-mode', false);
+      nodeGroup.selectAll('g.node')
+        .classed('active', false);
     } else {
-        svg.classed('node-active-mode', false);
-        nodeGroup.selectAll('g.node').classed('active', false);
+      svg.classed('node-active-mode', true);
+      nodeGroup.selectAll('g.node')
+        .classed('active', d => selectedNodes.has(d.id));
     }
 
-    if (selectedLinks.size > 0) {
-        linkGroup.selectAll('.link')
-            .style('opacity', d => selectedLinks.has(linkKey(d)) ? 1 : 0.6);
-    } else if (allowedSet && allowedSet.size > 0) {
-        linkGroup.selectAll('.link')
-            .style('opacity', d => {
-                const src = d.source.id || d.source;
-                const tgt = d.target.id || d.target;
-                return (allowedSet.has(src) && allowedSet.has(tgt)) ? 1 : 0.6;
-            });
-    } else {
-        linkGroup.selectAll('.link').style('opacity', null);
-    }
+    return;
+  }
+
+  const total = nodeGroup.selectAll('g.node').size();
+
+  // Case 1: clicked every node
+  if (selectedNodes.size === total) {
+    svg.classed('node-active-mode', true);
+    nodeGroup.selectAll('g.node').classed('active', true);
+    linkGroup.selectAll('.link').style('opacity', 1);
+    return;
+  }
+
+  // Case 2: no clicks & treemap filter allows everything
+  if (allowedSet && allowedSet.size === total && selectedNodes.size === 0) {
+    svg.classed('node-active-mode', false);
+    nodeGroup.selectAll('g.node').classed('active', false);
+    linkGroup.selectAll('.link').style('opacity', null);
+    return;
+  }
+
+  // Case 3: links selected but no node clicks
+  if (selectedLinks.size > 0 && selectedNodes.size === 0) {
+    linkGroup.selectAll('.link')
+      .style('opacity', d => selectedLinks.has(linkKey(d)) ? 1 : 0.6);
+    return;
+  }
+
+  // Case 4: mixed (some nodes clicked or treemap filter)
+  if (selectedNodes.size > 0) {
+    svg.classed('node-active-mode', true);
+    nodeGroup.selectAll('g.node')
+      .classed('active', d => selectedNodes.has(d.id));
+  } else if (allowedSet && allowedSet.size > 0) {
+    svg.classed('node-active-mode', true);
+    nodeGroup.selectAll('g.node')
+      .classed('active', d => allowedSet.has(d.id));
+  } else {
+    svg.classed('node-active-mode', false);
+    nodeGroup.selectAll('g.node').classed('active', false);
+  }
+
+  if (selectedLinks.size > 0) {
+    linkGroup.selectAll('.link')
+      .style('opacity', d => selectedLinks.has(linkKey(d)) ? 1 : 0.6);
+  } else if (allowedSet && allowedSet.size > 0) {
+    linkGroup.selectAll('.link')
+      .style('opacity', d => {
+        const s = d.source.id || d.source;
+        const t = d.target.id || d.target;
+        return (allowedSet.has(s) && allowedSet.has(t)) ? 1 : 0.6;
+      });
+  } else {
+    linkGroup.selectAll('.link').style('opacity', null);
+  }
 }
 
 function createGenderGraph(containerSelector, fullData) {
