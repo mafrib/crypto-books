@@ -306,8 +306,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                 tooltip
                     .html(`<strong>${d.data.name}</strong><br>${d.value} books`)
-                    .style("left", `${x + 10}px`)
-                    .style("top", `${y + 10}px`)
+                    .style("left", `${x + 20}px`)
+                    .style("top", `${y - 30}px`)
                     .style("visibility", "visible");
             })
             .on("mouseout", () => {
