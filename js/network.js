@@ -353,6 +353,10 @@ function initNetwork(containerSelector) {
     const cx = w / 2, cy = h / 2;
     const orbitR = Math.min(w, h) * 0.35;
 
+    const designW = 554, designH = 343;
+    const scaleFactor = Math.min(w / designW, h / designH);
+
+
     container.selectAll('svg').remove();
 
     svg = container.append('svg')
@@ -369,9 +373,9 @@ function initNetwork(containerSelector) {
         );
 
     simulation = d3.forceSimulation()
-        .force('link',    d3.forceLink().id(d => d.id).distance(160).strength(0.15))
-        .force('charge',  d3.forceManyBody().strength(-700))
-        .force('collide', d3.forceCollide().radius(d => Math.sqrt(d.size) * 8 + 4).strength(1))
+        .force('link',    d3.forceLink().id(d => d.id).distance(200 * scaleFactor).strength(0.15))
+        .force('charge',  d3.forceManyBody().strength(-1200 * scaleFactor))
+        .force('collide', d3.forceCollide().radius(d => Math.sqrt(d.size) * 6 * scaleFactor + 8).strength(1))
         .force('center',  d3.forceCenter(cx, cy))
         .force('x',       d3.forceX(cx).strength(0.002))
         .force('y',       d3.forceY(cy).strength(0.2))
