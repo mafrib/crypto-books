@@ -3,7 +3,7 @@ function filterBooks(data, query) {
     return data.filter(book =>
       book.Obra.toLowerCase().includes(q) ||
       book.Nome_Autor.toLowerCase().includes(q) ||
-      book.Livraria.toLowerCase().includes(q)
+      book.Proprietario_Nome.toLowerCase().includes(q)
     );
   }
 

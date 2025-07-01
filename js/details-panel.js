@@ -26,7 +26,7 @@ function updateDetailsPanel(libName, allData) {
     wrapper.querySelector('img').alt = libName;
 
     nameEl.textContent  = libName;
-    const count = allData.filter(r => r.Livraria === libName).length;
+    const count = allData.filter(r => r.Proprietario_Nome === libName).length;
     booksEl.textContent = `${count} book${count===1?'':'s'}`;
 }
 

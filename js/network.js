@@ -32,11 +32,11 @@ function handleLinkClick(d, allData) {
         )
         );
 
-    const libMap = d3.group(allData, r => r.Livraria);
+    const libMap = d3.group(allData, r => r.Proprietario_Nome);
     const filters = [];
 
     selectedNodes.forEach(id => {
-        filters.push(r => r.Livraria === id);
+        filters.push(r => r.Proprietario_Nome === id);
     });
 
     selectedLinks.forEach(key => {
@@ -75,7 +75,7 @@ function handleLinkClick(d, allData) {
         const common = new Set([...setA].filter(x => setB.has(x)));
 
         filters.push(row =>
-            (row.Livraria === a || row.Livraria === b) &&
+            (row.Proprietario_Nome === a || row.Proprietario_Nome === b) &&
             (type === 'book'
                 ? common.has(row.Obra)
                 : common.has(row.Nome_Autor)
@@ -171,7 +171,7 @@ function applyNetworkFilter(allowedSet, data) {
     // set or clear the global filter
     if (allowedSet && allowedSet.size > 0) {
         setGlobalFilter('network', row =>
-            allowedSet.has(row.Livraria.trim())
+            allowedSet.has(row.Proprietario_Nome.trim())
         );
     } else {
         clearGlobalFilter('network');
@@ -271,12 +271,12 @@ function isAnonymous(name) {
 }
 
 function processNodes(data) {
-    const grouped = d3.group(data, d => d.Livraria);
+    const grouped = d3.group(data, d => d.Proprietario_Nome);
     return Array.from(grouped, ([key, vals]) => ({ id: key, size: vals.length }));
 }
 
 function processEdges(data) {
-    const libs   = d3.group(data, d => d.Livraria);
+    const libs   = d3.group(data, d => d.Proprietario_Nome);
     const libMap = new Map();
     const edges  = [];
 
@@ -624,7 +624,7 @@ function createGenderGraph(containerSelector, fullData) {
     const maleLibs   = new Set();
 
     fullData.forEach(row => {
-        const lib   = row.Livraria.trim();
+        const lib   = row.Proprietario_Nome.trim();
         const lower = lib.toLowerCase();
 
         const isFemale =
@@ -635,7 +635,7 @@ function createGenderGraph(containerSelector, fullData) {
         else maleLibs.add(lib);
     });
 
-    const groupedByLib = d3.group(fullData, d => d.Livraria.trim());
+    const groupedByLib = d3.group(fullData, d => d.Proprietario_Nome.trim());
     const libSizes = new Map();
     groupedByLib.forEach((rows, libName) => {
         libSizes.set(libName, rows.length);
@@ -662,7 +662,7 @@ function createGenderGraph(containerSelector, fullData) {
     const femaleAuthors = new Set();
     const maleAuthors = new Set();
     fullData.forEach(row => {
-        const lib = row.Livraria.trim();
+        const lib = row.Proprietario_Nome.trim();
         const lower = lib.toLowerCase();
         const isFemale = lower.includes('d. leonor') || lower.includes('d. beatriz');
 

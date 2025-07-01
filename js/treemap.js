@@ -16,7 +16,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                     ([category, genres]) => ({
                         name: category,
                         children: Array.from(genres, ([genre, records]) => {
-                            const femaleCount = records.filter(r => isFemaleLibrary(r.Livraria)).length;
+                            const femaleCount = records.filter(r => isFemaleLibrary(r.Proprietario_Nome)).length;
                             const maleCount   = records.length - femaleCount;
 
                             return {
@@ -35,7 +35,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                 children: Array.from(
                     d3.group(data, d => d.TradicaoIntelectual_Obra),
                     ([tradition, records]) => {
-                        const femaleCount = records.filter(r => isFemaleLibrary(r.Livraria)).length;
+                        const femaleCount = records.filter(r => isFemaleLibrary(r.Proprietario_Nome)).length;
                         const maleCount   = records.length - femaleCount;
 
                         return {
@@ -110,7 +110,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         const filteredRows = applyGlobalFilters(globalData);
 
         // Build a Set of “allowed” library IDs
-        const allowed = new Set(filteredRows.map(r => r.Livraria));
+        const allowed = new Set(filteredRows.map(r => r.Proprietario_Nome));
 
         // Update styling of the network‐graph rather than rebuilding it
         updateNetworkStyles(allowed);

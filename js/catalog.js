@@ -27,20 +27,20 @@ function createBooksCatalog(data) {
 
     newEntries.append("div")
         .classed("livraria", true)
-        .text(d => d.Livraria);
+        .text(d => d.Proprietario_Nome);
 
     newEntries.merge(entries)
-        .classed("male",   d => genderGraphActive && !isFemaleLibrary(d.Livraria))
-        .classed("female", d => genderGraphActive &&  isFemaleLibrary(d.Livraria))
+        .classed("male",   d => genderGraphActive && !isFemaleLibrary(d.Proprietario_Nome))
+        .classed("female", d => genderGraphActive &&  isFemaleLibrary(d.Proprietario_Nome))
         .select(".obra").text(d => d.Obra);
 
     newEntries.merge(entries).select(".autor").text(d => d.Nome_Autor);
-    newEntries.merge(entries).select(".livraria").text(d => d.Livraria);
+    newEntries.merge(entries).select(".livraria").text(d => d.Proprietario_Nome);
 
     // Update existing entries (if needed)
     entries.select(".obra").text(d => d.Obra);
     entries.select(".autor").text(d => d.Nome_Autor);
-    entries.select(".livraria").text(d => d.Livraria);
+    entries.select(".livraria").text(d => d.Proprietario_Nome);
 
     const countDisplay = d3.select("#book-count")
         .text(`${data.length} book${data.length !== 1 ? 's' : ''} found`);
@@ -58,7 +58,7 @@ function setupSearchBar(rawData) {
       setGlobalFilter('search', (book) =>
         book.Obra.toLowerCase().includes(query.toLowerCase()) ||
         book.Nome_Autor.toLowerCase().includes(query.toLowerCase()) ||
-        book.Livraria.toLowerCase().includes(query.toLowerCase())
+        book.Proprietario_Nome.toLowerCase().includes(query.toLowerCase())
       );
     } else {
       clearGlobalFilter('search');

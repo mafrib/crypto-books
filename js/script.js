@@ -11,11 +11,11 @@ function switchMode(mode) {
     createTreemap('#treemap-area', filteredData, mode, () => {
         const newFiltered = applyGlobalFilters(globalData);
         const sorted = [...newFiltered].sort((a, b) =>
-            a.Livraria.localeCompare(b.Livraria)
+            a.Proprietario_Nome.localeCompare(b.Proprietario_Nome)
         );
         createBooksCatalog(sorted);
 
-        const allowedSet = new Set(newFiltered.map(r => r.Livraria));
+        const allowedSet = new Set(newFiltered.map(r => r.Proprietario_Nome));
         updateNetworkStyles(allowedSet);
     }, genderGraphActive);
 
@@ -37,7 +37,7 @@ function startDashboard() {
             globalData = data;
 
             let currentData = [...globalData];
-            const initialSortColumn = "Livraria";
+            const initialSortColumn = "Proprietario_Nome";
             let sortedData = [...currentData].sort((a, b) =>
                 a[initialSortColumn].localeCompare(b[initialSortColumn])
             );
@@ -80,9 +80,9 @@ function startDashboard() {
                         () => {
                         const newFiltered = applyGlobalFilters(globalData);
                         createBooksCatalog(
-                            [...newFiltered].sort((a,b) => a.Livraria.localeCompare(b.Livraria))
+                            [...newFiltered].sort((a,b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome))
                         );
-                        updateNetworkStyles(new Set(newFiltered.map(r=>r.Livraria)));
+                        updateNetworkStyles(new Set(newFiltered.map(r=>r.Proprietario_Nome)));
                         },
                         genderGraphActive
                     );
@@ -103,7 +103,7 @@ function startDashboard() {
                 );
                 createBooksCatalog(sortedData);
 
-                const allowedSet = new Set(newFiltered.map(r => r.Livraria));
+                const allowedSet = new Set(newFiltered.map(r => r.Proprietario_Nome));
                 updateNetworkStyles(allowedSet);
             }, genderGraphActive);
 
@@ -147,7 +147,7 @@ function startDashboard() {
                     () => {
                     const again = applyGlobalFilters(globalData);
                     createBooksCatalog(again);
-                    const libs = new Set(again.map(r => r.Livraria));
+                    const libs = new Set(again.map(r => r.Proprietario_Nome));
                     updateNetworkStyles(libs);
                     },
                     genderGraphActive
