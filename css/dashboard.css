@@ -507,16 +507,19 @@ svg:not(.node-active-mode) .node:hover text {
   max-width: 5rem;
 }
 
-.details-panel__name {
-  font-weight: 600;
-  margin: 0.25rem 0 0.125rem;
+.details-panel .details-panel__name {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0.25rem 0 0.5rem;
   text-align: center;
+  font-weight: 600;
 }
 
-.details-panel__books {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #555;
+.details-panel .details-panel__books {
+  max-width: 100%;
+  margin: 0 0 1rem;
   text-align: center;
 }
 
@@ -526,6 +529,19 @@ svg:not(.node-active-mode) .node:hover text {
   font-size: 0.7rem;
   text-align: center;
   color: #16404D;
+}
+
+.details-panel .details-panel__dates,
+.details-panel .details-panel__title,
+.details-panel .details-panel__reign {
+  align-self: flex-start;
+  max-width: 100%;
+  margin: 0.1rem 0 0;
+  font-size: 0.6rem;
+  line-height: 1.2;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 /* ---- TREEMAP ---- */
