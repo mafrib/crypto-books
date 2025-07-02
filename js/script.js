@@ -59,6 +59,10 @@ function startDashboard() {
                     selectedNodes.clear();
                     clickedLinks.clear();
                     selectedLinks.clear();
+                    currentCarouselLibs = [];
+                    currentIndex = 0;
+                    renderCarousel();
+                    clearDetailsPanel();
                     svg.classed('node-active-mode', false);
                     nodeGroup.selectAll('g.node').classed('active', false).classed('selected-by-link', false);
                     linkGroup.selectAll('.link').classed('active', false).style('opacity', null);
@@ -150,6 +154,7 @@ function startDashboard() {
                 );
                 createBooksCatalog(cleanData);
 
+                currentCarouselLibs = [];
                 currentIndex = 0;
                 renderCarousel();
                 clearDetailsPanel();

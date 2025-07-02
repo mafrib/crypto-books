@@ -504,6 +504,7 @@ function createNetworkGraph(containerSelector, data) {
             );
 
             const libs = Array.from(selectedNodes);
+            currentCarouselLibs = libs;
             currentIndex = libs.indexOf(id);
             if (currentIndex < 0) currentIndex = 0;
 
@@ -641,10 +642,6 @@ function createGenderGraph(containerSelector, fullData) {
     const scaleFactor = Math.min(width/designW, height/designH);
     const rFn = d => Math.sqrt(d.size) * 6 * scaleFactor;
 
-    const fontScale = d3.scaleSqrt()
-        .domain(d3.extent(nodes, d => d.size))
-        .range([9 * scaleFactor, 16 * scaleFactor]);
-
     const femaleLibs = new Set();
     const maleLibs   = new Set();
 
@@ -726,6 +723,10 @@ function createGenderGraph(containerSelector, fullData) {
         weight: sharedAuthorsCount
         }
     ];
+
+    const fontScale = d3.scaleSqrt()
+        .domain(d3.extent(nodes, d => d.size))
+        .range([16 * scaleFactor, 24 * scaleFactor]);
 
     addParallelMetadata(edges, 150);
     linkGroup.selectAll('path').remove();
@@ -809,6 +810,35 @@ function createGenderGraph(containerSelector, fullData) {
             updateNetworkStyles(null);
         });
 
+    nodeEnter
+        .on('mouseover', (event, d) => {
+            const previewLibs = d.id === 'Female owners'
+            ? Array.from(femaleLibs)
+            : Array.from(maleLibs);
+
+            currentCarouselLibs = previewLibs;
+            currentIndex = 0;
+            renderCarousel();
+            if (previewLibs.length)
+                updateDetailsPanel(previewLibs[0], fullData);
+        })
+        .on('mouseout', () => {
+            if (selectedNodes.size) {
+                const libs = [];
+                if (selectedNodes.has('Female owners')) libs.push(...femaleLibs);
+                if (selectedNodes.has('Male owners'))   libs.push(...maleLibs);
+                currentIndex = Math.min(currentIndex, libs.length - 1);
+                renderCarousel();
+                updateDetailsPanel(libs[currentIndex], fullData);
+            } else {
+                currentCarouselLibs = [];
+                currentIndex = 0;
+                renderCarousel();
+                clearDetailsPanel();
+            }
+        }
+    );
+
     nodeEnter.append('circle')
         .attr('r', d => rFn(d))
         .attr('class', d => `gender-circle ${d.gender}`);
@@ -837,6 +867,20 @@ function createGenderGraph(containerSelector, fullData) {
             }
 
             applyNetworkFilter(allowed, fullData);
+            updateNetworkStyles(allowed);
+
+            const libs = Array.from(allowed);
+            currentCarouselLibs = libs;
+            currentIndex = 0;
+            renderCarousel();
+            if (libs.length) {
+                updateDetailsPanel(libs[0], fullData);
+            } else {
+                currentCarouselLibs = [];
+                currentIndex = 0;
+                renderCarousel();
+                clearDetailsPanel();
+            }
         });
 
     simulation.nodes(nodes);

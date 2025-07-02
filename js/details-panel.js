@@ -8,14 +8,18 @@ const ownerPhotoMap = {
     'D. Pedro': 'img/libraries/pedro.jpg'
 };
 
+let currentCarouselLibs = [];
+let currentIndex = 0;
+
 function renderCarousel() {
+  const libs = currentCarouselLibs;
   const carousel = document.querySelector('.details-panel__carousel');
   carousel.innerHTML = '';
+  carousel.style.display = libs.length > 1 ? 'flex' : 'none';
 
-  const libs = Array.from(selectedNodes);
   libs.forEach((lib, i) => {
     const dot = document.createElement('div');
-    dot.className = 'dot' + (i === currentIndex ? ' active' : '');
+    dot.className = i === currentIndex ? 'dot active' : 'dot';
     dot.addEventListener('click', () => {
       currentIndex = i;
       updateDetailsPanel(libs[currentIndex], globalData);
@@ -23,8 +27,6 @@ function renderCarousel() {
     });
     carousel.appendChild(dot);
   });
-  // hide the carousel if only one or none are selected
-  carousel.style.display = libs.length > 1 ? 'flex' : 'none';
 }
 
 function updateDetailsPanel(libName, allData) {
