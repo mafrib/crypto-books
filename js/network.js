@@ -502,6 +502,18 @@ function createNetworkGraph(containerSelector, data) {
                 buildAllowedFromSelection(selectedNodes, selectedLinks),
                 data
             );
+
+            const libs = Array.from(selectedNodes);
+            currentIndex = libs.indexOf(id);
+            if (currentIndex < 0) currentIndex = 0;
+
+            renderCarousel();
+
+            if (libs.length > 0) {
+                updateDetailsPanel(libs[currentIndex], globalData);
+            } else {
+                clearDetailsPanel();
+            }
         });
 
     nodeEnter
@@ -509,7 +521,12 @@ function createNetworkGraph(containerSelector, data) {
             updateDetailsPanel(d.id, globalData);
         })
         .on('mouseout',  () => {
-            clearDetailsPanel()
+            if (selectedNodes.size > 0) {
+                const libs = Array.from(selectedNodes);
+                updateDetailsPanel(libs[currentIndex], globalData);
+            } else {
+                clearDetailsPanel();
+            }
         });
 
     nodeEnter.append('circle')

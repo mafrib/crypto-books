@@ -116,7 +116,6 @@ function startDashboard() {
             const clearBtn = document.getElementById('clear-btn');
             clearBtn.addEventListener('click', () => {
                 if (!clearBtn.classList.contains('active')) return;
-
                 Object.keys(activeFilters).forEach(src => clearGlobalFilter(src));
                 updateClearButton();
 
@@ -132,14 +131,12 @@ function startDashboard() {
                     .style('opacity', null);
 
                 const cleanData = applyGlobalFilters(globalData);
-
                 const networkContainer = '#network-graph .network-wrapper';
                 if (genderGraphActive) {
                     createGenderGraph(networkContainer, globalData);
                 } else {
                     createNetworkGraph(networkContainer, globalData);
                 }
-
                 createTreemap(
                     '#treemap-area',
                     cleanData,
@@ -147,13 +144,16 @@ function startDashboard() {
                     () => {
                     const again = applyGlobalFilters(globalData);
                     createBooksCatalog(again);
-                    const libs = new Set(again.map(r => r.Proprietario_Nome));
-                    updateNetworkStyles(libs);
+                    updateNetworkStyles(new Set(again.map(r => r.Proprietario_Nome)));
                     },
                     genderGraphActive
                 );
                 createBooksCatalog(cleanData);
-                });
+
+                currentIndex = 0;
+                renderCarousel();
+                clearDetailsPanel();
+            });
         })
         .catch((error) => {
             console.error("Error loading the CSV file:", error);
