@@ -406,6 +406,10 @@ function createNetworkGraph(containerSelector, data) {
     const designH = 343;
     const scaleFactor = Math.min(width / designW, height / designH);
 
+    const fontScale = d3.scaleSqrt()
+        .domain(d3.extent(nodes, d => d.size))
+        .range([9 * scaleFactor, 16 * scaleFactor]);
+
     simulation.force('center', d3.forceCenter(width/2, height/2));
 
     const weights = edges.map(e => +e.weight);
@@ -513,7 +517,7 @@ function createNetworkGraph(containerSelector, data) {
         .attr('stroke-width', 1);
     nodeEnter.append('text')
         .text(d => d.id)
-        .style('font-size', `${8 * scaleFactor}px`)
+        .style('font-size', d => `${fontScale(d.size)}px`)
         .each(function(d) {
             const dia = Math.sqrt(d.size) * 6 * scaleFactor * 2;
             wrapText(d3.select(this), dia);
@@ -619,6 +623,10 @@ function createGenderGraph(containerSelector, fullData) {
     const designW = 554, designH = 343;
     const scaleFactor = Math.min(width/designW, height/designH);
     const rFn = d => Math.sqrt(d.size) * 6 * scaleFactor;
+
+    const fontScale = d3.scaleSqrt()
+        .domain(d3.extent(nodes, d => d.size))
+        .range([9 * scaleFactor, 16 * scaleFactor]);
 
     const femaleLibs = new Set();
     const maleLibs   = new Set();
@@ -791,7 +799,11 @@ function createGenderGraph(containerSelector, fullData) {
     nodeEnter.append('text')
         .text(d => d.id)
         .attr('class', 'gender-label')
-        .style('font-size', `${15 * scaleFactor}px`);
+        .style('font-size', d => `${fontScale(d.size)}px`)
+        .each(function(d) {
+            const dia = Math.sqrt(d.size) * 6 * scaleFactor * 2;
+            wrapText(d3.select(this), dia);
+        });
 
     nodeEnter.merge(nodeSel)
         .on('click', (event, d) => {
