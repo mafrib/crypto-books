@@ -28,9 +28,14 @@
     </nav>
     <div class="dashboard-wrap">
       <div class="dashboard">
-        <div class="visualization">
-          <svg id="map"></svg>
-          <div class="map-legend"></div>
+        <div class="visualization" id="map-visualization">
+          <div id="map-area">
+            <svg id="map"></svg>
+            <div class="map-color-scale">
+              <div class="legend-title">No. of Books</div>
+              <div class="bar-wrapper"></div>
+            </div>
+          </div>
         </div>
         <div class="visualization" id="network-graph">
           <div class="network-wrapper"></div>

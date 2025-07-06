@@ -86,8 +86,66 @@ a {
 }
 
 /* -------MAP------- */
-#map {
+
+#map-area {
+  display: flex;
+  align-items: stretch;
+  height: 200px;
+}
+
+#map-area svg#map {
+  flex: 1 1 auto;
+  width: auto;
+  height: 200px;
   background-color: white;
+}
+
+.map-color-scale {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  align-items: center;
+}
+
+.map-color-scale .legend-title {
+  flex: 0 0 auto;
+  font-size: 0.6em;
+  text-align: right;
+  color: #16404D;
+  margin-bottom: 8px;
+  flex: 0 0 auto;
+}
+
+.map-color-scale .bar-wrapper {
+  width: 9px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+  min-height: 0;
+}
+
+.map-color-scale .bar-wrapper .legend-bar {
+  width: 100%;
+  border: 0.5px solid #16404D;
+  border-radius: 4px;
+  position: relative;
+}
+
+.map-color-scale .bar-wrapper .legend-bar + .legend-bar {
+  margin-top: -4px;       /* overlap amount */
+}
+
+.map-color-scale .bar-wrapper .legend-bar .legend-label {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateX(4px) translateY(-50%);
+  font-size: 0.55em;
+  color: #16404D;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .zoom-button {
@@ -112,6 +170,28 @@ a {
 
 .zoom-button:hover .zoom-icon {
   font-weight: 900;
+}
+
+.library-point {
+  stroke: #FAF7F4;
+  stroke-width: 0.5;
+}
+
+.library-point.books-15plus   { fill: #7F5F24; }
+.library-point.books-6to14   { fill: #B89B3C; }
+.library-point.books-1to5     { fill: #F0E3C0; }
+
+.map-tooltip {
+  position: absolute;
+  text-align: center;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 0.8em;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
 }
 
 /* --- NETWORK GRAPH --- */

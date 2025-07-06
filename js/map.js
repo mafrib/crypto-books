@@ -1,8 +1,8 @@
-const zoomMin = 0.9;
+const zoomMin = 0.5;
 const zoomMax = 8;
 
-const width = 355;
-const height = 180;
+const width = 380;
+const height = 200;
 
 function makeMap() {
 
@@ -10,7 +10,15 @@ function makeMap() {
         .attr("width", width)
         .attr("height", height);
 
+    const tooltip = d3.select("body")
+        .append("div")
+            .attr("class", "map-tooltip");
+
     const mapGroup = svg.append("g");
+
+    let mergedGeometries;
+    let countryFeatures;
+    let fullCountryFeatures;
 
     const zoomControl = svg.append("g")
         .attr("class", "zoom-controls")
@@ -54,8 +62,8 @@ function makeMap() {
         });
 
     const projection = d3.geoMercator()
-        .center([15, 52])  // Initial center
-        .scale(200)
+        .center([23, 47])  // Initial center
+        .scale(255)
         .translate([width / 2, height / 2]);
 
     const path = d3.geoPath().projection(projection);
@@ -83,25 +91,130 @@ function makeMap() {
         "Moldova", "Czechia", "Belarus", "Jordan", "Bosnia and Herz.",
         "Montenegro", "Macedonia", "Kosovo", "Lebanon", "Iran", "Armenia",
         "Azerbaijan", "Turkmenistan", "Uzbekistan", "Kazakhstan", "Palestine",
-        "Iraq", "Kuwait"
+        "Iraq", "Kuwait", "Pakistan", "Afghanistan"
     ]);
 
     // Load and process data
-    d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+    // File originally got from https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json
+    d3.json("data/countries-110m.json")
         .then(data => {
             // Filter visible countries by name
             const visibleGeometries = data.objects.countries.geometries
                 .filter(d => visibleCountries.has(d.properties.name));
 
             // Merge the geometries
-            const mergedGeometries = topojson.merge(
-                data,
-                visibleGeometries
+            mergedGeometries = topojson.merge(data, visibleGeometries);
+            countryFeatures = visibleGeometries.map(geom =>
+                topojson.feature(data, geom)
             );
+
+            fullCountryFeatures = data.objects.countries.geometries.map(geom =>
+            topojson.feature(data, geom)
+          );
 
             mapGroup.append("path")
                 .datum(mergedGeometries)
                 .attr("class", "europe-outline")
                 .attr("d", path);
+
+            return d3.csv("data/dataset.csv");
         })
+
+        .then(libraries => {
+            const parseDMS = str => {
+                const m = str.match(/(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEW])/);
+                if (!m) return NaN;
+                let [, deg, min, sec, dir] = m;
+                let dec = +deg + +min/60 + +sec/3600;
+                if (dir === "S"||dir==="W") dec = -dec;
+                return dec;
+            };
+
+            const points = libraries
+                .map(d => ({
+                ...d,
+                lat: parseDMS(d.Latitude_Autor),
+                lon: parseDMS(d.Longitude_Autor)
+                }))
+                .filter(d => !isNaN(d.lat) && !isNaN(d.lon));
+
+                const agg = {};
+                    points.forEach(d => {
+                    const key = `${d.lat},${d.lon}`;
+                    if (!agg[key]) {
+                        agg[key] = {
+                        lat: d.lat,
+                        lon: d.lon,
+                        totalBooks: 0,
+                        entries: []
+                        };
+                    }
+                    agg[key].totalBooks += +d.NumCopias;
+                    agg[key].entries.push(d);
+                    });
+
+                const aggregatedPoints = Object.values(agg);
+
+                mapGroup.selectAll("circle.library-point")
+                    .data(aggregatedPoints)
+                    .enter().append("circle")
+                        .attr("class", d => {
+                        const n = +d.totalBooks;
+                        let bucket = "";
+                        if      (n >= 15) bucket = "books-15plus";
+                        else if (n >= 6)  bucket = "books-6to14";
+                        else              bucket = "books-1to5";
+                        return `library-point ${bucket}`;
+                        })
+                        .attr("r", 2)
+                        .attr("cx", d => projection([d.lon,d.lat])[0])
+                        .attr("cy", d => projection([d.lon,d.lat])[1])
+                        .on("mouseover", (event, d) => {
+                        tooltip
+                            .style("opacity", 1)
+                            .html(`${d.totalBooks} book${+d.totalBooks>1?'s':''}`)
+                            .style("left", (event.pageX + 8) + "px")
+                            .style("top",  (event.pageY - 28) + "px");
+                        })
+                        .on("mousemove", (event) => {
+                        tooltip
+                            .style("left", (event.pageX + 8) + "px")
+                            .style("top",  (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => {
+                        tooltip.style("opacity", 0);
+                        });
+
+            const totalH = height;
+            const titleH = 20;
+            const wrapperH = totalH - titleH;
+
+            const sliceH = Math.floor(wrapperH / 3);
+
+            const overlap = 4;
+
+            const totals = [
+            { units: sliceH,                          color: '#7F5F24', label: '15+'    },
+            { units: sliceH,                          color: '#B89B3C', label: '6–14'   },
+            { units: wrapperH - 2 * sliceH + overlap, color: '#F0E3C0', label: '1-5'    }
+            ];
+
+            const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper');
+
+            const bars = barWrapper.selectAll('.legend-bar')
+            .data(totals)
+            .enter().append('div')
+                .attr('class', 'legend-bar')
+                .style('background', d => d.color)
+                .style('flex',       d => d.units)
+                .style('margin-top', (d,i) => i === 0 ? 0 : `-${overlap}px`)
+                .style('position', 'relative');
+
+           bars.append('div')
+            .attr('class', 'legend-label')
+            .text(d => d.label);
+
+        })
+    .catch(err => console.error("Error loading map or data:", err));
+
 }
