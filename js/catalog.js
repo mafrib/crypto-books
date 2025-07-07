@@ -18,6 +18,10 @@ function createBooksCatalog(data) {
         .classed("catalog-entry", true);
 
     newEntries.append("div")
+        .classed("descricao", true)
+        .text(d => d.Descricao);
+
+    newEntries.append("div")
         .classed("obra", true)
         .text(d => d.Obra);
 
@@ -34,6 +38,7 @@ function createBooksCatalog(data) {
         .classed("female", d => genderGraphActive &&  isFemaleLibrary(d.Proprietario_Nome))
         .select(".obra").text(d => d.Obra);
 
+    newEntries.merge(entries).select(".descricao").text(d => d.Descricao);
     newEntries.merge(entries).select(".autor").text(d => d.Nome_Autor);
     newEntries.merge(entries).select(".livraria").text(d => d.Proprietario_Nome);
 

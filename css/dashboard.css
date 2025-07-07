@@ -702,7 +702,7 @@ svg:not(.node-active-mode) .node:hover text {
 /* ----CATALOG---- */
 
 #catalog {
-  grid-column: 2;
+  grid-column: 2 / -1;
   grid-row: 2;
   display: flex; /* Limit the entries to the catalog area*/
   flex-direction: column;
@@ -737,7 +737,7 @@ svg:not(.node-active-mode) .node:hover text {
 
 .catalog-header {
   display: grid;
-  grid-template-columns: 1fr 1fr 0.5fr;
+  grid-template-columns: 1fr 1fr 1fr 0.5fr;
   grid-template-rows: 30px;
   gap: 20px; /* Aligns with the entries */
   font-weight: 600;
@@ -764,7 +764,7 @@ svg:not(.node-active-mode) .node:hover text {
 
 .catalog-entry {
   display: grid;
-  grid-template-columns: 1fr 1fr 0.5fr;
+  grid-template-columns: 1fr 1fr 1fr 0.5fr;
   gap: 20px;
   padding: 5px;
   margin: 10px 0;
