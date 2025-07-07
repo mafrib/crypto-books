@@ -323,6 +323,26 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
         const cellUpdate = cellEnter.merge(cell);
 
+        function highlightTreemapRect(book) {
+            d3.selectAll(selector + " rect")
+                .classed("hovered-treemap-rect", d => {
+                if (mode === "category") {
+                    return d.data.name === book.GenLit_Descricao;
+                } else if (mode === "tradition") {
+                    return d.data.name === book.TradicaoIntelectual_Obra;
+                }
+                return false;
+                });
+            }
+
+        function clearTreemapHighlights() {
+            d3.selectAll(selector + " rect")
+                .classed("hovered-treemap-rect", false);
+        }
+
+        window.highlightTreemapRect   = highlightTreemapRect;
+        window.clearTreemapHighlights = clearTreemapHighlights;
+
         cellUpdate.select("rect")
             .transition(t)
             .attr("x", d => d.x0)

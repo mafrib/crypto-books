@@ -365,6 +365,22 @@ function initNetwork(containerSelector) {
 
     linkGroup = svg.append('g').attr('class', 'links');
     nodeGroup = svg.append('g').attr('class', 'nodes');
+
+    function highlightNetworkNode(libraryName) {
+    d3.selectAll('g.node')
+        .classed('hovered-network-node',
+        d => d.id === libraryName
+        );
+    }
+
+    function clearNetworkHighlights() {
+    d3.selectAll('g.node')
+        .classed('hovered-network-node', false);
+    }
+
+    window.highlightNetworkNode   = highlightNetworkNode;
+    window.clearNetworkHighlights = clearNetworkHighlights;
+
     tooltip   = d3.select('body').selectAll('.tooltip')
         .data([null]).join(
             enter => enter.append('div').attr('class', 'tooltip'),

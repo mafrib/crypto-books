@@ -6,6 +6,9 @@ const height = 200;
 
 function makeMap() {
 
+    window.highlightMapPoint   = () => {};
+    window.clearMapHighlights  = () => {};
+
     const svg = d3.select("svg")
         .attr("width", width)
         .attr("height", height);
@@ -185,34 +188,53 @@ function makeMap() {
                         tooltip.style("opacity", 0);
                         });
 
-            const totalH = height;
-            const titleH = 20;
-            const wrapperH = totalH - titleH;
+                function highlightMapPoint(book) {
+                    d3.selectAll('circle.library-point')
+                        .classed('hovered-map-point',
+                        p => p.entries.some(e =>
+                            e.Obra              === book.Obra &&
+                            e.Nome_Autor        === book.Nome_Autor &&
+                            e.Proprietario_Nome === book.Proprietario_Nome
+                        )
+                        );
+                    }
 
-            const sliceH = Math.floor(wrapperH / 3);
+                function clearMapHighlights() {
+                    d3.selectAll('circle.library-point')
+                        .classed('hovered-map-point', false);
+                }
 
-            const overlap = 4;
+                window.highlightMapPoint   = highlightMapPoint;
+                window.clearMapHighlights  = clearMapHighlights;
 
-            const totals = [
-            { units: sliceH,                          color: '#7F5F24', label: '15+'    },
-            { units: sliceH,                          color: '#B89B3C', label: '6–14'   },
-            { units: wrapperH - 2 * sliceH + overlap, color: '#F0E3C0', label: '1-5'    }
-            ];
+                const totalH = height;
+                const titleH = 20;
+                const wrapperH = totalH - titleH;
 
-            const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper');
+                const sliceH = Math.floor(wrapperH / 3);
 
-            const bars = barWrapper.selectAll('.legend-bar')
-            .data(totals)
-            .enter().append('div')
-                .attr('class', 'legend-bar')
-                .style('background', d => d.color)
-                .style('flex',       d => d.units)
-                .style('margin-top', (d,i) => i === 0 ? 0 : `-${overlap}px`)
-                .style('position', 'relative');
+                const overlap = 4;
 
-           bars.append('div')
-            .attr('class', 'legend-label')
-            .text(d => d.label);
+                const totals = [
+                { units: sliceH,                          color: '#7F5F24', label: '15+'    },
+                { units: sliceH,                          color: '#B89B3C', label: '6–14'   },
+                { units: wrapperH - 2 * sliceH + overlap, color: '#F0E3C0', label: '1-5'    }
+                ];
+
+                const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper');
+
+                const bars = barWrapper.selectAll('.legend-bar')
+                .data(totals)
+                .enter().append('div')
+                    .attr('class', 'legend-bar')
+                    .style('background', d => d.color)
+                    .style('flex',       d => d.units)
+                    .style('margin-top', (d,i) => i === 0 ? 0 : `-${overlap}px`)
+                    .style('position', 'relative');
+
+            bars.append('div')
+                .attr('class', 'legend-label')
+                .text(d => d.label);
 
         })
     .catch(err => console.error("Error loading map or data:", err));

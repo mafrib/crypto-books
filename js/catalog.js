@@ -42,6 +42,25 @@ function createBooksCatalog(data) {
     newEntries.merge(entries).select(".autor").text(d => d.Nome_Autor);
     newEntries.merge(entries).select(".livraria").text(d => d.Proprietario_Nome);
 
+    newEntries
+      .on('mouseover', (event, d) => {
+        // highlight the entry
+        d3.select(event.currentTarget)
+          .classed('hovered-entry', true);
+
+        window.highlightMapPoint(d);
+        window.highlightNetworkNode(d.Proprietario_Nome);
+        window.highlightTreemapRect(d);
+      })
+      .on('mouseout', (event, d) => {
+        d3.select(event.currentTarget)
+          .classed('hovered-entry', false);
+
+        window.clearMapHighlights();
+        window.clearNetworkHighlights();
+        window.clearTreemapHighlights();
+      });
+
     // Update existing entries (if needed)
     entries.select(".obra").text(d => d.Obra);
     entries.select(".autor").text(d => d.Nome_Autor);

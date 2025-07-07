@@ -100,6 +100,10 @@ a {
   background-color: white;
 }
 
+.library-point.hovered-map-point {
+  fill: red !important;
+}
+
 .map-color-scale {
   display: flex;
   flex-direction: column;
@@ -484,6 +488,14 @@ svg:not(.node-active-mode) .node:hover text {
   top: 9px;
 }
 
+g.node.hovered-network-node circle {
+  fill: #16404D;
+}
+
+g.node.hovered-network-node text {
+  fill: #FFFAEC;
+}
+
 /* --- FILTER MENU --- */
 
 #side-menu {
@@ -699,6 +711,11 @@ svg:not(.node-active-mode) .node:hover text {
   font-size: 0.6rem;
 }
 
+#treemap-area rect.hovered-treemap-rect {
+  stroke: red;
+  stroke-width: 2px;
+}
+
 /* ----CATALOG---- */
 
 #catalog {
@@ -773,6 +790,11 @@ svg:not(.node-active-mode) .node:hover text {
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   font-size: 0.65rem;
   align-items: center;
+}
+
+.catalog-entry.hovered-entry {
+  background-color: #16404D;
+  color: #FFFAEC;
 }
 
 .catalog-entry.male   {
