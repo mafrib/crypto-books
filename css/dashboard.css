@@ -89,14 +89,12 @@ a {
 
 #map-area {
   display: flex;
+  justify-content: flex-start;
   align-items: stretch;
-  height: 200px;
 }
 
 #map-area svg#map {
-  flex: 1 1 auto;
   width: auto;
-  height: 200px;
   background-color: white;
 }
 
@@ -107,14 +105,12 @@ a {
 .map-color-scale {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  align-items: center;
+  padding-left: 6px;
 }
 
 .map-color-scale .legend-title {
-  flex: 0 0 auto;
   font-size: 0.6em;
-  text-align: right;
+  text-align: left;
   color: #16404D;
   margin-bottom: 8px;
   flex: 0 0 auto;

@@ -9,9 +9,16 @@ function makeMap() {
     window.highlightMapPoint   = () => {};
     window.clearMapHighlights  = () => {};
 
+    const containerEl = document.getElementById("map-area");
+    const legendEl    = document.querySelector(".map-color-scale");
+    const legendW = legendEl.clientWidth;
+    const mapW   = containerEl.clientWidth - legendW;
+
+    const mapH = window.innerHeight * 0.26;
+
     const svg = d3.select("svg")
-        .attr("width", width)
-        .attr("height", height);
+        .attr("width", mapW)
+        .attr("height", mapH);
 
     const tooltip = d3.select("body")
         .append("div")
@@ -65,16 +72,16 @@ function makeMap() {
         });
 
     const projection = d3.geoMercator()
-        .center([23, 47])  // Initial center
+        .center([17, 47])  // Initial center
         .scale(255)
-        .translate([width / 2, height / 2]);
+        .translate([mapW / 2, mapH / 2]);
 
     const path = d3.geoPath().projection(projection);
 
     // Initialize zoom
     const zoom = d3.zoom()
         .scaleExtent([zoomMin, zoomMax])
-        .translateExtent([[0, 0], [width, height]])
+        .translateExtent([[0, 0], [mapW, mapH]])
         .on("zoom", (event) => {
             mapGroup.attr("transform", event.transform);
         });
@@ -221,7 +228,8 @@ function makeMap() {
                 { units: wrapperH - 2 * sliceH + overlap, color: '#F0E3C0', label: '1-5'    }
                 ];
 
-                const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper');
+                const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper')
+                    .style("height", map + "px");
 
                 const bars = barWrapper.selectAll('.legend-bar')
                 .data(totals)
