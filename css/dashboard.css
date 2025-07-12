@@ -264,7 +264,53 @@ a {
 #period-filter .period-bar.hovered-period-bar {
   background: #16404D;
 }
+
 #period-filter .period-bar.hovered-period-bar .label {
+  color: #FFFAEC;
+}
+
+.period-bar .count {
+  display: none;
+  position: static;
+  margin-top: 0.2em;
+  font-size: 0.6em;
+  font-weight: 700;
+  color: #16404D;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.period-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.period-bar .count {
+  font-size: 0.6em;
+  color: #16404D;
+  margin-top: 0.2em;
+}
+
+.period-bar .label,
+.period-bar .count {
+  transition: opacity 0.2s ease;
+}
+
+.period-bar:hover .label,
+.period-bar.hovered-period-bar .label {
+  display: none;
+}
+
+.period-bar:hover .count,
+.period-bar.hovered-period-bar .count {
+  display: block;
+  color: #16404D;
+}
+
+.period-bar.selected .count,
+.period-bar.hovered-period-bar .count {
   color: #FFFAEC;
 }
 

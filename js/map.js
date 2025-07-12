@@ -137,6 +137,12 @@ function makeMap() {
         })
 
         .then(libraries => {
+            const periodCounts = d3.rollup(
+                libraries,
+                v => v.length,
+                d => d.EpocaHistorica_Autor
+                );
+
             const parseDMS = str => {
                 const m = str.match(/(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEW])/);
                 if (!m) return NaN;
@@ -154,90 +160,90 @@ function makeMap() {
                 }))
                 .filter(d => !isNaN(d.lat) && !isNaN(d.lon));
 
-                const agg = {};
-                    points.forEach(d => {
-                    const key = `${d.lat},${d.lon}`;
-                    if (!agg[key]) {
-                        agg[key] = {
+            const agg = {};
+            points.forEach(d => {
+                const key = `${d.lat},${d.lon}`;
+                if (!agg[key]) {
+                    agg[key] = {
                         lat: d.lat,
                         lon: d.lon,
                         totalBooks: 0,
                         entries: []
-                        };
-                    }
-                    agg[key].totalBooks += +d.NumCopias;
-                    agg[key].entries.push(d);
-                    });
+                    };
+                }
+                agg[key].totalBooks += +d.NumCopias;
+                agg[key].entries.push(d);
+            });
 
-                const aggregatedPoints = Object.values(agg);
+            const aggregatedPoints = Object.values(agg);
 
-                mapGroup.selectAll("circle.library-point")
-                    .data(aggregatedPoints)
-                    .enter().append("circle")
-                        .attr("class", d => {
+            mapGroup.selectAll("circle.library-point")
+                .data(aggregatedPoints)
+                .enter().append("circle")
+                    .attr("class", d => {
                         const n = +d.totalBooks;
                         let bucket = "";
                         if      (n >= 15) bucket = "books-15plus";
                         else if (n >= 6)  bucket = "books-6to14";
                         else              bucket = "books-1to5";
                         return `library-point ${bucket}`;
-                        })
-                        .attr("r", 2)
-                        .attr("cx", d => projection([d.lon,d.lat])[0])
-                        .attr("cy", d => projection([d.lon,d.lat])[1])
-                        .on("mouseover", (event, d) => {
+                    })
+                    .attr("r", 2)
+                    .attr("cx", d => projection([d.lon,d.lat])[0])
+                    .attr("cy", d => projection([d.lon,d.lat])[1])
+                    .on("mouseover", (event, d) => {
                         tooltip
                             .style("opacity", 1)
                             .html(`${d.totalBooks} book${+d.totalBooks>1?'s':''}`)
                             .style("left", (event.pageX + 8) + "px")
                             .style("top",  (event.pageY - 28) + "px");
-                        })
-                        .on("mousemove", (event) => {
+                    })
+                    .on("mousemove", (event) => {
                         tooltip
                             .style("left", (event.pageX + 8) + "px")
                             .style("top",  (event.pageY - 28) + "px");
-                        })
-                        .on("mouseout", () => {
+                    })
+                    .on("mouseout", () => {
                         tooltip.style("opacity", 0);
-                        });
+                    });
 
-                function highlightMapPoint(book) {
-                    d3.selectAll('circle.library-point')
-                        .classed('hovered-map-point',
+            function highlightMapPoint(book) {
+                d3.selectAll('circle.library-point')
+                    .classed('hovered-map-point',
                         p => p.entries.some(e =>
                             e.Obra              === book.Obra &&
                             e.Nome_Autor        === book.Nome_Autor &&
                             e.Proprietario_Nome === book.Proprietario_Nome
                         )
-                        );
-                    }
+                    );
+            }
 
-                function clearMapHighlights() {
-                    d3.selectAll('circle.library-point')
-                        .classed('hovered-map-point', false);
-                }
+            function clearMapHighlights() {
+                d3.selectAll('circle.library-point')
+                    .classed('hovered-map-point', false);
+            }
 
-                window.highlightMapPoint   = highlightMapPoint;
-                window.clearMapHighlights  = clearMapHighlights;
+            window.highlightMapPoint   = highlightMapPoint;
+            window.clearMapHighlights  = clearMapHighlights;
 
-                const totalH = height;
-                const titleH = 20;
-                const wrapperH = totalH - titleH;
+            const totalH = height;
+            const titleH = 20;
+            const wrapperH = totalH - titleH;
 
-                const sliceH = Math.floor(wrapperH / 3);
+            const sliceH = Math.floor(wrapperH / 3);
 
-                const overlap = 4;
+            const overlap = 4;
 
-                const totals = [
+            const totals = [
                 { units: sliceH,                          color: '#7F5F24', label: '15+'    },
                 { units: sliceH,                          color: '#B89B3C', label: '6–14'   },
                 { units: wrapperH - 2 * sliceH + overlap, color: '#F0E3C0', label: '1-5'    }
-                ];
+            ];
 
-                const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper')
-                    .style("height", mapH + "px");
+            const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper')
+                .style("height", mapH + "px");
 
-                const bars = barWrapper.selectAll('.legend-bar')
+            const bars = barWrapper.selectAll('.legend-bar')
                 .data(totals)
                 .enter().append('div')
                     .attr('class', 'legend-bar')
@@ -270,37 +276,47 @@ function makeMap() {
             );
 
             const pf = d3.select('#period-filter');
-            pf.selectAll('.period-bar')
-            .data(allPeriods)
-            .enter().append('div')
-                .attr('class', 'period-bar')
-                .on('click', function(event, period) {
-                const i = selectedPeriods.indexOf(period);
-                if (i > -1) selectedPeriods.splice(i, 1);
-                else          selectedPeriods.push(period);
+            const periodBars = pf.selectAll('.period-bar')
+                .data(allPeriods)
+                .enter().append('div')
+                    .attr('class', 'period-bar')
+                    .on('click', function(event, period) {
+                        const i = selectedPeriods.indexOf(period);
+                        if (i > -1) selectedPeriods.splice(i, 1);
+                        else          selectedPeriods.push(period);
 
-                d3.select(this).classed('selected', selectedPeriods.includes(period));
+                        d3.select(this).classed('selected', selectedPeriods.includes(period));
 
-                if (selectedPeriods.length) {
-                    setGlobalFilter('period', d =>
-                    selectedPeriods.includes(d.EpocaHistorica_Autor)
-                    );
-                } else {
-                    clearGlobalFilter('period');
-                }
+                        if (selectedPeriods.length) {
+                            setGlobalFilter('period', d =>
+                            selectedPeriods.includes(d.EpocaHistorica_Autor)
+                            );
+                        } else {
+                            clearGlobalFilter('period');
+                        }
 
-                updateDashboard();
-                })
-            .append('span')
-                .attr('class', 'label')
-                .html(d => {
-                    const m = d.match(/^(.*?)\s*(\(.+\))$/);
-                    if (m) {
-                    const [, main, years] = m;
-                    return `${main}<br><span class="period‐years">${years}</span>`;
-                    }
-                    return d;
-                });
+                        updateDashboard();
+                    });
+
+            periodBars
+                .append('span')
+                    .attr('class', 'label')
+                    .html(d => {
+                        const m = d.match(/^(.*?)\s*(\(.+\))$/);
+                        if (m) {
+                            const [, main, years] = m;
+                            return `${main}<br><span class="period‐years">${years}</span>`;
+                        }
+                        return d;
+                    });
+
+            periodBars
+                .append('span')
+                    .attr('class', 'count')
+                    .text(d => {
+                        const n = periodCounts.get(d) || 0;
+                        return `${n} book${n === 1 ? '' : 's'}`;
+                    });
 
             function highlightPeriodBar(book) {
                 d3.selectAll('#period-filter .period-bar')
@@ -343,35 +359,35 @@ function makeMap() {
 }
 
 function updateDashboard() {
-  const filtered = applyGlobalFilters(globalData);
+    const filtered = applyGlobalFilters(globalData);
 
-  d3.selectAll('circle.library-point')
-    .style('display', d =>
-      filtered.some(r =>
-        d.entries.some(e => e.ID_Cod === r.ID_Cod)
-      )
-        ? null
-        : 'none'
-    );
+    d3.selectAll('circle.library-point')
+        .style('display', d =>
+        filtered.some(r =>
+            d.entries.some(e => e.ID_Cod === r.ID_Cod)
+        )
+            ? null
+            : 'none'
+        );
 
-  const sorted = [...filtered]
-    .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
-  createBooksCatalog(sorted);
-
-  const allowedSet = new Set(filtered.map(r => r.Proprietario_Nome));
-  updateNetworkStyles(allowedSet);
-
-  createTreemap(
-    '#treemap-area',
-    filtered,
-    currentTreemapMode,
-    () => {
-      const newlyFiltered = applyGlobalFilters(globalData);
-      const sortedAgain = [...newlyFiltered]
+    const sorted = [...filtered]
         .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
-      createBooksCatalog(sortedAgain);
-      updateNetworkStyles(new Set(newlyFiltered.map(r => r.Proprietario_Nome)));
-    },
-    genderGraphActive
-  );
+    createBooksCatalog(sorted);
+
+    const allowedSet = new Set(filtered.map(r => r.Proprietario_Nome));
+    updateNetworkStyles(allowedSet);
+
+    createTreemap(
+        '#treemap-area',
+        filtered,
+        currentTreemapMode,
+        () => {
+        const newlyFiltered = applyGlobalFilters(globalData);
+        const sortedAgain = [...newlyFiltered]
+            .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
+        createBooksCatalog(sortedAgain);
+        updateNetworkStyles(new Set(newlyFiltered.map(r => r.Proprietario_Nome)));
+        },
+        genderGraphActive
+    );
 }
