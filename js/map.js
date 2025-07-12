@@ -20,6 +20,12 @@ function makeMap() {
         .attr("width", mapW)
         .attr("height", mapH);
 
+    d3.select('#map-area')
+        .style('height', mapH + 'px');
+
+    d3.select('#map-area .map-color-scale')
+        .style('height', mapH + 'px');
+
     const tooltip = d3.select("body")
         .append("div")
             .attr("class", "map-tooltip");
@@ -229,7 +235,7 @@ function makeMap() {
                 ];
 
                 const barWrapper = d3.select('#map-area .map-color-scale .bar-wrapper')
-                    .style("height", map + "px");
+                    .style("height", mapH + "px");
 
                 const bars = barWrapper.selectAll('.legend-bar')
                 .data(totals)
@@ -244,7 +250,106 @@ function makeMap() {
                 .attr('class', 'legend-label')
                 .text(d => d.label);
 
+            let selectedPeriods = [];
+
+            const periodOrder = [
+                "Indeterminada",
+                "Época Arcaica (VIII-V aC)",
+                "Antiguidade Clássica (V aC-III)",
+                "Antiguidade Tardia (III-VIII)",
+                "Alta Idade Média (VIII-XI)",
+                "Idade Média Central (XI-XIII)",
+                "Baixa Idade Média (XIV-XV)"
+            ];
+
+            const allPeriods = Array.from(
+                new Set(libraries.map(d => d.EpocaHistorica_Autor).filter(Boolean))
+            )
+            .sort((a, b) =>
+                periodOrder.indexOf(a) - periodOrder.indexOf(b)
+            );
+
+            const pf = d3.select('#period-filter');
+            pf.selectAll('.period-bar')
+            .data(allPeriods)
+            .enter().append('div')
+                .attr('class', 'period-bar')
+                .on('click', function(event, period) {
+                const i = selectedPeriods.indexOf(period);
+                if (i > -1) selectedPeriods.splice(i, 1);
+                else          selectedPeriods.push(period);
+
+                d3.select(this).classed('selected', selectedPeriods.includes(period));
+
+                if (selectedPeriods.length) {
+                    setGlobalFilter('period', d =>
+                    selectedPeriods.includes(d.EpocaHistorica_Autor)
+                    );
+                } else {
+                    clearGlobalFilter('period');
+                }
+
+                updateDashboard();
+                })
+            .append('span')
+                .attr('class', 'label')
+                .text(d => d);
+
+            function updateFiltersAndRedraw() {
+                activeFilters.period = [...selectedPeriods];
+
+                const filtered = applyGlobalFilters(globalData);
+
+                d3.selectAll('circle.library-point')
+                    .style('display', d =>
+                    !selectedPeriods.length ||
+                    d.entries.some(e => selectedPeriods.includes(e.EpocaHistorica_Autor))
+                        ? null
+                        : 'none'
+                    );
+
+                redrawTreemap(filtered);
+                redrawNetwork(filtered);
+                redrawCatalog(filtered);
+
+                updateClearButton();
+            }
         })
+
     .catch(err => console.error("Error loading map or data:", err));
 
+}
+
+function updateDashboard() {
+  const filtered = applyGlobalFilters(globalData);
+
+  d3.selectAll('circle.library-point')
+    .style('display', d =>
+      filtered.some(r =>
+        d.entries.some(e => e.ID_Cod === r.ID_Cod)
+      )
+        ? null
+        : 'none'
+    );
+
+  const sorted = [...filtered]
+    .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
+  createBooksCatalog(sorted);
+
+  const allowedSet = new Set(filtered.map(r => r.Proprietario_Nome));
+  updateNetworkStyles(allowedSet);
+
+  createTreemap(
+    '#treemap-area',
+    filtered,
+    currentTreemapMode,
+    () => {
+      const newlyFiltered = applyGlobalFilters(globalData);
+      const sortedAgain = [...newlyFiltered]
+        .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
+      createBooksCatalog(sortedAgain);
+      updateNetworkStyles(new Set(newlyFiltered.map(r => r.Proprietario_Nome)));
+    },
+    genderGraphActive
+  );
 }

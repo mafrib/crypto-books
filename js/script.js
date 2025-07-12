@@ -123,6 +123,12 @@ function startDashboard() {
                 Object.keys(activeFilters).forEach(src => clearGlobalFilter(src));
                 updateClearButton();
 
+                selectedPeriods = [];
+                d3.selectAll('#period-filter .period-bar')
+                    .classed('selected', false);
+
+                updateDashboard();
+
                 selectedNodes.clear();
                 clickedLinks.clear();
                 selectedLinks.clear();

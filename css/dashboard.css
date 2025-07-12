@@ -67,7 +67,7 @@ a {
 .dashboard {
   display: grid;
   grid-template-columns:
-    minmax(25rem, 1fr)
+    minmax(35rem, 1fr)
     minmax(30rem, 1.5fr)
     10rem;
   height: 100%;
@@ -109,7 +109,7 @@ a {
 }
 
 .map-color-scale .legend-title {
-  font-size: 0.6em;
+  font-size: 0.6rem;
   text-align: left;
   color: #16404D;
   margin-bottom: 8px;
@@ -117,13 +117,12 @@ a {
 }
 
 .map-color-scale .bar-wrapper {
-  width: 9px;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: visible;
-  min-height: 0;
+  width: 0.6em;
 }
 
 .map-color-scale .bar-wrapper .legend-bar {
@@ -134,7 +133,7 @@ a {
 }
 
 .map-color-scale .bar-wrapper .legend-bar + .legend-bar {
-  margin-top: -4px;       /* overlap amount */
+  margin-top: -4px;
 }
 
 .map-color-scale .bar-wrapper .legend-bar .legend-label {
@@ -142,7 +141,7 @@ a {
   left: 100%;
   top: 50%;
   transform: translateX(4px) translateY(-50%);
-  font-size: 0.55em;
+  font-size: 0.55rem;
   color: #16404D;
   white-space: nowrap;
   pointer-events: none;
@@ -192,6 +191,74 @@ a {
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
+}
+
+#map-visualization {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100%;
+}
+
+.period-filter-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  margin-top: 16px;
+}
+
+#period-filter {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: 100%;
+  flex: 1 1 auto;
+  margin-top: 16px;
+  gap: 6px;
+}
+
+#period-filter .period-bar {
+  flex: 1 1 0;
+  min-width: 50px;
+  height: 100%;
+  background: rgba(22,64,77,0.1);
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+#period-filter .period-bar.selected {
+  background: #16404D;
+}
+
+#period-filter .period-bar .label {
+  font-size: 0.6em;
+  color: #16404D;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
+  line-height: 1.2;
+}
+
+#period-filter .period-bar.selected .label {
+  color: #FFFAEC;
+}
+
+.period-filter-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.filter-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #16404D;
+  margin-top: 8px;
 }
 
 /* --- NETWORK GRAPH --- */
@@ -762,7 +829,7 @@ g.node.hovered-network-node text {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
+  font-size: 0.7rem;
 }
 
 .sort-icon {
