@@ -293,7 +293,29 @@ function makeMap() {
                 })
             .append('span')
                 .attr('class', 'label')
-                .text(d => d);
+                .html(d => {
+                    const m = d.match(/^(.*?)\s*(\(.+\))$/);
+                    if (m) {
+                    const [, main, years] = m;
+                    return `${main}<br><span class="period‐years">${years}</span>`;
+                    }
+                    return d;
+                });
+
+            function highlightPeriodBar(book) {
+                d3.selectAll('#period-filter .period-bar')
+                .classed('hovered-period-bar',
+                    period => period === book.EpocaHistorica_Autor
+                );
+            }
+
+            function clearPeriodHighlights() {
+                d3.selectAll('#period-filter .period-bar')
+                .classed('hovered-period-bar', false);
+            }
+
+            window.highlightPeriodBar   = highlightPeriodBar;
+            window.clearPeriodHighlights = clearPeriodHighlights;
 
             function updateFiltersAndRedraw() {
                 activeFilters.period = [...selectedPeriods];

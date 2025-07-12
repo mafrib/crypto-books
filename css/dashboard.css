@@ -261,6 +261,13 @@ a {
   margin-top: 8px;
 }
 
+#period-filter .period-bar.hovered-period-bar {
+  background: #16404D;
+}
+#period-filter .period-bar.hovered-period-bar .label {
+  color: #FFFAEC;
+}
+
 /* --- NETWORK GRAPH --- */
 
 #network-graph {
@@ -481,7 +488,7 @@ svg:not(.node-active-mode) .node:hover text {
 .legend-item::after {
   color: #16404D;
   font-family: Inter, Helvetica, sans-serif;
-  font-size: 0.55rem;
+  font-size: 0.6rem;
   font-weight: 400;
   white-space: nowrap;
   line-height: 1;

@@ -51,6 +51,7 @@ function createBooksCatalog(data) {
         window.highlightMapPoint(d);
         window.highlightNetworkNode(d.Proprietario_Nome);
         window.highlightTreemapRect(d);
+        window.highlightPeriodBar(d);
       })
       .on('mouseout', (event, d) => {
         d3.select(event.currentTarget)
@@ -59,6 +60,7 @@ function createBooksCatalog(data) {
         window.clearMapHighlights();
         window.clearNetworkHighlights();
         window.clearTreemapHighlights();
+        window.clearPeriodHighlights();
       });
 
     // Update existing entries (if needed)
