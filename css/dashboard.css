@@ -159,8 +159,6 @@ a {
 
 .europe-outline {
     fill: #16404D;
-    stroke: #333;
-    stroke-width: 0.5px;
 }
 
 .zoom-button:hover .zoom-button-bg {
@@ -172,7 +170,7 @@ a {
 }
 
 .library-point {
-  stroke: #FAF7F4;
+  stroke: #16404D;
   stroke-width: 0.5;
 }
 
@@ -775,7 +773,14 @@ g.node.hovered-network-node text {
   border-radius: 8px;
   padding: 3px 5px;
   font-size: 0.65rem;
-  border: 1px solid #16404D;
+  background-color: #FFFAEC;
+  color: #16404D;
+  border: 0.5px solid #16404D;
+  cursor: pointer;
+}
+
+.mode-button:not(.active):hover {
+  background-color: #DCDED4;
 }
 
 .mode-button.active {
