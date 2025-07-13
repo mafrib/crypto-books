@@ -191,12 +191,22 @@ function makeMap() {
                     .attr("r", 2)
                     .attr("cx", d => projection([d.lon,d.lat])[0])
                     .attr("cy", d => projection([d.lon,d.lat])[1])
-                    .on("mouseover", (event, d) => {
+                      .on("mouseover", (event, d) => {
+                        const location = d.entries[0].LocalNasc_Autor || "Unknown location";
+
+                        const numAuthors = new Set(d.entries.map(e => e.Nome_Autor)).size;
+
+                        const numBooks = d.entries.length;
+
                         tooltip
-                            .style("opacity", 1)
-                            .html(`${d.totalBooks} book${+d.totalBooks>1?'s':''}`)
-                            .style("left", (event.pageX + 8) + "px")
-                            .style("top",  (event.pageY - 28) + "px");
+                        .style("opacity", 1)
+                        .html(
+                            `<strong>Location:</strong> ${location}<br/>` +
+                            `<strong>No. of authors:</strong> ${numAuthors}<br/>` +
+                            `<strong>No. of books:</strong> ${numBooks}`
+                        )
+                        .style("left", (event.pageX + 8) + "px")
+                        .style("top",  (event.pageY - 28) + "px");
                     })
                     .on("mousemove", (event) => {
                         tooltip
