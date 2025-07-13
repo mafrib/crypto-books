@@ -66,13 +66,14 @@ a {
 
 .dashboard {
   display: grid;
-  grid-template-columns:
-    minmax(35rem, 1fr)
-    minmax(30rem, 1.5fr)
-    10rem;
+  grid-template-columns: 1fr 1fr 10rem;
   height: 100%;
   grid-template-rows: 1.25fr 1fr;
   gap: 15px;
+}
+
+.dashboard > * {
+  min-width: 0;
 }
 
 .visualization {
