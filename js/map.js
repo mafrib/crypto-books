@@ -14,7 +14,7 @@ function makeMap() {
     const legendW = legendEl.clientWidth;
     const mapW   = containerEl.clientWidth - legendW;
 
-    const mapH = window.innerHeight * 0.26;
+    const mapH = window.innerHeight * 0.28;
 
     const svg = d3.select("svg")
         .attr("width", mapW)
@@ -78,8 +78,8 @@ function makeMap() {
         });
 
     const projection = d3.geoMercator()
-        .center([17, 47])  // Initial center
-        .scale(255)
+        .center([25, 47])  // Initial center
+        .scale(330)
         .translate([mapW / 2, mapH / 2]);
 
     const path = d3.geoPath().projection(projection);
