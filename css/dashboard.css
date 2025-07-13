@@ -298,13 +298,11 @@ a {
   transition: opacity 0.2s ease;
 }
 
-.period-bar:hover .label,
-.period-bar.hovered-period-bar .label {
+.period-bar:hover .label {
   display: none;
 }
 
-.period-bar:hover .count,
-.period-bar.hovered-period-bar .count {
+.period-bar:hover .count {
   display: block;
   color: #16404D;
 }
