@@ -122,6 +122,7 @@ function startDashboard() {
                 if (!clearBtn.classList.contains('active')) return;
                 Object.keys(activeFilters).forEach(src => clearGlobalFilter(src));
                 updateClearButton();
+                document.getElementById('search-input').value = '';
 
                 selectedPeriods = [];
                 d3.selectAll('#period-filter .period-bar')
