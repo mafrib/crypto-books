@@ -1,5 +1,5 @@
-const zoomMin = 0.5;
-const zoomMax = 8;
+const zoomMin = 0.8;
+const zoomMax = 4;
 
 const width = 380;
 const height = 200;
@@ -79,7 +79,7 @@ function makeMap() {
 
     const projection = d3.geoMercator()
         .center([25, 47])  // Initial center
-        .scale(330)
+        .scale(280)
         .translate([mapW / 2, mapH / 2]);
 
     const path = d3.geoPath().projection(projection);
