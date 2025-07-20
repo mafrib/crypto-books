@@ -73,26 +73,53 @@ function createBooksCatalog(data) {
 
 }
 
+function normalizeText(text) {
+  return text
+    .normalize("NFD") // normalize accents
+    .replace(/\p{Diacritic}/gu, "") // remove accents
+    .toLowerCase();
+}
+
+function itemMatchesAllTerms(item, terms) {
+  const fields = [
+    item.Descricao,
+    item.Obra,
+    item.Nome_Autor,
+    item.Proprietario_Nome
+  ].map(field => normalizeText(field));
+
+  return terms.every(term => {
+    return fields.some(field => {
+      return field
+        .split(/\s+/)
+        .some(word => {
+          const cleanedWord = word.replace(/^[^\p{L}\p{N}]+/gu, ""); // remove leading non-letters/numbers
+          return cleanedWord.startsWith(term);
+        });
+    });
+  });
+}
+
 function setupSearchBar(rawData) {
   const input = document.getElementById("search-input");
 
   input.addEventListener("input", () => {
-    const query = input.value;
-
-    // Update search filter
-    if (query) {
-      setGlobalFilter('search', (book) =>
-        book.Obra.toLowerCase().includes(query.toLowerCase()) ||
-        book.Nome_Autor.toLowerCase().includes(query.toLowerCase()) ||
-        book.Proprietario_Nome.toLowerCase().includes(query.toLowerCase())
-      );
-    } else {
-      clearGlobalFilter('search');
+    const query = input.value.trim();
+    if (!query) {
+      createBooksCatalog(rawData);
+      return;
     }
 
-    // TO DO: highlight occurences in other idioms during search
-    const filteredData = applyGlobalFilters(rawData);
-    createBooksCatalog(filteredData);
+    const terms = query
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(t => t);
+
+    const results = rawData.filter(item => itemMatchesAllTerms(item, terms));
+
+    createBooksCatalog(results);
   });
 }
 
