@@ -90,6 +90,10 @@ function makeMap() {
         .translateExtent([[0, 0], [mapW, mapH]])
         .on("zoom", (event) => {
             mapGroup.attr("transform", event.transform);
+
+            const k = event.transform.k;
+            mapGroup.selectAll("circle.library-point")
+            .attr("r", d => d.baseR / event.transform.k)
         });
 
     svg.call(zoom);
@@ -188,7 +192,10 @@ function makeMap() {
                         else              bucket = "books-1to5";
                         return `library-point ${bucket}`;
                     })
-                    .attr("r", 2)
+                    .attr("r", d => {
+                        d.baseR = 3;
+                        return d.baseR;
+                    })
                     .attr("cx", d => projection([d.lon,d.lat])[0])
                     .attr("cy", d => projection([d.lon,d.lat])[1])
                       .on("mouseover", (event, d) => {
