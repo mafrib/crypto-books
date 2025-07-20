@@ -119,7 +119,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         createBooksCatalog(filteredRows);
     }
 
-    function zoom(node) {
+    function zoom(node, initRect = null) {
         const childData = node.children
             ? node.children.map(d => d.data)
             : [node.data];
@@ -178,6 +178,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                 const isLeaf = !d.children;
 
+                const initRect = { x0: d.x0, y0: d.y0, x1: d.x1, y1: d.y1 };
+
                 if (isLeaf) {
                     // Leaf‐level filter
                     const filterFn = currentTreemapMode === 'category'
@@ -188,8 +190,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                     setGlobalFilter('treemap', filterFn);
 
-                    // Zoom into the leaf
-                    zoom(d);
+                    zoom(d, initRect);
 
                     // Rebuild breadcrumbs for leaf
                     if (currentTreemapMode === 'category') {
@@ -264,27 +265,22 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                 // Intermediate‐level filter (non‐leaf category/tradition)
                 if (d.children) {
-                    zoom(d);
                     let filterFn;
-                    if (currentTreemapMode === 'category') {
-                        if (d.depth === 1) {
-                            filterFn = book => book.CatLit_Descricao === d.data.name;
-                        }
-                    } else {
+                    if (currentTreemapMode === 'category' && d.depth === 1) {
+                        filterFn = book => book.CatLit_Descricao === d.data.name;
+                    } else if (currentTreemapMode !== 'category') {
                         filterFn = book => book.TradicaoIntelectual_Obra === d.data.name;
                     }
+                    if (filterFn) setGlobalFilter('treemap', filterFn);
+                    else clearGlobalFilter('treemap');
 
-                    if (filterFn) {
-                        setGlobalFilter('treemap', filterFn);
-                    } else {
-                        clearGlobalFilter('treemap');
-                    }
+                    zoom(d, initRect);
 
                     if (onUpdate) onUpdate(applyFiltersAndRefresh());
                 }
             });
 
-        cellEnter.append("rect")
+        const rectEnter = cellEnter.append("rect")
             .attr("fill", d => {
                 if (genderGraphActive) {
                     // compute the fraction of female books in this cell
@@ -314,12 +310,27 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                 tooltip.style("visibility", "hidden");
             });
 
-        cellEnter.append("text")
+        if (initRect) {
+            rectEnter
+                .attr("x",      initRect.x0)
+                .attr("y",      initRect.y0)
+                .attr("width",  initRect.x1 - initRect.x0)
+                .attr("height", initRect.y1 - initRect.y0);
+        }
+
+        const textEnter = cellEnter.append("text")
             .attr("pointer-events", "none")
             .attr("fill", "white")
             .attr("font-size", "0.6rem")
             .text(d => d.data.name)
             .call(wrapText, d => d.x1 - d.x0 - 8);
+
+        if (initRect) {
+            textEnter
+                .attr("x", initRect.x0 + 4)
+                .attr("y", initRect.y0 + 14)
+                .style("opacity", 0);
+        }
 
         const cellUpdate = cellEnter.merge(cell);
 
