@@ -57,6 +57,7 @@
           <div class="button-group">
             <button id="filter-btn">
               <span>Filter</span>
+              <span id="filter-badge" class="filter-badge">0</span>
               <img src="../img/icons/slider-filter.png" id="filter-icon"></img>
             </button>
             <button id="clear-btn">
@@ -116,6 +117,87 @@
         </div>
       </div>
     </div>
+    <div id="filter-modal" class="modal" aria-modal="true" role="dialog">
+      <div class="modal-scrim"></div>
 
+      <div class="modal-panel">
+
+        <header class="modal-header">
+          <h2>Advanced filters</h2>
+          <button id="close-modal" class="icon-btn" aria-label="Close">&times;</button>
+        </header>
+
+        <div id="filter-tags" class="filter-tags"></div>
+        <button id="clear-modal-filters" class="solid-btn outline">Clear all</button>
+
+        <div class="modal-body">
+
+          <section class="filter-group">
+            <h3 class="group-title">Context</h3>
+
+            <details open>
+              <summary>
+                Library <span class="count" data-for="filter-library"></span>
+              </summary>
+              <ul id="filter-library" class="checklist" data-multi></ul>
+            </details>
+
+            <details>
+              <summary>
+                Author <span class="count" data-for="filter-author"></span>
+              </summary>
+              <input type="text" class="quick-search" placeholder="Search authors…">
+              <ul id="filter-author" class="checklist" data-multi></ul>
+            </details>
+          </section>
+
+          <section class="filter-group">
+            <h3 class="group-title">Attribution</h3>
+
+            <details>
+              <summary>Prob. Atrib. Obra</summary>
+              <ul id="filter-probobra" class="checklist"></ul>
+            </details>
+
+            <details>
+              <summary>Prob. Atrib. Autor</summary>
+              <ul id="filter-probautor" class="checklist"></ul>
+            </details>
+          </section>
+
+          <section class="filter-group two-col">
+            <details>
+              <summary>Language <span class="count" data-for="filter-idioma"></span></summary>
+              <ul id="filter-idioma" class="checklist" data-multi></ul>
+            </details>
+
+            <details>
+              <summary>Category <span class="count" data-for="filter-category"></span></summary>
+              <ul id="filter-category" class="checklist" data-multi></ul>
+            </details>
+
+            <details>
+              <summary>Tradition <span class="count" data-for="filter-tradition"></span></summary>
+              <ul id="filter-tradition" class="checklist" data-multi></ul>
+            </details>
+
+            <details>
+              <summary>Genre <span class="count" data-for="filter-genre"></span></summary>
+              <ul id="filter-genre" class="checklist" data-multi></ul>
+            </details>
+
+            <details>
+              <summary>Historical period <span class="count" data-for="filter-period"></span></summary>
+              <ul id="filter-period" class="checklist" data-multi></ul>
+            </details>
+          </section>
+
+        </div>
+
+        <footer class="modal-footer">
+          <button id="apply-filters"  class="solid-btn">Apply</button>
+        </footer>
+      </div>
+    </div>
   </body>
 </html>

@@ -3,6 +3,31 @@ let baselineW, baselineH;
 let currentTreemapMode = 'category';
 let genderGraphActive = false;
 
+function openModal ()  { document.getElementById('filter-modal').classList.add('open'); }
+function closeModal () { document.getElementById('filter-modal').classList.remove('open'); }
+
+function fillChecklist(listId, values, multi = true) {
+    const ul = document.getElementById(listId);
+    ul.innerHTML = '';
+    values.forEach(v => {
+        const id = `${listId}-${CSS.escape(v)}`;
+        const li = document.createElement('li');
+        li.innerHTML =
+        `<label for="${id}">` +
+        `<input id="${id}" type="${multi ? 'checkbox' : 'radio'}" value="${v}">` +
+        `<span class="chk-txt">${v || '–'}</span>` +
+        `</label>`;
+        ul.appendChild(li);
+    });
+}
+
+// how many boxes are checked in a given checklist
+function getChecked(listId) {
+  return Array.from(
+    document.querySelectorAll(`#${listId} input:checked`)
+  ).map(c => c.value);
+}
+
 function switchMode(mode) {
     currentTreemapMode = mode;
 
@@ -28,6 +53,59 @@ function isFemaleLibrary(rawName) {
   return lower.includes('d. leonor') || lower.includes('d. beatriz');
 }
 
+// helper to grab unique, non‐empty values for a given key
+function uniq(key) {
+  return Array.from(
+    new Set(globalData.map(d => d[key]).filter(v => v))
+  ).sort();
+}
+
+function populateFilterOptions() {
+  // distinct & sorted helpers
+  const u = key => Array.from(new Set(globalData.map(d => d[key]).filter(Boolean))).sort();
+
+  fillChecklist('filter-library',   u('Proprietario_Nome'));
+  fillChecklist('filter-author',    u('Nome_Autor'));
+  fillChecklist('filter-idioma',    u('Idioma'));
+  fillChecklist('filter-category',  u('CatLit_Descricao'));
+  fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'));
+  fillChecklist('filter-genre',     u('GenLit_Descricao'));
+  fillChecklist('filter-period',    u('EpocaHistorica_Autor'));
+
+  // single-choice radio lists
+  fillChecklist('filter-probobra',  u('ProbAtribObra'));
+  fillChecklist('filter-probautor', u('ProbAtribAutor'));
+}
+
+function wireSearch(inputEl, listEl) {
+  inputEl.addEventListener('input', () => {
+    const term = inputEl.value.trim().toLowerCase();
+    listEl.querySelectorAll('li').forEach(li => {
+      const txt = li.textContent.toLowerCase();
+      li.style.display = term && !txt.includes(term) ? 'none' : '';
+    });
+  });
+}
+
+// update the (n) counter inside each <summary>
+function bumpCounter(list) {
+  const n = list.querySelectorAll('input:checked').length;
+  const id = list.id;
+  const counter = list.closest('details')
+                     .querySelector(`[data-for="${id}"]`);
+  if (counter) counter.textContent = n ? `(${n})` : '';
+}
+
+// hook every checklist once the DOM exists
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.checklist').forEach(list => {
+    list.addEventListener('change', () => {
+        bumpCounter(list);
+        refreshFilterTags();
+    });
+  });
+});
+
 function startDashboard() {
     clearDetailsPanel();
     document.getElementById("search-input").value = "";
@@ -35,6 +113,13 @@ function startDashboard() {
     d3.csv("data/dataset.csv")
         .then((data) => {
             globalData = data;
+
+            populateFilterOptions();
+
+            wireSearch(
+                document.querySelector('#filter-author').previousElementSibling,
+                document.getElementById('filter-author')
+            );
 
             let currentData = [...globalData];
             const initialSortColumn = "Proprietario_Nome";
@@ -165,7 +250,110 @@ function startDashboard() {
                 currentIndex = 0;
                 renderCarousel();
                 clearDetailsPanel();
+
+                badge.textContent = '0';
+                filterBtn.classList.remove('filters-active');
+                refreshFilterTags();
             });
+
+            const filterBtn  = document.getElementById('filter-btn');
+            const modal      = document.getElementById('filter-modal');
+            const applyBtn   = document.getElementById('apply-filters');
+            const badge      = document.getElementById('filter-badge');
+
+            filterBtn.addEventListener('click', openModal);
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+
+            document.getElementById('clear-modal-filters')
+                .addEventListener('click', () => {
+                document.querySelectorAll('.checklist input:checked')
+                        .forEach(cb => cb.checked = false);
+                document.querySelectorAll('.checklist')
+                        .forEach(list => bumpCounter(list));
+                document.getElementById('filter-tags').innerHTML = '';
+                refreshFilterTags();
+            });
+
+            function refreshFilterTags() {
+                const tags = document.getElementById('filter-tags');
+                tags.innerHTML = '';
+
+                Object.keys(activeFilters).forEach(key => {
+                    const map = {
+                    byLibrary:'filter-library', byAuthor:'filter-author',
+                    byIdioma:'filter-idioma',   byCategory:'filter-category',
+                    byTradition:'filter-tradition', byGenre:'filter-genre',
+                    byPeriod:'filter-period',  byProbObra:'filter-probobra',
+                    byProbAutor:'filter-probautor'
+                    };
+                    const listId = map[key];
+                    if (!listId) return;
+
+                    const values = getChecked(listId);
+                    values.forEach(v => {
+                    const tag = document.createElement('div');
+                    tag.className = 'filter-tag';
+                    tag.textContent = v;
+
+                    const x = document.createElement('span');
+                    x.className = 'remove';
+                    x.textContent = '×';
+                    x.addEventListener('click', () => {
+                        document.querySelectorAll(`#${listId} input[value="${CSS.escape(v)}"]`)
+                                .forEach(cb => { cb.checked = false; });
+                        bumpCounter(document.getElementById(listId));
+                        refreshFilterTags();
+                    });
+                    tag.appendChild(x);
+                    tags.appendChild(tag);
+                    });
+                });
+            }
+
+            applyBtn.addEventListener('click', () => {
+                const libs    = getChecked('filter-library');
+                const auths   = getChecked('filter-author');
+                const idioma  = getChecked('filter-idioma');
+                const cats    = getChecked('filter-category');
+                const trads   = getChecked('filter-tradition');
+                const gens    = getChecked('filter-genre');
+                const pers    = getChecked('filter-period');
+                const probOb  = getChecked('filter-probobra');
+                const probAu  = getChecked('filter-probautor');
+
+                libs.length   ? setGlobalFilter('byLibrary',   r => libs.includes(r.Proprietario_Nome))
+                                : clearGlobalFilter('byLibrary');
+                auths.length  ? setGlobalFilter('byAuthor',    r => auths.includes(r.Nome_Autor))
+                                : clearGlobalFilter('byAuthor');
+                idioma.length ? setGlobalFilter('byIdioma',    r => idioma.includes(r.Idioma))
+                                : clearGlobalFilter('byIdioma');
+                cats.length   ? setGlobalFilter('byCategory',  r => cats.includes(r.CatLit_Descricao))
+                                : clearGlobalFilter('byCategory');
+                trads.length  ? setGlobalFilter('byTradition', r => trads.includes(r.TradicaoIntelectual_Obra))
+                                : clearGlobalFilter('byTradition');
+                gens.length   ? setGlobalFilter('byGenre',     r => gens.includes(r.GenLit_Descricao))
+                                : clearGlobalFilter('byGenre');
+                pers.length   ? setGlobalFilter('byPeriod',    r => pers.includes(r.EpocaHistorica_Autor))
+                                : clearGlobalFilter('byPeriod');
+
+                probOb.length ? setGlobalFilter('byProbObra',  r => probOb.includes(r.ProbAtribObra))
+                    : clearGlobalFilter('byProbObra');
+
+                probAu.length ? setGlobalFilter('byProbAutor', r => probAu.includes(r.ProbAtribAutor))
+                    : clearGlobalFilter('byProbAutor');
+
+                updateDashboard();
+                const filterCount = Object.keys(activeFilters).length;
+                badge.textContent = filterCount;
+                filterBtn.classList.toggle('filters-active', filterCount > 0);
+
+                refreshFilterTags();
+                closeModal();
+                });
+
+            document.getElementById('filter-modal')
+                .addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
         })
         .catch((error) => {
             console.error("Error loading the CSV file:", error);
