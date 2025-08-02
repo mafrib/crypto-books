@@ -674,6 +674,9 @@ summary .count { font-weight:500; font-size:.7rem; }
 .quick-search {
   width:100%; margin:0 .75rem .5rem; padding:.3rem .4rem;
   border:1px solid #C5C0AD; border-radius:6px; font-size:.75rem;
+  box-sizing:border-box;
+  width:calc(100% - 1.5rem);
+  max-width:100%;
 }
 
 .modal-footer {
@@ -758,6 +761,7 @@ details[open] > summary::after {
 }
 
 #filter-btn {
+  position: relative;
   background: #A6CDC6;
 }
 
@@ -888,6 +892,44 @@ details[open] > summary::after {
 .details-panel__carousel .dot.active {
   background: #16404D;
 }
+
+.filter-badge {
+  position:absolute; top:-6px; right:-6px;
+  min-width:18px; height:18px;
+  padding:0 4px;
+  background:#16404D; color:#FFFAEC;
+  border-radius:50%; font-size:.7rem;
+  line-height:18px; text-align:center;
+  display:none;
+}
+
+.filter-tag {
+  display:inline-flex; align-items:center; gap:6px;
+  background:#16404D; color:#FFFAEC;
+  padding:2px 10px; border-radius:9999px;
+  font-size:.65rem;
+}
+
+.filter-tag .remove { cursor:pointer; font-weight:700; }
+
+.filter-tags {
+  display:flex; flex-wrap:wrap; gap:6px;
+  margin:.5rem 1.5rem 0;
+}
+
+#filter-btn.filters-active .filter-badge {
+  display:block;
+  color: white;
+}
+
+#filter-modal .modal-panel {
+  font-size: 0.70rem;
+}
+
+#filter-modal h2           { font-size: 0.85rem; }
+#filter-modal summary      { font-size: 0.75rem; }
+#filter-modal .quick-search,
+#filter-modal .checklist   { font-size: 0.70rem; }
 
 /* ---- TREEMAP ---- */
 

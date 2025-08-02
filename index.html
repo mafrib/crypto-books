@@ -57,7 +57,7 @@
           <div class="button-group">
             <button id="filter-btn">
               <span>Filter</span>
-              <span id="filter-badge" class="filter-badge">0</span>
+              <span id="filter-badge" class="filter-badge"></span>
               <img src="../img/icons/slider-filter.png" id="filter-icon"></img>
             </button>
             <button id="clear-btn">
@@ -135,7 +135,7 @@
           <section class="filter-group">
             <h3 class="group-title">Context</h3>
 
-            <details open>
+            <details>
               <summary>
                 Library <span class="count" data-for="filter-library"></span>
               </summary>
@@ -172,17 +172,19 @@
             </details>
 
             <details>
-              <summary>Category <span class="count" data-for="filter-category"></span></summary>
+              <summary>Literary Category <span class="count" data-for="filter-category"></span></summary>
               <ul id="filter-category" class="checklist" data-multi></ul>
             </details>
 
             <details>
-              <summary>Tradition <span class="count" data-for="filter-tradition"></span></summary>
+              <summary>Intellectual Tradition <span class="count" data-for="filter-tradition"></span></summary>
+              <input type="text" class="quick-search" placeholder="Search intellectual traditions…">
               <ul id="filter-tradition" class="checklist" data-multi></ul>
             </details>
 
             <details>
-              <summary>Genre <span class="count" data-for="filter-genre"></span></summary>
+              <summary>Literary Genre <span class="count" data-for="filter-genre"></span></summary>
+              <input type="text" class="quick-search" placeholder="Search literary genres…">
               <ul id="filter-genre" class="checklist" data-multi></ul>
             </details>
 

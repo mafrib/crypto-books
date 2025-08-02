@@ -2,9 +2,33 @@ let globalData;
 let baselineW, baselineH;
 let currentTreemapMode = 'category';
 let genderGraphActive = false;
+const periodOrder = [
+  "Indeterminada",
+  "Época Arcaica (VIII-V aC)",
+  "Antiguidade Clássica (V aC-III)",
+  "Antiguidade Tardia (III-VIII)",
+  "Alta Idade Média (VIII-XI)",
+  "Idade Média Central (XI-XIII)",
+  "Baixa Idade Média (XIV-XV)"
+];
 
-function openModal ()  { document.getElementById('filter-modal').classList.add('open'); }
+function openModal ()  {
+    const modal = document.getElementById('filter-modal');
+    modal.classList.add('open');
+
+    modal.querySelectorAll('details[open]').forEach(d => d.open = false);
+}
+
 function closeModal () { document.getElementById('filter-modal').classList.remove('open'); }
+
+function updateFilterBadge() {
+  const count = Object.keys(activeFilters || {}).length;
+  const btn   = document.getElementById('filter-btn');
+  const badge = document.getElementById('filter-badge');
+  badge.textContent = count > 0 ? count : '';
+  btn.classList.toggle('filters-active', count > 0);
+}
+
 
 function fillChecklist(listId, values, multi = true) {
     const ul = document.getElementById(listId);
@@ -62,7 +86,7 @@ function uniq(key) {
 
 function populateFilterOptions() {
   // distinct & sorted helpers
-  const u = key => Array.from(new Set(globalData.map(d => d[key]).filter(Boolean))).sort();
+  const u = key => Array.from(new Set(globalData.map(d=>d[key]).filter(Boolean))).sort();
 
   fillChecklist('filter-library',   u('Proprietario_Nome'));
   fillChecklist('filter-author',    u('Nome_Autor'));
@@ -70,11 +94,49 @@ function populateFilterOptions() {
   fillChecklist('filter-category',  u('CatLit_Descricao'));
   fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'));
   fillChecklist('filter-genre',     u('GenLit_Descricao'));
-  fillChecklist('filter-period',    u('EpocaHistorica_Autor'));
+
+  const periods = periodOrder.filter(p=>globalData.some(d=>d.EpocaHistorica_Autor===p));
+  fillChecklist('filter-period', periods);
 
   // single-choice radio lists
   fillChecklist('filter-probobra',  u('ProbAtribObra'));
   fillChecklist('filter-probautor', u('ProbAtribAutor'));
+}
+
+function refreshFilterTags() {
+    const tags = document.getElementById('filter-tags');
+    tags.innerHTML = '';
+
+    Object.keys(activeFilters).forEach(key => {
+        const map = {
+            byLibrary:'filter-library', byAuthor:'filter-author',
+            byIdioma:'filter-idioma',   byCategory:'filter-category',
+            byTradition:'filter-tradition', byGenre:'filter-genre',
+            byPeriod:'filter-period',  byProbObra:'filter-probobra',
+            byProbAutor:'filter-probautor'
+        };
+        const listId = map[key];
+        if (!listId) return;
+
+        const values = getChecked(listId);
+        values.forEach(v => {
+            const tag = document.createElement('div');
+            tag.className = 'filter-tag';
+            tag.textContent = v;
+
+            const x = document.createElement('span');
+            x.className = 'remove';
+            x.textContent = '×';
+            x.addEventListener('click', () => {
+                document.querySelectorAll(`#${listId} input[value="${CSS.escape(v)}"]`)
+                    .forEach(cb => { cb.checked = false; });
+                bumpCounter(document.getElementById(listId));
+                refreshFilterTags();
+            });
+            tag.appendChild(x);
+            tags.appendChild(tag);
+        });
+    });
 }
 
 function wireSearch(inputEl, listEl) {
@@ -102,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     list.addEventListener('change', () => {
         bumpCounter(list);
         refreshFilterTags();
+        updateFilterBadge();
     });
   });
 });
@@ -119,6 +182,14 @@ function startDashboard() {
             wireSearch(
                 document.querySelector('#filter-author').previousElementSibling,
                 document.getElementById('filter-author')
+            );
+            wireSearch(
+                document.querySelector('#filter-tradition').previousElementSibling,
+                document.getElementById('filter-tradition')
+            );
+            wireSearch(
+                document.querySelector('#filter-genre').previousElementSibling,
+                document.getElementById('filter-genre')
             );
 
             let currentData = [...globalData];
@@ -202,6 +273,9 @@ function startDashboard() {
                     switchMode(mode);
                 });
 
+            const filterBtn  = document.getElementById('filter-btn');
+            const badge      = document.getElementById('filter-badge');
+
             const clearBtn = document.getElementById('clear-btn');
             clearBtn.addEventListener('click', () => {
                 if (!clearBtn.classList.contains('active')) return;
@@ -251,15 +325,18 @@ function startDashboard() {
                 renderCarousel();
                 clearDetailsPanel();
 
-                badge.textContent = '0';
-                filterBtn.classList.remove('filters-active');
+                updateFilterBadge();
+
+                document.querySelectorAll('.checklist input:checked')
+                    .forEach(cb => cb.checked = false);
+                document.querySelectorAll('.checklist')
+                    .forEach(list => bumpCounter(list));
+
                 refreshFilterTags();
             });
 
-            const filterBtn  = document.getElementById('filter-btn');
             const modal      = document.getElementById('filter-modal');
             const applyBtn   = document.getElementById('apply-filters');
-            const badge      = document.getElementById('filter-badge');
 
             filterBtn.addEventListener('click', openModal);
             document.getElementById('close-modal').addEventListener('click', closeModal);
@@ -273,42 +350,6 @@ function startDashboard() {
                 document.getElementById('filter-tags').innerHTML = '';
                 refreshFilterTags();
             });
-
-            function refreshFilterTags() {
-                const tags = document.getElementById('filter-tags');
-                tags.innerHTML = '';
-
-                Object.keys(activeFilters).forEach(key => {
-                    const map = {
-                    byLibrary:'filter-library', byAuthor:'filter-author',
-                    byIdioma:'filter-idioma',   byCategory:'filter-category',
-                    byTradition:'filter-tradition', byGenre:'filter-genre',
-                    byPeriod:'filter-period',  byProbObra:'filter-probobra',
-                    byProbAutor:'filter-probautor'
-                    };
-                    const listId = map[key];
-                    if (!listId) return;
-
-                    const values = getChecked(listId);
-                    values.forEach(v => {
-                    const tag = document.createElement('div');
-                    tag.className = 'filter-tag';
-                    tag.textContent = v;
-
-                    const x = document.createElement('span');
-                    x.className = 'remove';
-                    x.textContent = '×';
-                    x.addEventListener('click', () => {
-                        document.querySelectorAll(`#${listId} input[value="${CSS.escape(v)}"]`)
-                                .forEach(cb => { cb.checked = false; });
-                        bumpCounter(document.getElementById(listId));
-                        refreshFilterTags();
-                    });
-                    tag.appendChild(x);
-                    tags.appendChild(tag);
-                    });
-                });
-            }
 
             applyBtn.addEventListener('click', () => {
                 const libs    = getChecked('filter-library');
@@ -343,9 +384,7 @@ function startDashboard() {
                     : clearGlobalFilter('byProbAutor');
 
                 updateDashboard();
-                const filterCount = Object.keys(activeFilters).length;
-                badge.textContent = filterCount;
-                filterBtn.classList.toggle('filters-active', filterCount > 0);
+                updateFilterBadge();
 
                 refreshFilterTags();
                 closeModal();
