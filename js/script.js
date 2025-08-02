@@ -57,16 +57,13 @@ function switchMode(mode) {
 
     const filteredData = applyGlobalFilters(globalData);
 
-    createTreemap('#treemap-area', filteredData, mode, () => {
-        const newFiltered = applyGlobalFilters(globalData);
-        const sorted = [...newFiltered].sort((a, b) =>
-            a.Proprietario_Nome.localeCompare(b.Proprietario_Nome)
-        );
-        createBooksCatalog(sorted);
-
-        const allowedSet = new Set(newFiltered.map(r => r.Proprietario_Nome));
-        updateNetworkStyles(allowedSet);
-    }, genderGraphActive);
+    createTreemap(
+        '#treemap-area',
+        filteredData,
+        currentTreemapMode,
+        updateDashboard,
+        genderGraphActive
+    );
 
     d3.selectAll('.mode-button').classed('active', false);
     d3.select(`.mode-button[data-mode="${mode}"]`).classed('active', true);
@@ -176,6 +173,7 @@ function startDashboard() {
     d3.csv("data/dataset.csv")
         .then((data) => {
             globalData = data;
+            const filteredData = applyGlobalFilters(globalData);
 
             populateFilterOptions();
 
@@ -235,15 +233,9 @@ function startDashboard() {
                     createBooksCatalog(filtered);
                     createTreemap(
                         '#treemap-area',
-                        filtered,
+                        filteredData,
                         currentTreemapMode,
-                        () => {
-                        const newFiltered = applyGlobalFilters(globalData);
-                        createBooksCatalog(
-                            [...newFiltered].sort((a,b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome))
-                        );
-                        updateNetworkStyles(new Set(newFiltered.map(r=>r.Proprietario_Nome)));
-                        },
+                        updateDashboard,
                         genderGraphActive
                     );
                 });
@@ -255,17 +247,13 @@ function startDashboard() {
                 });
             }
 
-            createTreemap('#treemap-area', globalData, currentTreemapMode, () => {
-                const newFiltered = applyGlobalFilters(globalData);
-                currentData = newFiltered;
-                sortedData = [...currentData].sort((a, b) =>
-                    a[initialSortColumn].localeCompare(b[initialSortColumn])
-                );
-                createBooksCatalog(sortedData);
-
-                const allowedSet = new Set(newFiltered.map(r => r.Proprietario_Nome));
-                updateNetworkStyles(allowedSet);
-            }, genderGraphActive);
+            createTreemap(
+                '#treemap-area',
+                filteredData,
+                currentTreemapMode,
+                updateDashboard,
+                genderGraphActive
+            );
 
             d3.selectAll('.mode-button')
                 .on('click', function() {
@@ -309,13 +297,9 @@ function startDashboard() {
                 }
                 createTreemap(
                     '#treemap-area',
-                    cleanData,
+                    filteredData,
                     currentTreemapMode,
-                    () => {
-                    const again = applyGlobalFilters(globalData);
-                    createBooksCatalog(again);
-                    updateNetworkStyles(new Set(again.map(r => r.Proprietario_Nome)));
-                    },
+                    updateDashboard,
                     genderGraphActive
                 );
                 createBooksCatalog(cleanData);

@@ -91,19 +91,7 @@ function handleLinkClick(d, allData) {
     clearGlobalFilter('network');
     }
 
-    const filtered = applyGlobalFilters(allData);
-    createTreemap(
-    '#treemap-area',
-    filtered,
-    currentTreemapMode,
-    () => createBooksCatalog(applyGlobalFilters(allData)),
-    genderGraphActive
-    );
-    createBooksCatalog(filtered);
-
-    updateNetworkStyles(
-        buildAllowedFromSelection(selectedNodes, selectedLinks)
-    );
+    updateDashboard();
 }
 
 function distPointToSegment(px, py, x1, y1, x2, y2) {
@@ -177,19 +165,7 @@ function applyNetworkFilter(allowedSet, data) {
         clearGlobalFilter('network');
     }
 
-    // re-draw treemap & catalog
-    const filtered = applyGlobalFilters(data);
-        createTreemap(
-            '#treemap-area',
-            filtered,
-            currentTreemapMode,
-            () => createBooksCatalog(applyGlobalFilters(data)),
-            genderGraphActive
-        );
-        createBooksCatalog(filtered);
-
-    // update node/link styles if in normal mode
-    updateNetworkStyles(allowedSet);
+    updateDashboard();
 }
 
 function buildAllowedFromSelection(nodesSet, linksSet) {
@@ -807,13 +783,7 @@ function createGenderGraph(containerSelector, fullData) {
                 clearGlobalFilter('network');
             }
 
-            // propagate into treemap & catalog
-            const filtered = applyGlobalFilters(fullData);
-            createTreemap('#treemap-area', filtered, currentTreemapMode, () =>
-                createBooksCatalog(applyGlobalFilters(fullData)),
-                genderGraphActive
-            );
-            createBooksCatalog(filtered);
+           updateDashboard();
         });
 
     const nodeSel = nodeGroup.selectAll('g.node').data(nodes, d => d.id);

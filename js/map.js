@@ -349,26 +349,6 @@ function makeMap() {
 
             window.highlightPeriodBar   = highlightPeriodBar;
             window.clearPeriodHighlights = clearPeriodHighlights;
-
-            function updateFiltersAndRedraw() {
-                activeFilters.period = [...selectedPeriods];
-
-                const filtered = applyGlobalFilters(globalData);
-
-                d3.selectAll('circle.library-point')
-                    .style('display', d =>
-                    !selectedPeriods.length ||
-                    d.entries.some(e => selectedPeriods.includes(e.EpocaHistorica_Autor))
-                        ? null
-                        : 'none'
-                    );
-
-                redrawTreemap(filtered);
-                redrawNetwork(filtered);
-                redrawCatalog(filtered);
-
-                updateClearButton();
-            }
         })
 
     .catch(err => console.error("Error loading map or data:", err));

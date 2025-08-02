@@ -106,17 +106,21 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
     }
 
     function applyFiltersAndRefresh() {
-        // Apply all global filters (including the treemap filter we just set)
         const filteredRows = applyGlobalFilters(globalData);
 
-        // Build a Set of “allowed” library IDs
         const allowed = new Set(filteredRows.map(r => r.Proprietario_Nome));
-
-        // Update styling of the network‐graph rather than rebuilding it
         updateNetworkStyles(allowed);
 
-        // Rebuild the book catalog list (still based on filteredRows)
         createBooksCatalog(filteredRows);
+
+        d3.selectAll("circle.library-point")
+            .style("display", d =>
+            filteredRows.some(r =>
+                d.entries.some(e => e.ID_Cod === r.ID_Cod)
+            )
+                ? null
+                : "none"
+            );
     }
 
     function zoom(node, initRect = null) {
