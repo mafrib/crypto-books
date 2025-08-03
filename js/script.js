@@ -166,6 +166,108 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function redrawVisualisation(vizEl){
+    switch (vizEl.id){
+        case 'map-visualization':
+            makeMap();
+            break;
+        case 'network-graph':
+            const cont = '#network-graph .network-wrapper';
+            genderGraphActive
+                ? createGenderGraph(cont, globalData)
+                : createNetworkGraph(cont, globalData);
+            break;
+        case 'treemap':
+            createTreemap(
+                '#treemap-area',
+                applyGlobalFilters(globalData),
+                currentTreemapMode,
+                updateDashboard,
+                genderGraphActive
+            );
+            break;
+        case 'catalog':
+            createBooksCatalog(applyGlobalFilters(globalData));
+            break;
+        default:
+    }
+}
+
+function redrawAllViz () {
+    makeMap();
+    createTreemap(
+        '#treemap-area',
+        applyGlobalFilters(globalData),
+        currentTreemapMode,
+        updateDashboard,
+        genderGraphActive
+    );
+}
+
+function enableVizExpand() {
+    document.querySelectorAll('.visualization').forEach(viz=>{
+        if (viz.querySelector('.expand-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'expand-btn';
+        btn.innerHTML = '↗';
+        viz.appendChild(btn);
+
+        btn.addEventListener('click', e=>{
+        e.stopPropagation();
+        viz.classList.contains('is-expanded')
+            ? closeVizModal(viz.__modal, viz)
+            : openVizModal(viz);
+        });
+  });
+}
+
+function openVizModal(viz) {
+    const modal  = document.createElement('div');
+    modal.className = 'viz-modal';
+    modal.innerHTML = '<div class="viz-panel"></div>';
+    const panel = modal.firstElementChild;
+
+    const ph = document.createElement('div');
+    ph.className = 'viz-placeholder';
+    viz.__placeholder = ph;
+    viz.parentNode.insertBefore(ph, viz);   // occupy the cell
+
+    viz.__origParent = viz.parentNode;
+    viz.__origNext   = viz.nextSibling;
+    viz.__modal      = modal;
+    viz.classList.add('is-expanded');
+    panel.appendChild(viz);
+
+    viz.querySelector('.expand-btn').innerHTML = '↙';
+
+    modal.addEventListener('click', e=>{
+        if (e.target === modal) closeVizModal(modal, viz);
+    });
+
+    document.body.appendChild(modal);
+    requestAnimationFrame(()=>{
+        redrawAllViz();
+        redrawVisualisation(viz);
+    });
+}
+
+function closeVizModal(modal, viz) {
+    const {__origParent:p, __origNext:n} = viz;
+    n ? p.insertBefore(viz,n) : p.appendChild(viz);
+    viz.classList.remove('is-expanded');
+    viz.querySelector('.expand-btn').innerHTML = '↗';
+    if (viz.__placeholder){
+        viz.__placeholder.remove();
+        delete viz.__placeholder;
+    }
+    modal.remove();
+    requestAnimationFrame(()=>{
+        redrawAllViz();
+        redrawVisualisation(viz);
+    });
+}
+
 function startDashboard() {
     clearDetailsPanel();
     document.getElementById("search-input").value = "";
@@ -377,6 +479,7 @@ function startDashboard() {
             document.getElementById('filter-modal')
                 .addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
+            enableVizExpand();
         })
         .catch((error) => {
             console.error("Error loading the CSV file:", error);

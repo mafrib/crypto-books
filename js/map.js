@@ -1,27 +1,61 @@
+let mapSvg;
+let mapProjection;
+let mapGroup;
+let baseScale, baseWidth, baseHeight;
+
 const zoomMin = 0.8;
 const zoomMax = 4;
 
 const width = 380;
 const height = 200;
 
-function makeMap() {
+function makeMap () {
 
-    window.highlightMapPoint   = () => {};
-    window.clearMapHighlights  = () => {};
+    if (mapSvg) {
+        const containerEl = document.getElementById('map-area');
+        const legendEl    = containerEl.querySelector('.map-color-scale');
+        const legendW     = legendEl.clientWidth;
+        const mapW        = containerEl.clientWidth - legendW;
+        const isExpanded = document
+            .getElementById('map-visualization')
+            .classList.contains('is-expanded');
 
-    const containerEl = document.getElementById("map-area");
-    const legendEl    = document.querySelector(".map-color-scale");
-    const legendW = legendEl.clientWidth;
-    const mapW   = containerEl.clientWidth - legendW;
+        const mapH = isExpanded
+            ? containerEl.clientHeight
+            : Math.round(baseHeight * (mapW / baseWidth));
 
-    const mapH = window.innerHeight * 0.28;
+        mapSvg.attr('width', mapW).attr('height', mapH);
 
-    const svg = d3.select("svg")
-        .attr("width", mapW)
-        .attr("height", mapH);
+        const k = mapW / baseWidth;
+        mapProjection
+                .scale(baseScale * k)
+                .translate([mapW / 2, mapH / 2]);
 
-    d3.select('#map-area')
+        const path = d3.geoPath().projection(mapProjection);
+        mapGroup.select('path.europe-outline')
+                .attr('d', path);
+
+        const proj = d => mapProjection([d.lon, d.lat]);
+
+        mapSvg.selectAll('circle.library-point')
+            .attr('cx', d => proj(d)[0])
+            .attr('cy', d => proj(d)[1]);
+
+        d3.select('#map-area .map-color-scale , #map-area .bar-wrapper')
         .style('height', mapH + 'px');
+
+        return;
+    }
+
+    const containerEl = document.getElementById('map-area');
+    const legendEl    = containerEl.querySelector('.map-color-scale');
+    const legendW = legendEl.clientWidth;
+    const mapW    = containerEl.clientWidth - legendW;
+    const mapH = containerEl.clientHeight;
+
+    mapSvg = d3.select('#map')
+           .attr('width', mapW)
+           .attr('height', mapH);
 
     d3.select('#map-area .map-color-scale')
         .style('height', mapH + 'px');
@@ -30,20 +64,20 @@ function makeMap() {
         .append("div")
             .attr("class", "map-tooltip");
 
-    const mapGroup = svg.append("g");
+    mapGroup = mapSvg.append("g");
 
     let mergedGeometries;
     let countryFeatures;
     let fullCountryFeatures;
 
-    const zoomControl = svg.append("g")
+    const zoomControl = mapSvg.append("g")
         .attr("class", "zoom-controls")
         .attr("transform", "translate(20,20)");
 
     // Zoom in button (top)
     zoomControl.append("g")
         .attr("class", "zoom-button")
-        .on("click", () => zoom.scaleBy(svg, 1.2))
+        .on("click", () => zoom.scaleBy(mapSvg, 1.2))
         .on("dblclick", function(event) {
             event.stopPropagation(); // Prevent zoom in behind the button
         })
@@ -62,7 +96,7 @@ function makeMap() {
     zoomControl.append("g")
         .attr("class", "zoom-button")
         .attr("transform", "translate(0,25)")
-        .on("click", () => zoom.scaleBy(svg.transition().duration(50), 0.8))
+        .on("click", () => zoom.scaleBy(mapSvg.transition().duration(50), 0.8))
         .on("dblclick", function(event) {
             event.stopPropagation(); // Prevent zoom in behind the button
         })
@@ -77,12 +111,16 @@ function makeMap() {
                 .text("-");
         });
 
-    const projection = d3.geoMercator()
+    mapProjection = d3.geoMercator()
         .center([25, 47])  // Initial center
         .scale(280)
         .translate([mapW / 2, mapH / 2]);
 
-    const path = d3.geoPath().projection(projection);
+    baseScale  = mapProjection.scale();
+    baseWidth  = mapW;
+    baseHeight = mapH;
+
+    const path = d3.geoPath().projection(mapProjection);
 
     // Initialize zoom
     const zoom = d3.zoom()
@@ -96,7 +134,7 @@ function makeMap() {
             .attr("r", d => d.baseR / event.transform.k)
         });
 
-    svg.call(zoom);
+    mapSvg.call(zoom);
 
     // Country names that are visible on the map
     const visibleCountries = new Set([
@@ -196,8 +234,8 @@ function makeMap() {
                         d.baseR = 3;
                         return d.baseR;
                     })
-                    .attr("cx", d => projection([d.lon,d.lat])[0])
-                    .attr("cy", d => projection([d.lon,d.lat])[1])
+                    .attr("cx", d => mapProjection([d.lon,d.lat])[0])
+                    .attr("cy", d => mapProjection([d.lon,d.lat])[1])
                       .on("mouseover", (event, d) => {
                         const location = d.entries[0].LocalNasc_Autor || "Unknown location";
 
