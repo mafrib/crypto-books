@@ -861,6 +861,14 @@ details[open] > summary::after {
   box-sizing: border-box;
 }
 
+.details-panel__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 .details-panel__img-wrapper {
   aspect-ratio: 3/4;
   width: 6rem;
@@ -878,6 +886,36 @@ details[open] > summary::after {
   object-fit: cover;
   object-position: top center;
 }
+
+.details-panel__carousel-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.details-panel__carousel {
+  display: flex;
+  gap: 0.4rem;
+  z-index: 0;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #16404D;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.carousel-arrow.left  { left: 0.5rem; }
+.carousel-arrow.right { right: 0.5rem; }
 
 .details-panel__placeholder {
   font-style: italic;

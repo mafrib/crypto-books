@@ -12,21 +12,44 @@ let currentCarouselLibs = [];
 let currentIndex = 0;
 
 function renderCarousel() {
-  const libs = currentCarouselLibs;
-  const carousel = document.querySelector('.details-panel__carousel');
-  carousel.innerHTML = '';
-  carousel.style.display = libs.length > 1 ? 'flex' : 'none';
+    const libs       = currentCarouselLibs;
+    const container  = document.querySelector('.details-panel__carousel-container');
+    const dots       = container.querySelector('.details-panel__carousel');
+    const leftArrow  = container.querySelector('.carousel-arrow.left');
+    const rightArrow = container.querySelector('.carousel-arrow.right');
 
-  libs.forEach((lib, i) => {
-    const dot = document.createElement('div');
-    dot.className = i === currentIndex ? 'dot active' : 'dot';
-    dot.addEventListener('click', () => {
-      currentIndex = i;
-      updateDetailsPanel(libs[currentIndex], globalData);
-      renderCarousel();
+    dots.innerHTML = '';
+
+    dots.style.display = libs.length > 1 ? 'flex' : 'none';
+
+    leftArrow.style.display  = (libs.length > 1 && currentIndex > 0)               ? 'block' : 'none';
+    rightArrow.style.display = (libs.length > 1 && currentIndex < libs.length - 1) ? 'block' : 'none';
+
+    leftArrow.onclick = () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateDetailsPanel(libs[currentIndex], globalData);
+        renderCarousel();
+      }
+    };
+    rightArrow.onclick = () => {
+      if (currentIndex < libs.length - 1) {
+        currentIndex++;
+        updateDetailsPanel(libs[currentIndex], globalData);
+        renderCarousel();
+      }
+    };
+
+    libs.forEach((lib, i) => {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === currentIndex ? ' active' : '');
+      dot.addEventListener('click', () => {
+        currentIndex = i;
+        updateDetailsPanel(libs[currentIndex], globalData);
+        renderCarousel();
+      });
+      dots.appendChild(dot);
     });
-    carousel.appendChild(dot);
-  });
 }
 
 function updateDetailsPanel(libName, allData) {
