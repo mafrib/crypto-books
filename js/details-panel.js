@@ -25,6 +25,8 @@ function renderCarousel() {
     leftArrow.style.display  = (libs.length > 1 && currentIndex > 0)               ? 'block' : 'none';
     rightArrow.style.display = (libs.length > 1 && currentIndex < libs.length - 1) ? 'block' : 'none';
 
+    if (libs.length < 2) return;
+
     leftArrow.onclick = () => {
       if (currentIndex > 0) {
         currentIndex--;
