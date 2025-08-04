@@ -1144,8 +1144,12 @@ details[open] > summary::after {
 
 #catalog-entries {
   flex: 1 1 auto;
-  overflow-y: auto; /* Enable vertical scroll */
   margin-bottom: 0.5rem;
+  overflow-y: scroll;
+  padding-right: 0.8rem;
+  scrollbar-gutter: stable both-edges;
+  scrollbar-color: #16404D #D6E5DB;
+  scrollbar-width: auto;
 }
 
 .catalog-entry {
@@ -1178,11 +1182,17 @@ details[open] > summary::after {
 
 /* Scrollbar styling */
 #catalog-entries::-webkit-scrollbar {
-  width: 8px;
+  width: 8px
 }
 
 #catalog-entries::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #D6E5DB;
+}
+
+#catalog-entries::-webkit-scrollbar-thumb {
+  background-color: #16404D;
+  border-radius: 4px;
+  border: 2px solid #D6E5DB;
 }
 
 #book-count {
