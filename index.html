@@ -52,6 +52,43 @@
             <div class="toggle-label">Group by gender</div>
             <div class="switch" role="button" aria-pressed="false" tabindex="0"></div>
           </div>
+          <button id="network-info-btn"
+            class="info-btn"
+            aria-expanded="false"
+            aria-controls="network-info-panel">i</button>
+          <div id="network-info-panel" class="info-panel" hidden>
+            <div class="info-body">
+            <div class="size-legend">
+              <svg class="legend-svg" viewBox="0 0 120 46" aria-hidden="true">
+                <defs>
+                  <marker id="arrow-end" viewBox="0 0 6 6"
+                          refX="5" refY="3" markerWidth="6" markerHeight="6"
+                          orient="auto">
+                    <path d="M0 0L6 3L0 6Z" fill="#16404D"/>
+                  </marker>
+                </defs>
+                <circle cx="20"  cy="20" r="7"/>
+                <circle cx="55"  cy="20" r="12"/>
+                <circle cx="100" cy="20" r="17"/>
+                <line x1="20" y1="43" x2="100" y2="43"
+                      stroke="#16404D" stroke-width="0.8"
+                      marker-end="url(#arrow-end)"/>
+              </svg>
+              <span class="legend-label">Number&nbsp;of&nbsp;books</span>
+            </div>
+            <div class="link-legend">
+              <svg class="legend-svg" viewBox="0 0 95 46" aria-hidden="true">
+                <line x1="0"  x2="75" y1="4"  y2="4"  stroke-width="2"/>
+                <line x1="0"  x2="75" y1="18" y2="18" stroke-width="5"/>
+                <line x1="0"  x2="75" y1="34" y2="34" stroke-width="8"/>
+                <line x1="88" y1="3" x2="88" y2="38"
+                      stroke="#16404D" stroke-width="0.8"
+                      marker-end="url(#arrow-end)"/>
+              </svg>
+              <span class="legend-label">Shared&nbsp;items<br>(books/authors)</span>
+            </div>
+            </div>
+         </div>
         </div>
          <div id="side-menu">
           <div class="button-group">

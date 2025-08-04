@@ -658,6 +658,92 @@ g.node.hovered-network-node text {
   fill: #FFFAEC;
 }
 
+.info-btn {
+  position: absolute;
+  top: 4px; right: 30px;
+  width: 22px; height: 22px;
+  background: rgba(255,255,255,.55);
+  border: 1px solid #16404D;
+  border-radius: 50%;
+  font-size: 1rem; line-height: 20px;
+  text-align: center; color: #16404D;
+  cursor: pointer; z-index: 2;
+}
+
+.info-btn:hover { background:#D6E5DB; }
+
+.info-panel {
+  position: absolute;
+  top: 32px; right: 6px;
+  width: clamp(160px, 28vw, 240px);
+  background: #D6E5DB;
+  border: 1px solid #16404D;
+  border-radius: 12px;
+  padding: 0.6rem 0.7rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  font-size: 0.6rem;
+  line-height: 1.2;
+  display: none;
+  z-index: 2;
+}
+
+.legend-block{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.legend-label {
+  color:#16404D;
+}
+
+.legend-svg          { width: 100%; height: auto; }
+
+.size-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+}
+
+.size-legend svg circle {
+  fill: #FFFAEC;
+  stroke: #16404D;
+  stroke-width: 0.4;
+}
+
+.size-legend svg line[marker-end] {
+  stroke: #16404D;
+}
+
+.size-legend .legend-label {
+  margin-top: 0;
+  text-align: center;
+}
+
+#network-info-panel .info-body { gap: 1.5rem; }
+
+.link-legend svg line   { stroke: #578E7E; }
+.link-legend svg line[marker-end] { stroke: #16404D; }
+
+.info-panel.open      { display: block; }
+
+.info-panel.open { display: block; }
+
+.link-legend {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
 /* GLOBAL FILTER BUTTON */
 
 .modal               { position:fixed; inset:0; display:none; }

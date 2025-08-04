@@ -873,3 +873,23 @@ function createGenderGraph(containerSelector, fullData) {
     simulation.force('link').links(edges);
     simulation.alpha(0.5).restart();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  const btn   = document.getElementById('network-info-btn');
+  const panel = document.getElementById('network-info-panel');
+  if (!btn || !panel) return;
+
+  btn.addEventListener('click', e => {
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', !open);
+    panel.classList.toggle('open', !open);
+  });
+
+  document.addEventListener('click', e => {
+    if (!panel.contains(e.target) && !btn.contains(e.target)) {
+      btn.setAttribute('aria-expanded', false);
+      panel.classList.remove('open');
+    }
+  });
+});
