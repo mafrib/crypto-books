@@ -91,16 +91,26 @@ a {
 /* EXPANDABLE VISUALIZATION DETAILS */
 
 .expand-btn {
-  position: absolute; top: 4px; right: 4px;
+  position: absolute;
+  top: 4px;
+  right: 8px;
   width: 22px; height: 22px;
-  background: rgba(255,255,255,.55);
-  border: 1px solid #16404D;
+  background: transparent;
+  border: none;
   border-radius: 50%;
-  font-size: 1rem; line-height: 20px; text-align: center;
-  color: #16404D; cursor: pointer; z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
 }
 
 .expand-btn:hover { background: #D6E5DB; }
+
+.expand-btn img {
+  width: 14px;
+  height: 14px;
+}
 
 .viz-modal {
   position: fixed; inset: 0; background: rgba(0,0,0,.60);
@@ -660,12 +670,13 @@ g.node.hovered-network-node text {
 
 .info-btn {
   position: absolute;
-  top: 4px; right: 30px;
+  top: 4px; right: 35px;
   width: 22px; height: 22px;
-  background: rgba(255,255,255,.55);
+  background: transparent;
   border: 1px solid #16404D;
   border-radius: 50%;
   font-size: 1rem; line-height: 20px;
+  font-weight: 200;
   text-align: center; color: #16404D;
   cursor: pointer; z-index: 2;
 }
@@ -677,7 +688,6 @@ g.node.hovered-network-node text {
   top: 32px; right: 6px;
   width: clamp(160px, 28vw, 240px);
   background: #D6E5DB;
-  border: 1px solid #16404D;
   border-radius: 12px;
   padding: 0.6rem 0.7rem;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
@@ -687,7 +697,19 @@ g.node.hovered-network-node text {
   z-index: 2;
 }
 
-.legend-block{
+#network-info-panel[hidden] {
+  display: none;
+}
+
+#network-info-btn:hover + #network-info-panel {
+  display: block;
+}
+
+#network-info-panel:hover {
+  display: block;
+}
+
+.legend-block {
   display: flex;
   flex-direction: column;
   align-items: center;

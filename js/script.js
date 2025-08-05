@@ -210,7 +210,8 @@ function enableVizExpand() {
 
         const btn = document.createElement('button');
         btn.className = 'expand-btn';
-        btn.innerHTML = '↗';
+        btn.setAttribute('aria-label', 'Maximize');
+        btn.innerHTML = '<img src="../img/icons/maximize.png" alt="" aria-hidden="true">';
         viz.appendChild(btn);
 
         btn.addEventListener('click', e=>{
@@ -239,7 +240,9 @@ function openVizModal(viz) {
     viz.classList.add('is-expanded');
     panel.appendChild(viz);
 
-    viz.querySelector('.expand-btn').innerHTML = '↙';
+    const btn = viz.querySelector('.expand-btn');
+    btn.querySelector('img').src = '../img/icons/minimize.png';
+    btn.setAttribute('aria-label', 'Restore');
 
     modal.addEventListener('click', e=>{
         if (e.target === modal) closeVizModal(modal, viz);
@@ -256,7 +259,9 @@ function closeVizModal(modal, viz) {
     const {__origParent:p, __origNext:n} = viz;
     n ? p.insertBefore(viz,n) : p.appendChild(viz);
     viz.classList.remove('is-expanded');
-    viz.querySelector('.expand-btn').innerHTML = '↗';
+    const btn = viz.querySelector('.expand-btn');
+    btn.querySelector('img').src = '../img/icons/maximize.png';
+    btn.setAttribute('aria-label', 'Maximize');
     if (viz.__placeholder){
         viz.__placeholder.remove();
         delete viz.__placeholder;
