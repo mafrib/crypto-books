@@ -342,7 +342,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
             d3.selectAll(selector + " rect")
                 .classed("hovered-treemap-rect", d => {
                 if (mode === "category") {
-                    return d.data.name === book.GenLit_Descricao;
+                    const cat = (book.CatLit_Descricao   || '').trim();
+                    const gen = (book.GenLit_Descricao   || '').trim();
+                    return d.data.name === gen || d.data.name === cat;
                 } else if (mode === "tradition") {
                     return d.data.name === book.TradicaoIntelectual_Obra;
                 }
