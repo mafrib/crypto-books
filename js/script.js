@@ -170,12 +170,23 @@ function redrawVisualisation(vizEl){
     switch (vizEl.id){
         case 'map-visualization':
             makeMap();
+            updateDashboard();
             break;
         case 'network-graph':
             const cont = '#network-graph .network-wrapper';
-            genderGraphActive
-                ? createGenderGraph(cont, globalData)
-                : createNetworkGraph(cont, globalData);
+
+            if (genderGraphActive) {
+                createGenderGraph(cont, globalData);
+            } else {
+                createNetworkGraph(cont, globalData);
+            }
+
+            const allowedSet = new Set(
+                applyGlobalFilters(globalData)
+                    .map(r => r.Proprietario_Nome.trim())
+            );
+
+            updateNetworkStyles(allowedSet);
             break;
         case 'treemap':
             createTreemap(
