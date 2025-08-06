@@ -250,7 +250,6 @@ function openVizModal(viz) {
 
     document.body.appendChild(modal);
     requestAnimationFrame(()=>{
-        redrawAllViz();
         redrawVisualisation(viz);
     });
 }
@@ -268,7 +267,6 @@ function closeVizModal(modal, viz) {
     }
     modal.remove();
     requestAnimationFrame(()=>{
-        redrawAllViz();
         redrawVisualisation(viz);
     });
 }
