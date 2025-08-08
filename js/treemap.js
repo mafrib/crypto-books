@@ -83,7 +83,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
     svg.on("click", () => {
         // Clear filter when clicking background (root zoom)
         clearGlobalFilter('treemap');
-        zoom(root);
+        zoom(root, null, true);
 
         // Trigger update callback (will “un‐dim” everything again)
         if (onUpdate) onUpdate(applyFiltersAndRefresh());
@@ -123,7 +123,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
             );
     }
 
-    function zoom(node, initRect = null) {
+    function zoom(node, initRect = null, fromUser = false) {
         const childData = node.children
             ? node.children.map(d => d.data)
             : [node.data];
@@ -146,7 +146,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         const path = d3.select("#treemap-breadcrumbs");
         if (!node.parent) {
             path.html(root.data.name);
-            clearGlobalFilter('treemap');
+            if (fromUser) clearGlobalFilter('treemap');
             if (onUpdate) onUpdate(applyFiltersAndRefresh());
         } else {
             path.html(`
@@ -215,7 +215,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                         d3.select("#treemap-breadcrumbs .crumb-root")
                             .on("click", () => {
-                                zoom(root);
+                                zoom(root, null, true);
                                 clearGlobalFilter('treemap');
                                 if (onUpdate) onUpdate(applyFiltersAndRefresh());
                             });
