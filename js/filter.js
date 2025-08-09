@@ -24,6 +24,7 @@ function setGlobalFilter(source, filterFn) {
 
 function clearGlobalFilter(source) {
   delete activeFilters[source];
+  if (source === 'treemap') treemapSelection = null;
   updateClearButton();
 }
 
