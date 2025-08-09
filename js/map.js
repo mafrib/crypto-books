@@ -336,6 +336,7 @@ function makeMap () {
                 .enter().append('div')
                     .attr('class', 'period-bar')
                     .on('click', function(event, period) {
+                        if (d3.select(this).classed('inactive')) return;
                         const i = selectedPeriods.indexOf(period);
                         if (i > -1) selectedPeriods.splice(i, 1);
                         else          selectedPeriods.push(period);
@@ -372,6 +373,7 @@ function makeMap () {
                         const n = periodCounts.get(d) || 0;
                         return `${n} book${n === 1 ? '' : 's'}`;
                     });
+            updatePeriodBars(libraries);
 
             function highlightPeriodBar(book) {
                 d3.selectAll('#period-filter .period-bar')
@@ -395,6 +397,8 @@ function makeMap () {
 
 function updateDashboard() {
     const filtered = applyGlobalFilters(globalData);
+
+    updatePeriodBars(filtered);
 
     d3.selectAll('circle.library-point')
         .style('display', d =>
@@ -426,3 +430,19 @@ function updateDashboard() {
         genderGraphActive
     );
 }
+
+function updatePeriodBars(rows) {
+  const counts = d3.rollup(rows, v => v.length, d => d.EpocaHistorica_Autor);
+
+  d3.selectAll('#period-filter .period-bar')
+    .each(function(period) {
+      const n = counts.get(period) || 0;
+
+      d3.select(this)
+        .classed('inactive', n === 0)
+        .select('.count')
+        .text(`${n} book${n === 1 ? '' : 's'}`);
+    });
+}
+
+window.updatePeriodBars = updatePeriodBars;

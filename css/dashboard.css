@@ -370,6 +370,14 @@ a {
   color: #FFFAEC;
 }
 
+.period-bar.inactive {
+  opacity: .35;
+}
+
+.period-bar.inactive:hover {
+  opacity: .55;
+}
+
 /* --- NETWORK GRAPH --- */
 
 #network-graph {
