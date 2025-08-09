@@ -1,3 +1,5 @@
+let treemapSelection = null;
+
 function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphActive = false) {
 
     // Cleanup before redraw
@@ -83,13 +85,42 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
     svg.on("click", () => {
         // Clear filter when clicking background (root zoom)
         clearGlobalFilter('treemap');
+        treemapSelection = null;
         zoom(root, null, true);
 
         // Trigger update callback (will “un‐dim” everything again)
         if (onUpdate) onUpdate(applyFiltersAndRefresh());
     });
 
-    zoom(root);
+    goToStoredPosition();
+
+    function goToStoredPosition() {
+        if (!treemapSelection) {
+            zoom(root);
+            return;
+        }
+
+        let target = null;
+
+        if (currentTreemapMode === 'category') {
+            const catNode = root.children
+                .find(n => n.data.name === treemapSelection.cat);
+
+            if (catNode) {
+                if (treemapSelection.gen) {
+                    target = catNode.children
+                        ?.find(n => n.data.name === treemapSelection.gen);
+                } else {
+                    target = catNode;
+                }
+            }
+        } else {
+            target = root.children
+                .find(n => n.data.name === treemapSelection.trad);
+        }
+
+        zoom(target || root);
+    }
 
     function wrapText(selection, maxWidthAccessor) {
         selection.each(function(d) {
@@ -194,6 +225,11 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                     setGlobalFilter('treemap', filterFn);
 
+                    if (currentTreemapMode === 'category')
+                        treemapSelection = {cat: d.parent.data.name, gen: d.data.name};
+                    else
+                        treemapSelection = {trad: d.data.name};
+
                     zoom(d, initRect);
 
                     // Rebuild breadcrumbs for leaf
@@ -277,6 +313,11 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                     }
                     if (filterFn) setGlobalFilter('treemap', filterFn);
                     else clearGlobalFilter('treemap');
+
+                    if (currentTreemapMode === 'category')
+                        treemapSelection = {cat: d.data.name};
+                    else
+                        treemapSelection = {trad: d.data.name};
 
                     zoom(d, initRect);
 
