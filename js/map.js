@@ -421,11 +421,12 @@ function updateDashboard() {
         filtered,
         currentTreemapMode,
         () => {
-        const newlyFiltered = applyGlobalFilters(globalData);
-        const sortedAgain = [...newlyFiltered]
-            .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
-        createBooksCatalog(sortedAgain);
-        updateNetworkStyles(new Set(newlyFiltered.map(r => r.Proprietario_Nome)));
+            const newlyFiltered = applyGlobalFilters(globalData);
+            updatePeriodBars(newlyFiltered);
+            const sortedAgain = [...newlyFiltered]
+                .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
+            createBooksCatalog(sortedAgain);
+            updateNetworkStyles(new Set(newlyFiltered.map(r => r.Proprietario_Nome)));
         },
         genderGraphActive
     );
