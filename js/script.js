@@ -2,6 +2,7 @@ let globalData;
 let baselineW, baselineH;
 let currentTreemapMode = 'category';
 let genderGraphActive = false;
+let treemapFilterOrigin = null;   // 'category' or 'tradition'
 const periodOrder = [
   "Indeterminada",
   "Época Arcaica (VIII-V aC)",
@@ -29,6 +30,17 @@ function updateFilterBadge() {
   btn.classList.toggle('filters-active', count > 0);
 }
 
+function treemapFilterActive() {
+  return activeFilters && activeFilters.hasOwnProperty('treemap');
+}
+
+function updateTreemapBadge() {
+  document.querySelectorAll('.mode-button').forEach(btn => {
+    const mode   = btn.dataset.mode;
+    const show   = treemapFilterActive() && mode === treemapFilterOrigin;
+    btn.classList.toggle('has-filter', show);
+  });
+}
 
 function fillChecklist(listId, values, multi = true) {
     const ul = document.getElementById(listId);
@@ -290,6 +302,7 @@ function startDashboard() {
         .then((data) => {
             globalData = data;
             const filteredData = applyGlobalFilters(globalData);
+            updateTreemapBadge();
 
             populateFilterOptions();
 
@@ -375,6 +388,7 @@ function startDashboard() {
                 .on('click', function() {
                     const mode = this.getAttribute('data-mode');
                     switchMode(mode);
+                    updateTreemapBadge();
                 });
 
             const filterBtn  = document.getElementById('filter-btn');

@@ -86,6 +86,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         // Clear filter when clicking background (root zoom)
         clearGlobalFilter('treemap');
         treemapSelection = null;
+        treemapFilterOrigin = null;
+        updateTreemapBadge();
         const filteredRows = applyGlobalFilters(globalData);
         createTreemap(
             '#treemap-area',
@@ -182,7 +184,11 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         const path = d3.select("#treemap-breadcrumbs");
         if (!node.parent) {
             path.html(root.data.name);
-            if (fromUser) clearGlobalFilter('treemap');
+            if (fromUser) {
+                clearGlobalFilter('treemap');
+                treemapFilterOrigin = null;
+                updateTreemapBadge();
+            }
             if (onUpdate) onUpdate();
         } else {
             path.html(`
@@ -195,6 +201,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                     event.stopPropagation();
                     clearGlobalFilter('treemap');
                     treemapSelection = null;
+                    treemapFilterOrigin = null;
+                    updateTreemapBadge();
                     const filteredRows = applyGlobalFilters(globalData);
                     createTreemap(
                         '#treemap-area',
@@ -235,6 +243,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                         : book => book.TradicaoIntelectual_Obra === d.data.name;
 
                     setGlobalFilter('treemap', filterFn);
+                    treemapFilterOrigin = currentTreemapMode;
+                    updateTreemapBadge();
 
                     if (currentTreemapMode === 'category')
                         treemapSelection = {cat: d.parent.data.name, gen: d.data.name};
@@ -264,6 +274,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                             .on("click", () => {
                                 zoom(root, null, true);
                                 clearGlobalFilter('treemap');
+                                treemapFilterOrigin = null;
+                                updateTreemapBadge();
                                 if (onUpdate) onUpdate();
                             });
 
@@ -273,6 +285,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                                 setGlobalFilter('treemap',
                                     book => book.CatLit_Descricao === d.parent.data.name
                                 );
+                                treemapFilterOrigin = currentTreemapMode;
+                                updateTreemapBadge();
                                 d3.select("#treemap-breadcrumbs").html(`
                                     <span class="crumb-root" style="cursor:pointer; font-weight:normal;">
                                       ${rootLabel}
@@ -286,6 +300,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                                     .on("click", () => {
                                         zoom(root);
                                         clearGlobalFilter('treemap');
+                                        treemapFilterOrigin = null;
+                                        updateTreemapBadge();
                                         if (onUpdate) onUpdate();
                                     });
                                 if (onUpdate) onUpdate();
@@ -306,6 +322,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                             .on("click", () => {
                                 zoom(root);
                                 clearGlobalFilter('treemap');
+                                treemapFilterOrigin = null;
+                                updateTreemapBadge();
                                 if (onUpdate) onUpdate();
                             });
                     }
@@ -322,8 +340,15 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                     } else if (currentTreemapMode !== 'category') {
                         filterFn = book => book.TradicaoIntelectual_Obra === d.data.name;
                     }
-                    if (filterFn) setGlobalFilter('treemap', filterFn);
-                    else clearGlobalFilter('treemap');
+                    if (filterFn) {
+                        setGlobalFilter('treemap', filterFn);
+                        treemapFilterOrigin = currentTreemapMode;
+                    }
+                    else {
+                        clearGlobalFilter('treemap');
+                        treemapFilterOrigin = null;
+                    }
+                    updateTreemapBadge();
 
                     if (currentTreemapMode === 'category')
                         treemapSelection = {cat: d.data.name};
