@@ -398,6 +398,10 @@ function startDashboard() {
             clearBtn.addEventListener('click', () => {
                 if (!clearBtn.classList.contains('active')) return;
                 Object.keys(activeFilters).forEach(src => clearGlobalFilter(src));
+
+                treemapFilterOrigin = null;
+                updateTreemapBadge();
+
                 updateClearButton();
                 document.getElementById('search-input').value = '';
 
