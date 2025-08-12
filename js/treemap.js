@@ -86,10 +86,15 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         // Clear filter when clicking background (root zoom)
         clearGlobalFilter('treemap');
         treemapSelection = null;
-        zoom(root, null, true);
-
-        // Trigger update callback (will “un‐dim” everything again)
-        if (onUpdate) onUpdate(applyFiltersAndRefresh());
+        const filteredRows = applyGlobalFilters(globalData);
+        createTreemap(
+            '#treemap-area',
+            filteredRows,
+            currentTreemapMode,
+            onUpdate,
+            genderGraphActive
+        );
+        if (onUpdate) onUpdate();
     });
 
     goToStoredPosition();
@@ -178,21 +183,27 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         if (!node.parent) {
             path.html(root.data.name);
             if (fromUser) clearGlobalFilter('treemap');
-            if (onUpdate) onUpdate(applyFiltersAndRefresh());
+            if (onUpdate) onUpdate();
         } else {
             path.html(`
-                <span style="cursor: pointer; font-weight: normal;">${root.data.name}</span>
+                <span class="crumb-root" style="cursor: pointer; font-weight: normal;">${root.data.name}</span>
                 &nbsp;>&nbsp;
                 <span style="font-weight: bold;">${node.data.name}</span>
             `);
-            path.select("span")
+            path.select('.crumb-root')
                 .on("click", (event) => {
                     event.stopPropagation();
-                    zoom(node.originalParent);
-                    if (node.originalParent.parent === null) {
-                        clearGlobalFilter('treemap');
-                        if (onUpdate) onUpdate(applyFiltersAndRefresh());
-                    }
+                    clearGlobalFilter('treemap');
+                    treemapSelection = null;
+                    const filteredRows = applyGlobalFilters(globalData);
+                    createTreemap(
+                        '#treemap-area',
+                        filteredRows,
+                        currentTreemapMode,
+                        onUpdate,
+                        genderGraphActive
+                    );
+                    if (onUpdate) onUpdate();
                 });
         }
 
@@ -253,7 +264,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                             .on("click", () => {
                                 zoom(root, null, true);
                                 clearGlobalFilter('treemap');
-                                if (onUpdate) onUpdate(applyFiltersAndRefresh());
+                                if (onUpdate) onUpdate();
                             });
 
                         d3.select("#treemap-breadcrumbs .crumb-category")
@@ -275,9 +286,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                                     .on("click", () => {
                                         zoom(root);
                                         clearGlobalFilter('treemap');
-                                        if (onUpdate) onUpdate(applyFiltersAndRefresh());
+                                        if (onUpdate) onUpdate();
                                     });
-                                if (onUpdate) onUpdate(applyFiltersAndRefresh());
+                                if (onUpdate) onUpdate();
                             });
 
                     } else {
@@ -295,11 +306,11 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                             .on("click", () => {
                                 zoom(root);
                                 clearGlobalFilter('treemap');
-                                if (onUpdate) onUpdate(applyFiltersAndRefresh());
+                                if (onUpdate) onUpdate();
                             });
                     }
 
-                    if (onUpdate) onUpdate(applyFiltersAndRefresh());
+                    if (onUpdate) onUpdate();
                     return;
                 }
 
@@ -321,7 +332,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                     zoom(d, initRect);
 
-                    if (onUpdate) onUpdate(applyFiltersAndRefresh());
+                    if (onUpdate) onUpdate();
                 }
             });
 
