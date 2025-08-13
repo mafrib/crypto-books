@@ -450,6 +450,12 @@ function createNetworkGraph(containerSelector, data) {
             .on('end', dragended)
         )
         .on('click', function(event, d) {
+
+            if (selectedNodes.size === 0 && treemapFilterActive()) {
+               applyGlobalFilters(globalData)
+                 .forEach(r => selectedNodes.add(r.Proprietario_Nome.trim()));
+           }
+
             const id = d.id;
             if (selectedNodes.has(id)) {
                 selectedNodes.delete(id);
