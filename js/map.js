@@ -2,6 +2,7 @@ let mapSvg;
 let mapProjection;
 let mapGroup;
 let baseScale, baseWidth, baseHeight;
+let selectedPeriods = [];
 
 const zoomMin = 0.8;
 const zoomMax = 4;
@@ -310,8 +311,6 @@ function makeMap () {
             bars.append('div')
                 .attr('class', 'legend-label')
                 .text(d => d.label);
-
-            let selectedPeriods = [];
 
             const periodOrder = [
                 "Indeterminada",

@@ -453,6 +453,21 @@ function createNetworkGraph(containerSelector, data) {
 
             const prevSelection = new Set(selectedNodes);
 
+            const allowedSet = new Set(
+                applyGlobalFilters(globalData)
+                    .map(r => r.Proprietario_Nome.trim())
+            );
+
+            if (!allowedSet.has(d.id)) {
+                // Which filters are blocking the node?
+                const blockers = getConflictingFilters(d.id);
+
+                if (blockers.length) {
+                    showConflictPopup(d.id, blockers);
+                    return;
+                }
+            }
+
             if (selectedNodes.size === 0 && treemapFilterActive()) {
                applyGlobalFilters(globalData)
                  .forEach(r => selectedNodes.add(r.Proprietario_Nome.trim()));

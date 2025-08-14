@@ -13,8 +13,6 @@ const periodOrder = [
   "Baixa Idade Média (XIV-XV)"
 ];
 
-let pendingUndoNodes = null;  // keeps a copy of the nodes that were just cleared
-
 function showNoResultsPopup(prevSel) {
   pendingUndoNodes = prevSel;
   document.getElementById('no-results-popup').hidden = false;
@@ -27,6 +25,61 @@ function hideNoResultsPopup() {
 
 window.showNoResultsPopup  = showNoResultsPopup;
 window.hideNoResultsPopup  = hideNoResultsPopup;
+
+function getConflictingFilters(libId) {
+    const rowsOfLib = globalData.filter(r =>
+        r.Proprietario_Nome.trim() === libId
+    );
+
+    return Object.keys(activeFilters)
+        .filter(src => src !== 'network')   // ignore the network key
+        .filter(src => {
+            const fn = activeFilters[src];
+            return rowsOfLib.every(row => !fn(row));
+        });
+}
+
+function showConflictPopup(libId, conflictingFilters) {
+    const niceName = libId.replace(/\s+/g,' ').trim();
+    const msg      = document.getElementById('conflict-msg');
+    msg.innerHTML =
+        `The library “<strong>${niceName}</strong>” has no books that match:` +
+        '<br>' +
+        conflictingFilters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
+
+    document.getElementById('conflict-popup').hidden = false;
+}
+
+function hideConflictPopup() {
+    pendingNode   = null;
+    document.getElementById('conflict-popup').hidden = true;
+}
+
+window.hideConflictPopup = hideConflictPopup;
+
+function prettyFilterName(src) {
+    // helper that turns the internal filter-key into a label
+    const map = {
+        byCategory : 'Literary category',
+        byAuthor   : 'Author',
+        byIdioma   : 'Language',
+        treemap    : 'Treemap filter',
+        network    : 'Network filter'
+    };
+
+    /* add the concrete period(s) that are selected */
+    if (src === 'period' || src === 'byPeriod') {
+        const labels = Array.from(
+        document.querySelectorAll('#period-filter .period-bar.selected .label')
+        ).map(el => el.textContent.replace(/\s+/g, ' ').trim());
+
+        const list = labels.length ? `: ${labels.join(', ')}` : '';
+        return `Historical period${list}`;
+    }
+
+    return map[src] || src;
+}
+
 
 function openModal ()  {
     const modal = document.getElementById('filter-modal');
@@ -192,29 +245,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.getElementById('conflict-keep-btn')
+          .addEventListener('click', hideConflictPopup);
+
+    document.getElementById('conflict-clear-btn')
+        .addEventListener('click', () => {
+            document.getElementById('clear-btn').click();
+            hideConflictPopup();
+        });
+
     document.getElementById('undo-last-btn')
-            .addEventListener('click', ()=>{
-    if (!pendingUndoNodes) return;
-    // restore previous node selection
-    selectedNodes.clear();
-    pendingUndoNodes.forEach(n=>selectedNodes.add(n));
-    hideNoResultsPopup();
+        .addEventListener('click', ()=> {
+            if (!pendingUndoNodes) return;
+            // restore previous node selection
+            selectedNodes.clear();
+            pendingUndoNodes.forEach(n=>selectedNodes.add(n));
+            hideNoResultsPopup();
 
-    svg.classed('node-active-mode', true);
-    nodeGroup.selectAll('g.node')
-            .classed('active', d => selectedNodes.has(d.id));
+            svg.classed('node-active-mode', true);
+            nodeGroup.selectAll('g.node')
+                    .classed('active', d => selectedNodes.has(d.id));
 
-    applyNetworkFilter(
-        buildAllowedFromSelection(selectedNodes, selectedLinks),
-        globalData
-    );
-    });
+            applyNetworkFilter(
+                buildAllowedFromSelection(selectedNodes, selectedLinks),
+                globalData
+            );
+        });
 
     document.getElementById('clear-filters-btn')
-            .addEventListener('click', ()=>{
-    document.getElementById('clear-btn').click();
-    hideNoResultsPopup();
-});
+        .addEventListener('click', ()=> {
+            document.getElementById('clear-btn').click();
+            hideNoResultsPopup();
+        });
 
 });
 
