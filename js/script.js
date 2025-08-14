@@ -13,6 +13,21 @@ const periodOrder = [
   "Baixa Idade Média (XIV-XV)"
 ];
 
+let pendingUndoNodes = null;  // keeps a copy of the nodes that were just cleared
+
+function showNoResultsPopup(prevSel) {
+  pendingUndoNodes = prevSel;
+  document.getElementById('no-results-popup').hidden = false;
+}
+
+function hideNoResultsPopup() {
+  pendingUndoNodes = null;
+  document.getElementById('no-results-popup').hidden = true;
+}
+
+window.showNoResultsPopup  = showNoResultsPopup;
+window.hideNoResultsPopup  = hideNoResultsPopup;
+
 function openModal ()  {
     const modal = document.getElementById('filter-modal');
     modal.classList.add('open');
@@ -167,15 +182,40 @@ function bumpCounter(list) {
   if (counter) counter.textContent = n ? `(${n})` : '';
 }
 
-// hook every checklist once the DOM exists
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.checklist').forEach(list => {
-    list.addEventListener('change', () => {
-        bumpCounter(list);
-        refreshFilterTags();
-        updateFilterBadge();
+    // hook every checklist once the DOM exists
+    document.querySelectorAll('.checklist').forEach(list => {
+        list.addEventListener('change', () => {
+            bumpCounter(list);
+            refreshFilterTags();
+            updateFilterBadge();
+        });
     });
-  });
+
+    document.getElementById('undo-last-btn')
+            .addEventListener('click', ()=>{
+    if (!pendingUndoNodes) return;
+    // restore previous node selection
+    selectedNodes.clear();
+    pendingUndoNodes.forEach(n=>selectedNodes.add(n));
+    hideNoResultsPopup();
+
+    svg.classed('node-active-mode', true);
+    nodeGroup.selectAll('g.node')
+            .classed('active', d => selectedNodes.has(d.id));
+
+    applyNetworkFilter(
+        buildAllowedFromSelection(selectedNodes, selectedLinks),
+        globalData
+    );
+    });
+
+    document.getElementById('clear-filters-btn')
+            .addEventListener('click', ()=>{
+    document.getElementById('clear-btn').click();
+    hideNoResultsPopup();
+});
+
 });
 
 function redrawVisualisation(vizEl){
@@ -451,6 +491,7 @@ function startDashboard() {
                     .forEach(list => bumpCounter(list));
 
                 refreshFilterTags();
+                hideNoResultsPopup();
             });
 
             const modal      = document.getElementById('filter-modal');

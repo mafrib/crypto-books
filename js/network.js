@@ -451,10 +451,25 @@ function createNetworkGraph(containerSelector, data) {
         )
         .on('click', function(event, d) {
 
+            const prevSelection = new Set(selectedNodes);
+
             if (selectedNodes.size === 0 && treemapFilterActive()) {
                applyGlobalFilters(globalData)
                  .forEach(r => selectedNodes.add(r.Proprietario_Nome.trim()));
-           }
+           } else if (selectedNodes.size === 0) {
+                // no treemap filter → back to default view
+                clearGlobalFilter('network');
+                svg.classed('node-active-mode', false);
+                nodeGroup.selectAll('g.node').classed('active', false);
+                linkGroup.selectAll('.link').style('opacity', null);
+                updateDashboard();
+            } else {
+                window.hideNoResultsPopup();
+                applyNetworkFilter(
+                    buildAllowedFromSelection(selectedNodes, selectedLinks),
+                    data
+                );
+            }
 
             const id = d.id;
             if (selectedNodes.has(id)) {
@@ -496,10 +511,23 @@ function createNetworkGraph(containerSelector, data) {
                     )
                 );
 
-            applyNetworkFilter(
-                buildAllowedFromSelection(selectedNodes, selectedLinks),
-                data
-            );
+            if (selectedNodes.size === 0 && treemapFilterActive()){
+                // remove every library → zero results
+                setGlobalFilter('network', ()=>false);
+                updateDashboard();
+
+                svg.classed('node-active-mode', true);
+                nodeGroup.selectAll('g.node').classed('active', false);
+                linkGroup.selectAll('.link').style('opacity', 0.6);
+
+                window.showNoResultsPopup(prevSelection);
+                } else {
+                window.hideNoResultsPopup();
+                applyNetworkFilter(
+                    buildAllowedFromSelection(selectedNodes, selectedLinks),
+                    data
+                );
+            }
 
             const libs = Array.from(selectedNodes);
             currentCarouselLibs = libs;

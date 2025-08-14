@@ -102,6 +102,12 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
     goToStoredPosition();
 
     function goToStoredPosition() {
+        // if there are no child nodes (empty dataset) just zoom to root and quit
+        if (!root.children || root.children.length === 0) {
+            zoom(root);
+            return;
+        }
+
         if (!treemapSelection) {
             zoom(root);
             return;
