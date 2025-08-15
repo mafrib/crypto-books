@@ -336,13 +336,15 @@ function makeMap () {
                     .attr('class', 'period-bar')
                     .on('click', function (event, period) {
 
-                        const willAdd = !selectedPeriods.includes(period);
-
-                        if (willAdd) {
-                            const blockers = getConflictingFiltersForPeriod(period);
+                        const adding = !selectedPeriods.includes(period);
+                        if (adding) {
+                            const blockers = getConflictingFilters(
+                                globalData.filter(r => r.EpocaHistorica_Autor === period),
+                                ['period','byPeriod']
+                            );
                             if (blockers.length) {
-                            showPeriodConflictPopup(period, blockers);
-                            return;
+                                showConflictPopup(period, blockers, 'period');
+                                return;
                             }
                         }
 
@@ -382,7 +384,7 @@ function makeMap () {
                         const n = periodCounts.get(d) || 0;
                         return `${n} book${n === 1 ? '' : 's'}`;
                     });
-            updatePeriodBars(libraries);
+            repaintPeriodBars(libraries);
 
             function highlightPeriodBar(book) {
                 d3.selectAll('#period-filter .period-bar')
@@ -457,8 +459,10 @@ function repaintPeriodBars(rowSetWithoutPeriod) {
         d3.select(this)
             .classed('selected', sel)
             .classed('inactive', n === 0)
-            .classed('dimmed',  !sel && selectedPeriods.length > 0)   // NEW
+            .classed('dimmed',  !sel && selectedPeriods.length > 0)
             .select('.count')
             .text(`${n} book${n === 1 ? '' : 's'}`);
         });
 }
+
+window.repaintPeriodBars = repaintPeriodBars;

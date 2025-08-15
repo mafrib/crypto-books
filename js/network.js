@@ -459,11 +459,12 @@ function createNetworkGraph(containerSelector, data) {
             );
 
             if (!allowedSet.has(d.id)) {
-                // Which filters are blocking the node?
-                const blockers = getConflictingFilters(d.id);
+                const blockers = getConflictingFilters(
+                    globalData.filter(r => r.Proprietario_Nome.trim() === d.id)
+                );
 
                 if (blockers.length) {
-                    showConflictPopup(d.id, blockers);
+                    showConflictPopup(d.id, blockers, 'library');
                     return;
                 }
             }
@@ -585,30 +586,51 @@ function createNetworkGraph(containerSelector, data) {
 }
 
 function updateNetworkStyles(allowedSet) {
-
-    const filtersActive = Object.keys(activeFilters)
-                                .some(k => k !== 'network');
-
     const nodesSel = nodeGroup.selectAll('g.node');
     const linksSel = linkGroup.selectAll('.link');
 
-    if (!filtersActive) {
-        svg.classed('node-active-mode', false);
-        nodesSel.classed('active', false);
-        linksSel.classed('active', false);
+    if (!allowedSet) {
+        allowedSet = new Set(
+            applyGlobalFilters(globalData)
+              .map(r => r.Proprietario_Nome.trim())
+        );
+    }
+
+    const externalFiltersActive =
+        Object.keys(activeFilters).some(k => k !== 'network');
+
+    const networkSelectionActive =
+        selectedNodes.size > 0 || selectedLinks.size > 0;
+
+    if (!externalFiltersActive) {
+
+        svg.classed('node-active-mode', networkSelectionActive);
+
+        if (networkSelectionActive) {
+
+            nodesSel.classed('active', d => selectedNodes.has(d.id));
+
+            linksSel.classed('active',
+                l => selectedLinks.has(linkKey(l))
+            );
+        } else {
+            nodesSel.classed('active', false);
+            linksSel.classed('active', false);
+        }
         return;
     }
 
     svg.classed('node-active-mode', true);
 
-    if (!allowedSet) return;
-
-    nodesSel.classed('active', d => allowedSet.has(d.id));
+    nodesSel.classed('active',
+        d => allowedSet.has(d.id));
 
     linksSel.classed('active',
-        d => allowedSet.has(d.source.id) && allowedSet.has(d.target.id)
+        d => allowedSet.has(d.source.id) &&
+             allowedSet.has(d.target.id)
     );
 }
+
 
 function createGenderGraph(containerSelector, fullData) {
 

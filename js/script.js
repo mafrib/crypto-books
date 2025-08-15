@@ -12,6 +12,8 @@ const periodOrder = [
   "Idade Média Central (XI-XIII)",
   "Baixa Idade Média (XIV-XV)"
 ];
+window.highlightPeriodBar    = () => {};
+window.clearPeriodHighlights = () => {};
 
 function showNoResultsPopup(prevSel) {
   pendingUndoNodes = prevSel;
@@ -26,17 +28,11 @@ function hideNoResultsPopup() {
 window.showNoResultsPopup  = showNoResultsPopup;
 window.hideNoResultsPopup  = hideNoResultsPopup;
 
-function getConflictingFilters(libId) {
-    const rowsOfLib = globalData.filter(r =>
-        r.Proprietario_Nome.trim() === libId
-    );
-
-    return Object.keys(activeFilters)
-        .filter(src => src !== 'network')   // ignore the network key
-        .filter(src => {
-            const fn = activeFilters[src];
-            return rowsOfLib.every(row => !fn(row));
-        });
+function getConflictingFilters(rows, skip = []) {
+  const ignore = new Set(['network', ...skip]);
+  return Object.keys(activeFilters)
+    .filter(k => !ignore.has(k))
+    .filter(k => rows.every(r => !activeFilters[k](r)));
 }
 
 function getConflictingFiltersForPeriod(periodName) {
@@ -53,15 +49,19 @@ function getConflictingFiltersForPeriod(periodName) {
     });
 }
 
-function showConflictPopup(libId, conflictingFilters) {
-    const niceName = libId.replace(/\s+/g,' ').trim();
-    const msg      = document.getElementById('conflict-msg');
-    msg.innerHTML =
-        `The library “<strong>${niceName}</strong>” has no books that match:` +
-        '<br>' +
-        conflictingFilters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
+function showConflictPopup(subjectLabel, filters, kind = 'library') {
+  const prefix = {
+    library : 'The library',
+    period  : 'The historical period'
+  }[kind] || 'The item';
 
-    document.getElementById('conflict-popup').hidden = false;
+  const msg = document.getElementById('conflict-msg');
+  msg.innerHTML =
+      `${prefix} “<strong>${subjectLabel}</strong>” has no books that match:` +
+      '<br>' +
+      filters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
+
+  document.getElementById('conflict-popup').hidden = false;
 }
 
 function showPeriodConflictPopup(periodName, conflictingFilters) {
