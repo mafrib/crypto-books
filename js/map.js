@@ -334,23 +334,25 @@ function makeMap () {
                 .data(allPeriods)
                 .enter().append('div')
                     .attr('class', 'period-bar')
-                    .on('click', function(event, period) {
-                        if (d3.select(this).classed('inactive')) return;
-                        const i = selectedPeriods.indexOf(period);
-                        if (i > -1) selectedPeriods.splice(i, 1);
+                    .on('click', function (event, period) {
+                        const idx = selectedPeriods.indexOf(period);
+                        if (idx > -1) selectedPeriods.splice(idx, 1);
                         else          selectedPeriods.push(period);
 
-                        d3.select(this).classed('selected', selectedPeriods.includes(period));
-
                         if (selectedPeriods.length) {
-                            setGlobalFilter('period', d =>
-                            selectedPeriods.includes(d.EpocaHistorica_Autor)
+                            setGlobalFilter('period',
+                            d => selectedPeriods.includes(d.EpocaHistorica_Autor)
                             );
                         } else {
                             clearGlobalFilter('period');
                         }
 
                         updateDashboard();
+
+                        const rowsNow = applyGlobalFilters(globalData);
+                        if (rowsNow.length === 0) {
+                            window.showNoResultsPopup(new Set(selectedPeriods));
+                        }
                     });
 
             periodBars
@@ -396,8 +398,8 @@ function makeMap () {
 
 function updateDashboard() {
     const filtered = applyGlobalFilters(globalData);
-
-    updatePeriodBars(filtered);
+    const filteredNoPeriod   = applyFiltersExcept(['period','byPeriod']);
+    repaintPeriodBars(filteredNoPeriod);
 
     d3.selectAll('circle.library-point')
         .style('display', d =>
@@ -421,7 +423,8 @@ function updateDashboard() {
         currentTreemapMode,
         () => {
             const newlyFiltered = applyGlobalFilters(globalData);
-            updatePeriodBars(newlyFiltered);
+            const newlyFilteredNoPeriod= applyFiltersExcept(['period','byPeriod']);
+            repaintPeriodBars(newlyFilteredNoPeriod);
             const sortedAgain = [...newlyFiltered]
                 .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
             createBooksCatalog(sortedAgain);
@@ -431,18 +434,23 @@ function updateDashboard() {
     );
 }
 
-function updatePeriodBars(rows) {
-  const counts = d3.rollup(rows, v => v.length, d => d.EpocaHistorica_Autor);
+function repaintPeriodBars(rowSetWithoutPeriod) {
+    const counts = d3.rollup(
+        rowSetWithoutPeriod,
+        v => v.length,
+        d => d.EpocaHistorica_Autor
+    );
 
-  d3.selectAll('#period-filter .period-bar')
-    .each(function(period) {
-      const n = counts.get(period) || 0;
+    d3.selectAll('#period-filter .period-bar')
+        .each(function (period) {
+        const sel  = selectedPeriods.includes(period);
+        const n    = counts.get(period) || 0;
 
-      d3.select(this)
-        .classed('inactive', n === 0)
-        .select('.count')
-        .text(`${n} book${n === 1 ? '' : 's'}`);
-    });
+        d3.select(this)
+            .classed('selected', sel)
+            .classed('inactive', n === 0)
+            .classed('dimmed',  !sel && selectedPeriods.length > 0)   // NEW
+            .select('.count')
+            .text(`${n} book${n === 1 ? '' : 's'}`);
+        });
 }
-
-window.updatePeriodBars = updatePeriodBars;

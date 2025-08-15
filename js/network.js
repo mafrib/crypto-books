@@ -474,7 +474,6 @@ function createNetworkGraph(containerSelector, data) {
            } else if (selectedNodes.size === 0) {
                 // no treemap filter → back to default view
                 clearGlobalFilter('network');
-                svg.classed('node-active-mode', false);
                 nodeGroup.selectAll('g.node').classed('active', false);
                 linkGroup.selectAll('.link').style('opacity', null);
                 updateDashboard();
@@ -495,8 +494,6 @@ function createNetworkGraph(containerSelector, data) {
 
             nodeGroup.selectAll('g.node')
                 .classed('active', n => selectedNodes.has(n.id));
-
-            svg.classed('node-active-mode', selectedNodes.size > 0);
 
             // 1) Recompute autoSelectedLinks from selectedNodes
             const autoSelectedLinks = new Set();
@@ -531,7 +528,6 @@ function createNetworkGraph(containerSelector, data) {
                 setGlobalFilter('network', ()=>false);
                 updateDashboard();
 
-                svg.classed('node-active-mode', true);
                 nodeGroup.selectAll('g.node').classed('active', false);
                 linkGroup.selectAll('.link').style('opacity', 0.6);
 
@@ -589,77 +585,29 @@ function createNetworkGraph(containerSelector, data) {
 }
 
 function updateNetworkStyles(allowedSet) {
-  if (!svg) return;
 
-  if (genderGraphActive) {
-    linkGroup.selectAll('.link').style('opacity', null);
+    const filtersActive = Object.keys(activeFilters)
+                                .some(k => k !== 'network');
 
-    if (selectedNodes.size === 0) {
-      // no gender node clicked → both base colors, no "active" class
-      svg.classed('node-active-mode', false);
-      nodeGroup.selectAll('g.node')
-        .classed('active', false);
-    } else {
-      svg.classed('node-active-mode', true);
-      nodeGroup.selectAll('g.node')
-        .classed('active', d => selectedNodes.has(d.id));
+    const nodesSel = nodeGroup.selectAll('g.node');
+    const linksSel = linkGroup.selectAll('.link');
+
+    if (!filtersActive) {
+        svg.classed('node-active-mode', false);
+        nodesSel.classed('active', false);
+        linksSel.classed('active', false);
+        return;
     }
 
-    return;
-  }
-
-  const total = nodeGroup.selectAll('g.node').size();
-
-  // Case 1: clicked every node
-  if (selectedNodes.size === total) {
     svg.classed('node-active-mode', true);
-    nodeGroup.selectAll('g.node').classed('active', true);
-    linkGroup.selectAll('.link').style('opacity', 1);
-    return;
-  }
 
-  // Case 2: no clicks & treemap filter allows everything
-  if (allowedSet && allowedSet.size === total && selectedNodes.size === 0) {
-    svg.classed('node-active-mode', false);
-    nodeGroup.selectAll('g.node').classed('active', false);
-    linkGroup.selectAll('.link').style('opacity', null);
-    return;
-  }
+    if (!allowedSet) return;
 
-  // Case 3: links selected but no node clicks
-  if (selectedLinks.size > 0 && selectedNodes.size === 0) {
-    linkGroup.selectAll('.link')
-      .style('opacity', d => selectedLinks.has(linkKey(d)) ? 1 : 0.6);
-    return;
-  }
+    nodesSel.classed('active', d => allowedSet.has(d.id));
 
-  // Case 4: mixed (some nodes clicked or treemap filter)
-  if (selectedNodes.size > 0) {
-    svg.classed('node-active-mode', true);
-    nodeGroup.selectAll('g.node')
-      .classed('active', d => selectedNodes.has(d.id));
-  } else if (allowedSet && allowedSet.size > 0) {
-    svg.classed('node-active-mode', true);
-    nodeGroup.selectAll('g.node')
-      .classed('active', d => allowedSet.has(d.id));
-  } else {
-    svg.classed('node-active-mode', false);
-    nodeGroup.selectAll('g.node').classed('active', false);
-  }
-
-  if (selectedLinks.size > 0) {
-    linkGroup.selectAll('.link')
-      .style('opacity', d => selectedLinks.has(linkKey(d)) ? 1 : 0.6);
-  } else if (allowedSet && allowedSet.size > 0) {
-    linkGroup.selectAll('.link')
-      .style('opacity', d => {
-        const s = d.source.id || d.source;
-        const t = d.target.id || d.target;
-        return (allowedSet.has(s) && allowedSet.has(t)) ? 1 : 0.6;
-      });
-  } else {
-    linkGroup.selectAll('.link').style('opacity', null);
-  }
+    linksSel.classed('active',
+        d => allowedSet.has(d.source.id) && allowedSet.has(d.target.id)
+    );
 }
 
 function createGenderGraph(containerSelector, fullData) {
@@ -812,7 +760,6 @@ function createGenderGraph(containerSelector, fullData) {
                .classed('active', l => selectedLinks.has(linkKey(l)));
 
             if (selectedLinks.size === 0) {
-                svg.classed('node-active-mode', false);
                 svg.selectAll('g.node')
                     .classed('active', false)
                     .classed('selected-by-link', false);

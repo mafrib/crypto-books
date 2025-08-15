@@ -46,3 +46,10 @@ function updateClearButton() {
       : '../img/icons/clear-filter-inactive.png';
   }
 }
+
+function applyFiltersExcept(keysToSkip = []) {
+    const skip = new Set(keysToSkip);
+    return Object.entries(activeFilters)
+                .filter(([k]) => !skip.has(k))
+                .reduce((data, [,fn]) => data.filter(fn), globalData);
+}

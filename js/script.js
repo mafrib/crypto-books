@@ -260,6 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // restore previous node selection
             selectedNodes.clear();
             pendingUndoNodes.forEach(n=>selectedNodes.add(n));
+            selectedPeriods = Array.from(pendingUndoNodes);
+            repaintPeriodBars(applyFiltersExcept(['period','byPeriod']));
+
             hideNoResultsPopup();
 
             svg.classed('node-active-mode', true);

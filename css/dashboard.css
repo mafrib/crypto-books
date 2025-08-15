@@ -306,6 +306,10 @@ a {
   color: #FFFAEC;
 }
 
+#period-filter .period-bar.dimmed:not(.inactive):not(.selected) {
+  opacity: 0.45;
+}
+
 .period-filter-wrapper {
   display: flex;
   flex-direction: column;
