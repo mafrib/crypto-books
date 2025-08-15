@@ -335,9 +335,22 @@ function makeMap () {
                 .enter().append('div')
                     .attr('class', 'period-bar')
                     .on('click', function (event, period) {
+
+                        const willAdd = !selectedPeriods.includes(period);
+
+                        if (willAdd) {
+                            const blockers = getConflictingFiltersForPeriod(period);
+                            if (blockers.length) {
+                            showPeriodConflictPopup(period, blockers);
+                            return;
+                            }
+                        }
+
                         const idx = selectedPeriods.indexOf(period);
                         if (idx > -1) selectedPeriods.splice(idx, 1);
                         else          selectedPeriods.push(period);
+
+                        d3.select(this).classed('selected', selectedPeriods.includes(period));
 
                         if (selectedPeriods.length) {
                             setGlobalFilter('period',
@@ -348,11 +361,6 @@ function makeMap () {
                         }
 
                         updateDashboard();
-
-                        const rowsNow = applyGlobalFilters(globalData);
-                        if (rowsNow.length === 0) {
-                            window.showNoResultsPopup(new Set(selectedPeriods));
-                        }
                     });
 
             periodBars

@@ -39,6 +39,20 @@ function getConflictingFilters(libId) {
         });
 }
 
+function getConflictingFiltersForPeriod(periodName) {
+  const rowsOfPeriod = globalData.filter(r =>
+    r.EpocaHistorica_Autor === periodName
+  );
+
+  return Object.keys(activeFilters)
+    .filter(src => src !== 'period' && src !== 'byPeriod' && src !== 'network')
+    .filter(src => {
+      const fn = activeFilters[src];
+
+      return rowsOfPeriod.every(row => !fn(row));
+    });
+}
+
 function showConflictPopup(libId, conflictingFilters) {
     const niceName = libId.replace(/\s+/g,' ').trim();
     const msg      = document.getElementById('conflict-msg');
@@ -48,6 +62,16 @@ function showConflictPopup(libId, conflictingFilters) {
         conflictingFilters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
 
     document.getElementById('conflict-popup').hidden = false;
+}
+
+function showPeriodConflictPopup(periodName, conflictingFilters) {
+  const msg = document.getElementById('conflict-msg');
+  msg.innerHTML =
+    `The historical period “<strong>${periodName}</strong>” has no books that match:` +
+    '<br>' +
+    conflictingFilters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
+
+  document.getElementById('conflict-popup').hidden = false;
 }
 
 function hideConflictPopup() {
