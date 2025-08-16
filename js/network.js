@@ -469,11 +469,11 @@ function createNetworkGraph(containerSelector, data) {
                 }
             }
 
-            if (selectedNodes.size === 0 && treemapFilterActive()) {
-               applyGlobalFilters(globalData)
-                 .forEach(r => selectedNodes.add(r.Proprietario_Nome.trim()));
-           } else if (selectedNodes.size === 0) {
-                // no treemap filter → back to default view
+            if (selectedNodes.size === 0 &&
+                Object.keys(activeFilters).some(k => k !== 'network')) {
+                applyGlobalFilters(globalData)
+                .forEach(r => selectedNodes.add(r.Proprietario_Nome.trim()));
+            } else if (selectedNodes.size === 0) {
                 clearGlobalFilter('network');
                 nodeGroup.selectAll('g.node').classed('active', false);
                 linkGroup.selectAll('.link').style('opacity', null);
