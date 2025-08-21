@@ -18,6 +18,13 @@ function syncPeriodChecklist () {
     bumpCounter(ul);
 }
 
+function debounce (fn, ms = 120) {
+  let h; return (...args) => { clearTimeout(h); h = setTimeout(()=>fn(...args), ms); };
+}
+
+const scheduleAvailUpdate = debounce(updateChecklistAvailability, 120);
+const scheduleDashboardUpdate = debounce(updateDashboard, 100);
+
 const sourceToList = {
     byLibrary   : 'filter-library',
     network     : 'filter-library',
@@ -30,6 +37,18 @@ const sourceToList = {
     period      : 'filter-period',
     byProbObra  : 'filter-probobra',
     byProbAutor : 'filter-probautor'
+};
+
+const listIdToField = {
+  'filter-library'   : 'Proprietario_Nome',
+  'filter-author'    : 'Nome_Autor',
+  'filter-idioma'    : 'Idioma',
+  'filter-category'  : 'CatLit_Descricao',
+  'filter-tradition' : 'TradicaoIntelectual_Obra',
+  'filter-genre'     : 'GenLit_Descricao',
+  'filter-period'    : 'EpocaHistorica_Autor',
+  'filter-probobra'  : 'ProbAtribObra',
+  'filter-probautor' : 'ProbAtribAutor'
 };
 
 function setChecked(listId, values){
@@ -64,6 +83,34 @@ function syncModalLists () {
     });
 }
 
+function commitChecklistFilters () {
+
+    const libs    = getChecked('filter-library');
+    const auths   = getChecked('filter-author');
+    const idioma  = getChecked('filter-idioma');
+    const cats    = getChecked('filter-category');
+    const trads   = getChecked('filter-tradition');
+    const gens    = getChecked('filter-genre');
+    const pers    = getChecked('filter-period');
+    const periodKey = activeFilters.hasOwnProperty('period')
+                          ? 'period'
+                          : 'byPeriod';
+
+    const probOb  = getChecked('filter-probobra');
+    const probAu  = getChecked('filter-probautor');
+
+    libs.length   ? setGlobalFilter('byLibrary',   r => libs.includes(r.Proprietario_Nome)          , libs) : clearGlobalFilter('byLibrary');
+    auths.length  ? setGlobalFilter('byAuthor',    r => auths.includes(r.Nome_Autor)                , auths): clearGlobalFilter('byAuthor');
+    idioma.length ? setGlobalFilter('byIdioma',    r => idioma.includes(r.Idioma)                   , idioma): clearGlobalFilter('byIdioma');
+    cats.length   ? setGlobalFilter('byCategory',  r => cats.includes(r.CatLit_Descricao)           , cats) : clearGlobalFilter('byCategory');
+    trads.length  ? setGlobalFilter('byTradition', r => trads.includes(r.TradicaoIntelectual_Obra)  , trads): clearGlobalFilter('byTradition');
+    gens.length   ? setGlobalFilter('byGenre',     r => gens.includes(r.GenLit_Descricao)           , gens) : clearGlobalFilter('byGenre');
+    pers.length ? setGlobalFilter(periodKey,
+          r => pers.includes(r.EpocaHistorica_Autor), pers, 'filter-period')
+            : clearGlobalFilter(periodKey);
+    probOb.length ? setGlobalFilter('byProbObra',  r => probOb.includes(r.ProbAtribObra)            , probOb): clearGlobalFilter('byProbObra');
+    probAu.length ? setGlobalFilter('byProbAutor', r => probAu.includes(r.ProbAtribAutor)           , probAu): clearGlobalFilter('byProbAutor');
+}
 
 function notifyFilterChange () {
     updateClearButton();
@@ -73,6 +120,8 @@ function notifyFilterChange () {
     syncPeriodChecklist();
     syncModalLists();
     rebuildFilterTags();
+    scheduleAvailUpdate();
+    scheduleDashboardUpdate();
 }
 
 // Centralized filtering system
@@ -128,3 +177,44 @@ function applyFiltersExcept(keysToSkip = []) {
                 .filter(([k]) => !skip.has(k))
                 .reduce((data, [,obj]) => data.filter(obj.fn), globalData);
 }
+
+
+function updateChecklistAvailability () {
+
+    const fullyFilteredRows = applyGlobalFilters(globalData);
+
+    Object.entries(listIdToField).forEach(([listId, field]) => {
+        const ul = document.getElementById(listId);
+        if (!ul) return;
+
+        const ownFilterKeys = Object.entries(activeFilters)
+            .filter(([src,obj]) => (obj.listId ?? sourceToList[src]) === listId)
+            .map(([src]) => src);
+
+        const rows = ownFilterKeys.length
+            ? applyFiltersExcept(ownFilterKeys)
+            : fullyFilteredRows;
+
+        const allowed = new Set(rows.map(r => (r[field] ?? '').toString()));
+
+        ul.querySelectorAll('input').forEach(cb => {
+            const selectable = allowed.has(cb.value) || cb.checked;
+            cb.disabled = !selectable;
+            cb.closest('li').classList.toggle('disabled-option', !selectable);
+
+            if (!selectable)
+                cb.parentElement.title =
+                  'No books match the current filters';
+            else
+                cb.parentElement.removeAttribute('title');
+        });
+
+        const lis = Array.from(ul.children);
+        lis.sort((a,b)=>
+            a.classList.contains('disabled-option') -
+            b.classList.contains('disabled-option')
+        );
+        lis.forEach(li => ul.appendChild(li));
+    });
+}
+

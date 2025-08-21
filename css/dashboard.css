@@ -1138,6 +1138,15 @@ details[open] > summary::after {
 #filter-modal .quick-search,
 #filter-modal .checklist   { font-size: 0.70rem; }
 
+.disabled-option {
+  color: #888;
+  pointer-events: none;
+}
+
+.disabled-option input {
+  cursor: not-allowed;
+}
+
 /* ---- TREEMAP ---- */
 
 .mode-button {
