@@ -32,7 +32,7 @@ function getConflictingFilters(rows, skip = []) {
   const ignore = new Set(['network', ...skip]);
   return Object.keys(activeFilters)
     .filter(k => !ignore.has(k))
-    .filter(k => rows.every(r => !activeFilters[k](r)));
+    .filter(k => rows.every(r => !activeFilters[k].fn(r)));
 }
 
 function getConflictingFiltersForPeriod(periodName) {
@@ -108,6 +108,8 @@ function prettyFilterName(src) {
 function openModal ()  {
     const modal = document.getElementById('filter-modal');
     modal.classList.add('open');
+
+    rebuildFilterTags();
 
     modal.querySelectorAll('details[open]').forEach(d => d.open = false);
 }
@@ -199,45 +201,152 @@ function populateFilterOptions() {
   const periods = periodOrder.filter(p=>globalData.some(d=>d.EpocaHistorica_Autor===p));
   fillChecklist('filter-period', periods);
 
-  // single-choice radio lists
   fillChecklist('filter-probobra',  u('ProbAtribObra'));
   fillChecklist('filter-probautor', u('ProbAtribAutor'));
 }
 
-function refreshFilterTags() {
-    const tags = document.getElementById('filter-tags');
-    tags.innerHTML = '';
+function rebuildFilterTags () {
 
-    Object.keys(activeFilters).forEach(key => {
-        const map = {
-            byLibrary:'filter-library', byAuthor:'filter-author',
-            byIdioma:'filter-idioma',   byCategory:'filter-category',
-            byTradition:'filter-tradition', byGenre:'filter-genre',
-            byPeriod:'filter-period',  byProbObra:'filter-probobra',
-            byProbAutor:'filter-probautor'
-        };
-        const listId = map[key];
-        if (!listId) return;
+    const tagsBox = document.getElementById('filter-tags');
+    tagsBox.innerHTML = '';
 
-        const values = getChecked(listId);
-        values.forEach(v => {
-            const tag = document.createElement('div');
-            tag.className = 'filter-tag';
-            tag.textContent = v;
+    function addTag(label, removeFn) {
+        const tag    = document.createElement('div');
+        tag.className = 'filter-tag';
+        tag.textContent = label;
 
-            const x = document.createElement('span');
-            x.className = 'remove';
-            x.textContent = '×';
-            x.addEventListener('click', () => {
-                document.querySelectorAll(`#${listId} input[value="${CSS.escape(v)}"]`)
-                    .forEach(cb => { cb.checked = false; });
-                bumpCounter(document.getElementById(listId));
-                refreshFilterTags();
+        const x = document.createElement('span');
+        x.className = 'remove';
+        x.textContent = '×';
+        x.addEventListener('click', removeFn);
+        tag.appendChild(x);
+
+        tagsBox.appendChild(tag);
+    }
+
+    let periodTagAdded = false;
+    for (const key of Object.keys(activeFilters)) {
+
+        switch (key){
+
+        case 'byLibrary'  : getChecked('filter-library'  )
+                            .forEach(v => addTag(v, () => {
+                                uncheckValue('filter-library', v);
+                                clearGlobalFilter('byLibrary');
+                            }));
+                            break;
+
+        case 'byAuthor'   : getChecked('filter-author'   )
+                            .forEach(v => addTag(v, () => {
+                                uncheckValue('filter-author', v);
+                                clearGlobalFilter('byAuthor');
+                            }));
+                            break;
+
+        case 'byIdioma'   : getChecked('filter-idioma'   )
+                            .forEach(v => addTag(v, () => {
+                                uncheckValue('filter-idioma', v);
+                                clearGlobalFilter('byIdioma');
+                            }));
+                            break;
+
+        case 'byCategory' : getChecked('filter-category' )
+                            .forEach(v => addTag(v, () => {
+                                uncheckValue('filter-category', v);
+                                clearGlobalFilter('byCategory');
+                            }));
+                            break;
+
+        case 'byTradition': getChecked('filter-tradition')
+                            .forEach(v => addTag(v, () => {
+                                uncheckValue('filter-tradition', v);
+                                clearGlobalFilter('byTradition');
+                            }));
+                            break;
+
+        case 'byGenre'    : getChecked('filter-genre'    )
+                            .forEach(v => addTag(v, () => {
+                                uncheckValue('filter-genre', v);
+                                clearGlobalFilter('byGenre');
+                            }));
+                            break;
+
+        case 'byPeriod' :
+        case 'period'  :
+
+            if (periodTagAdded) break;
+            periodTagAdded = true;
+            selectedPeriods.forEach(p => addTag(p, () => {
+                selectedPeriods = [];
+                d3.selectAll('#period-filter .period-bar').classed('selected', false);
+                clearGlobalFilter('period');
+                clearGlobalFilter('byPeriod');
+            }));
+            break;
+
+        case 'treemap' :
+            if (treemapSelection){
+                const tagLabel = currentTreemapMode === 'category'
+                    ? ( treemapSelection.gen
+                            ? `${treemapSelection.cat} › ${treemapSelection.gen}`
+                            : treemapSelection.cat )
+                    : treemapSelection.trad;
+
+                addTag(tagLabel, () => {
+                    treemapSelection   = null;
+                    treemapFilterOrigin = null;
+                    clearGlobalFilter('treemap');
+                    createTreemap('#treemap-area',
+                                    applyGlobalFilters(globalData),
+                                    currentTreemapMode,
+                                    updateDashboard,
+                                    genderGraphActive);
+                });
+            } else addTag('Treemap', () => {
+                clearGlobalFilter('treemap');
             });
-            tag.appendChild(x);
-            tags.appendChild(tag);
-        });
-    });
+            break;
+
+        case 'network' :
+            (activeFilters.network?.values || ['Network selection']).forEach(lib => {
+                addTag(lib, () => {
+                    selectedNodes.clear();
+                    selectedLinks.clear();
+                    clickedLinks.clear();
+                    clearGlobalFilter('network');
+                    updateNetworkStyles(null);
+                });
+            });
+            break;
+
+        case 'byProbObra' :
+            getChecked('filter-probobra').forEach(v=>addTag(`Prob. Obra: ${v}`, ()=>{
+                uncheckValue('filter-probobra', v);
+                clearGlobalFilter('byProbObra');
+            }));
+            break;
+
+        case 'byProbAutor':
+            getChecked('filter-probautor').forEach(v=>addTag(`Prob. Autor: ${v}`, ()=>{
+                uncheckValue('filter-probautor', v);
+                clearGlobalFilter('byProbAutor');
+            }));
+            break;
+
+        default:
+            addTag(key, () => clearGlobalFilter(key));
+        }
+  }
+}
+
+window.refreshFilterTags = rebuildFilterTags;
+const refreshFilterTags  = rebuildFilterTags;
+
+function uncheckValue(listId, value){
+    document
+        .querySelectorAll(`#${listId} input[value="${CSS.escape(value)}"]`)
+        .forEach(cb => cb.checked = false);
+    bumpCounter(document.getElementById(listId));
 }
 
 function wireSearch(inputEl, listEl) {
@@ -591,13 +700,23 @@ function startDashboard() {
 
             document.getElementById('clear-modal-filters')
                 .addEventListener('click', () => {
-                document.querySelectorAll('.checklist input:checked')
-                        .forEach(cb => cb.checked = false);
-                document.querySelectorAll('.checklist')
-                        .forEach(list => bumpCounter(list));
-                document.getElementById('filter-tags').innerHTML = '';
-                refreshFilterTags();
+                    clearAllFilters();
+
+                    document.querySelectorAll('.checklist input')
+                            .forEach(cb => cb.checked = false);
+                    document.querySelectorAll('.checklist')
+                            .forEach(list => bumpCounter(list));
+
+                    updateTreemapBadge();
+                    rebuildFilterTags();
+                    updateDashboard();
             });
+
+            if (!document.querySelector('#filter-category input:checked, #filter-genre input:checked, #filter-tradition input:checked')) {
+                clearGlobalFilter('treemap');
+                treemapFilterOrigin = null;
+                updateTreemapBadge();
+            }
 
             applyBtn.addEventListener('click', () => {
                 const libs    = getChecked('filter-library');
@@ -610,26 +729,32 @@ function startDashboard() {
                 const probOb  = getChecked('filter-probobra');
                 const probAu  = getChecked('filter-probautor');
 
-                libs.length   ? setGlobalFilter('byLibrary',   r => libs.includes(r.Proprietario_Nome))
-                                : clearGlobalFilter('byLibrary');
-                auths.length  ? setGlobalFilter('byAuthor',    r => auths.includes(r.Nome_Autor))
-                                : clearGlobalFilter('byAuthor');
-                idioma.length ? setGlobalFilter('byIdioma',    r => idioma.includes(r.Idioma))
-                                : clearGlobalFilter('byIdioma');
-                cats.length   ? setGlobalFilter('byCategory',  r => cats.includes(r.CatLit_Descricao))
-                                : clearGlobalFilter('byCategory');
-                trads.length  ? setGlobalFilter('byTradition', r => trads.includes(r.TradicaoIntelectual_Obra))
-                                : clearGlobalFilter('byTradition');
-                gens.length   ? setGlobalFilter('byGenre',     r => gens.includes(r.GenLit_Descricao))
-                                : clearGlobalFilter('byGenre');
-                pers.length   ? setGlobalFilter('byPeriod',    r => pers.includes(r.EpocaHistorica_Autor))
-                                : clearGlobalFilter('byPeriod');
+                libs.length   ? setGlobalFilter('byLibrary',   r => libs.includes(r.Proprietario_Nome), libs)
+                            : clearGlobalFilter('byLibrary');
 
-                probOb.length ? setGlobalFilter('byProbObra',  r => probOb.includes(r.ProbAtribObra))
-                    : clearGlobalFilter('byProbObra');
+                auths.length  ? setGlobalFilter('byAuthor',    r => auths.includes(r.Nome_Autor),       auths)
+                            : clearGlobalFilter('byAuthor');
 
-                probAu.length ? setGlobalFilter('byProbAutor', r => probAu.includes(r.ProbAtribAutor))
-                    : clearGlobalFilter('byProbAutor');
+                idioma.length ? setGlobalFilter('byIdioma',    r => idioma.includes(r.Idioma),          idioma)
+                            : clearGlobalFilter('byIdioma');
+
+                cats.length   ? setGlobalFilter('byCategory',  r => cats.includes(r.CatLit_Descricao),  cats)
+                            : clearGlobalFilter('byCategory');
+
+                trads.length  ? setGlobalFilter('byTradition', r => trads.includes(r.TradicaoIntelectual_Obra), trads)
+                            : clearGlobalFilter('byTradition');
+
+                gens.length   ? setGlobalFilter('byGenre',     r => gens.includes(r.GenLit_Descricao),  gens)
+                            : clearGlobalFilter('byGenre');
+
+                pers.length   ? setGlobalFilter('byPeriod',    r => pers.includes(r.EpocaHistorica_Autor), pers)
+                            : clearGlobalFilter('byPeriod');
+
+                probOb.length ? setGlobalFilter('byProbObra',  r => probOb.includes(r.ProbAtribObra),   probOb)
+                            : clearGlobalFilter('byProbObra');
+
+                probAu.length ? setGlobalFilter('byProbAutor', r => probAu.includes(r.ProbAtribAutor),  probAu)
+                            : clearGlobalFilter('byProbAutor');
 
                 updateDashboard();
                 updateFilterBadge();

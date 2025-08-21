@@ -248,7 +248,15 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                             book.GenLit_Descricao === d.data.name
                         : book => book.TradicaoIntelectual_Obra === d.data.name;
 
-                    setGlobalFilter('treemap', filterFn);
+                    setGlobalFilter(
+                        'treemap',
+                        filterFn,
+                        [ d.data.name ],
+                        currentTreemapMode === 'category'
+                            ? 'filter-genre'
+                            : 'filter-tradition'
+                    );
+
                     treemapFilterOrigin = currentTreemapMode;
                     updateTreemapBadge();
 
@@ -288,8 +296,11 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                         d3.select("#treemap-breadcrumbs .crumb-category")
                             .on("click", () => {
                                 zoom(d.parent);
-                                setGlobalFilter('treemap',
-                                    book => book.CatLit_Descricao === d.parent.data.name
+                                setGlobalFilter(
+                                    'treemap',
+                                    catFilter,
+                                    [cat],
+                                    'filter-category'
                                 );
                                 treemapFilterOrigin = currentTreemapMode;
                                 updateTreemapBadge();
@@ -347,7 +358,14 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                         filterFn = book => book.TradicaoIntelectual_Obra === d.data.name;
                     }
                     if (filterFn) {
-                        setGlobalFilter('treemap', filterFn);
+                        setGlobalFilter(
+                            'treemap',
+                            filterFn,
+                            [d.data.name],
+                            currentTreemapMode === 'category'
+                                ? 'filter-category'
+                                : 'filter-tradition'
+                        );
                         treemapFilterOrigin = currentTreemapMode;
                     }
                     else {

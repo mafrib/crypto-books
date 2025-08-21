@@ -84,9 +84,12 @@ function handleLinkClick(d, allData) {
     });
 
     if (filters.length > 0) {
-    setGlobalFilter('network',
-        row => filters.some(fn => fn(row))
-    );
+        const libs = Array.from(selectedNodes);
+        setGlobalFilter(
+            'network',
+            row => filters.some(fn => fn(row)),
+            libs
+        );
     } else {
     clearGlobalFilter('network');
     }
@@ -158,8 +161,10 @@ function addParallelMetadata(edges, gap) {
 function applyNetworkFilter(allowedSet, data) {
     // set or clear the global filter
     if (allowedSet && allowedSet.size > 0) {
-        setGlobalFilter('network', row =>
-            allowedSet.has(row.Proprietario_Nome.trim())
+        setGlobalFilter(
+            'network',
+            row => allowedSet.has(row.Proprietario_Nome.trim()),
+            Array.from(allowedSet)
         );
     } else {
         clearGlobalFilter('network');

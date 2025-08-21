@@ -355,8 +355,10 @@ function makeMap () {
                         d3.select(this).classed('selected', selectedPeriods.includes(period));
 
                         if (selectedPeriods.length) {
-                            setGlobalFilter('period',
-                            d => selectedPeriods.includes(d.EpocaHistorica_Autor)
+                            setGlobalFilter(
+                                'period',
+                                d => selectedPeriods.includes(d.EpocaHistorica_Autor),
+                                selectedPeriods
                             );
                         } else {
                             clearGlobalFilter('period');
