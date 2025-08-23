@@ -478,13 +478,14 @@ function enableVizExpand() {
         btn.className = 'expand-btn';
         btn.setAttribute('aria-label', 'Maximize');
         btn.innerHTML = '<img src="../img/icons/maximize.png" alt="" aria-hidden="true">';
-        viz.appendChild(btn);
+        (viz.querySelector('.viz-actions')
+            || viz).appendChild(btn);
 
-        btn.addEventListener('click', e=>{
-        e.stopPropagation();
-        viz.classList.contains('is-expanded')
-            ? closeVizModal(viz.__modal, viz)
-            : openVizModal(viz);
+        btn.addEventListener('click', e=> {
+            e.stopPropagation();
+            viz.classList.contains('is-expanded')
+                ? closeVizModal(viz.__modal, viz)
+                : openVizModal(viz);
         });
   });
 }
