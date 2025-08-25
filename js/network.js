@@ -529,7 +529,10 @@ function createNetworkGraph(containerSelector, data) {
                     )
                 );
 
-            if (selectedNodes.size === 0 && treemapFilterActive()){
+            const externalFiltersActive =
+                Object.keys(activeFilters).some(k => k !== 'network');
+
+            if (selectedNodes.size === 0 && externalFiltersActive){
                 // remove every library → zero results
                 setGlobalFilter('network', ()=>false);
                 updateDashboard();
