@@ -341,12 +341,13 @@ a {
   margin-top: 8px;
 }
 
-#period-filter .period-bar.hovered-period-bar {
-  background: #16404D;
+g.node.hovered-network-node circle {
+  stroke: red;
+  stroke-width: 2px;
 }
 
-#period-filter .period-bar.hovered-period-bar .label {
-  color: #FFFAEC;
+#period-filter .period-bar.hovered-period-bar{
+  border: 2px solid red;
 }
 
 .period-bar .count {
@@ -723,14 +724,6 @@ svg:not(.node-active-mode) .node:hover text {
 .switch[aria-pressed="true"]::after {
   left: 29px;
   top: 9px;
-}
-
-g.node.hovered-network-node circle {
-  fill: #16404D;
-}
-
-g.node.hovered-network-node text {
-  fill: #FFFAEC;
 }
 
 .info-btn {
