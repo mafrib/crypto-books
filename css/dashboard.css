@@ -88,6 +88,19 @@ a {
   z-index: 0;
 }
 
+#modal-shield {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+}
+
+#conflict-popup,
+#no-results-popup {
+  z-index: 9999;
+}
+
 /* EXPANDABLE VISUALIZATION DETAILS */
 
 .expand-btn {
@@ -279,7 +292,6 @@ a {
   flex: 1 1 auto;
   margin-top: 16px;
   gap: 6px;
-  padding: 0.2rem;
 }
 
 #period-filter .period-bar {
@@ -300,7 +312,7 @@ a {
 }
 
 #period-filter .period-bar .label {
-  font-size: 0.6em;
+  font-size: 0.55em;
   color: #16404D;
   white-space: normal;
   overflow-wrap: break-word;

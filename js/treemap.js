@@ -57,7 +57,6 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         .sort((a, b) => b.value - a.value);
 
     const path = d3.select("#treemap-breadcrumbs");
-    path.html(root.data.name); // Set root of path based on mode
 
     const containerEl = container.node();
     const width       = containerEl.clientWidth;
@@ -88,15 +87,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
         treemapSelection = null;
         treemapFilterOrigin = null;
         updateTreemapBadge();
-        const filteredRows = applyGlobalFilters(globalData);
-        createTreemap(
-            '#treemap-area',
-            filteredRows,
-            currentTreemapMode,
-            onUpdate,
-            genderGraphActive
-        );
-        if (onUpdate) onUpdate();
+        zoom(root, null, true);
     });
 
     goToStoredPosition();
@@ -180,45 +171,87 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
             .size([width, height])
             .paddingInner(1)(newRoot);
 
-        newRoot.each(d => {
-            d.originalParent = node.parent || root;
-        });
+        newRoot.originalParent = node.originalParent
+                        || node.parent;
 
         const nodes = newRoot.children;
 
-        // Update breadcrumbs
-        const path = d3.select("#treemap-breadcrumbs");
-        if (!node.parent) {
-            path.html(root.data.name);
-            if (fromUser) {
-                clearGlobalFilter('treemap');
-                treemapFilterOrigin = null;
-                updateTreemapBadge();
+        const path  = d3.select("#treemap-breadcrumbs");
+
+        const names = [];
+        let p = node;
+        while (p) {
+            names.unshift(p.data.name);
+            p = p.originalParent || p.parent;
+        }
+
+        const html = names.map((label, i) => {
+            const cls =
+                  i === 0              ? 'crumb-root'
+                : i === names.length-1 ? 'crumb-leaf'
+                : 'crumb-intermediate';
+            const w   = i === names.length-1 ? 'bold' : 'normal';
+            const cur = i === names.length-1 ? 'default' : 'pointer';
+            return `<span class="${cls}" data-level="${i}"
+                         style="cursor:${cur}; font-weight:${w};">
+                        ${label}
+                    </span>`;
+        }).join('&nbsp;>&nbsp;');
+
+        path.html(html);
+
+        path.select('.crumb-root')
+            .on('click', e => {
+                e.stopPropagation();
+                if (names.length === 1) return;
+                zoom(root, null, true);
+            });
+
+        path.selectAll('.crumb-intermediate').on('click', (e) => {
+            e.stopPropagation();
+
+            const targetLevel = +e.currentTarget.dataset.level;
+            let a = root;
+            for (let lvl = 1; lvl <= targetLevel; ++lvl) {
+                const wanted = names[lvl];
+                a = a.children?.find(n => n.data.name === wanted);
+                if (!a) break;
             }
-            if (onUpdate) onUpdate();
-        } else {
-            path.html(`
-                <span class="crumb-root" style="cursor: pointer; font-weight: normal;">${root.data.name}</span>
-                &nbsp;>&nbsp;
-                <span style="font-weight: bold;">${node.data.name}</span>
-            `);
-            path.select('.crumb-root')
-                .on("click", (event) => {
-                    event.stopPropagation();
+            if (!a) return;
+
+            if (currentTreemapMode === 'category') {
+                if (targetLevel === 1) {
+                    setGlobalFilter('treemap',
+                                    r => r.CatLit_Descricao === a.data.name,
+                                    [a.data.name],
+                                    'filter-category');
+                    treemapSelection   = { cat : a.data.name };
+                } else {
+                clearGlobalFilter('treemap');
+                    treemapSelection = null;
+                }
+            } else {
+                if (targetLevel === 1) {
+                    setGlobalFilter('treemap',
+                                    r => r.TradicaoIntelectual_Obra === a.data.name,
+                                    [a.data.name],
+                                    'filter-tradition');
+                    treemapSelection   = { trad : a.data.name };
+                } else {
                     clearGlobalFilter('treemap');
                     treemapSelection = null;
-                    treemapFilterOrigin = null;
-                    updateTreemapBadge();
-                    const filteredRows = applyGlobalFilters(globalData);
-                    createTreemap(
-                        '#treemap-area',
-                        filteredRows,
-                        currentTreemapMode,
-                        onUpdate,
-                        genderGraphActive
-                    );
-                    if (onUpdate) onUpdate();
-                });
+                }
+            }
+            treemapFilterOrigin = currentTreemapMode;
+            updateTreemapBadge();
+
+            zoom(a, null, true);
+        });
+
+        if (!node.parent && fromUser) {
+            clearGlobalFilter('treemap');
+            treemapFilterOrigin = null;
+            updateTreemapBadge();
         }
 
         const t = group.transition().duration(750);
@@ -267,85 +300,6 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
 
                     zoom(d, initRect);
 
-                    // Rebuild breadcrumbs for leaf
-                    if (currentTreemapMode === 'category') {
-                        const rootLabel = 'Literary categories';
-                        d3.select("#treemap-breadcrumbs").html(`
-                            <span class="crumb-root" style="cursor:pointer; font-weight:normal;">
-                              ${rootLabel}
-                            </span>
-                            &nbsp;>&nbsp;
-                            <span class="crumb-category" style="cursor:pointer; font-weight:normal;">
-                              ${d.parent.data.name}
-                            </span>
-                            &nbsp;>&nbsp;
-                            <span class="crumb-genre" style="font-weight:bold;">
-                              ${d.data.name}
-                            </span>
-                        `);
-
-                        d3.select("#treemap-breadcrumbs .crumb-root")
-                            .on("click", () => {
-                                zoom(root, null, true);
-                                clearGlobalFilter('treemap');
-                                treemapFilterOrigin = null;
-                                updateTreemapBadge();
-                                if (onUpdate) onUpdate();
-                            });
-
-                        d3.select("#treemap-breadcrumbs .crumb-category")
-                            .on("click", () => {
-                                zoom(d.parent);
-                                setGlobalFilter(
-                                    'treemap',
-                                    catFilter,
-                                    [cat],
-                                    'filter-category'
-                                );
-                                treemapFilterOrigin = currentTreemapMode;
-                                updateTreemapBadge();
-                                d3.select("#treemap-breadcrumbs").html(`
-                                    <span class="crumb-root" style="cursor:pointer; font-weight:normal;">
-                                      ${rootLabel}
-                                    </span>
-                                    &nbsp;>&nbsp;
-                                    <span class="crumb-category" style="font-weight:bold;">
-                                      ${d.parent.data.name}
-                                    </span>
-                                `);
-                                d3.select("#treemap-breadcrumbs .crumb-root")
-                                    .on("click", () => {
-                                        zoom(root);
-                                        clearGlobalFilter('treemap');
-                                        treemapFilterOrigin = null;
-                                        updateTreemapBadge();
-                                        if (onUpdate) onUpdate();
-                                    });
-                                if (onUpdate) onUpdate();
-                            });
-
-                    } else {
-                        d3.select("#treemap-breadcrumbs").html(`
-                            <span class="crumb-root" style="cursor:pointer; font-weight:normal;">
-                              Intellectual Tradition
-                            </span>
-                            &nbsp;>&nbsp;
-                            <span class="crumb-tradition" style="font-weight:bold;">
-                              ${d.data.name}
-                            </span>
-                        `);
-
-                        d3.select("#treemap-breadcrumbs .crumb-root")
-                            .on("click", () => {
-                                zoom(root);
-                                clearGlobalFilter('treemap');
-                                treemapFilterOrigin = null;
-                                updateTreemapBadge();
-                                if (onUpdate) onUpdate();
-                            });
-                    }
-
-                    if (onUpdate) onUpdate();
                     return;
                 }
 
@@ -380,8 +334,6 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                         treemapSelection = {trad: d.data.name};
 
                     zoom(d, initRect);
-
-                    if (onUpdate) onUpdate();
                 }
             });
 

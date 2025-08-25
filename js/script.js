@@ -3,6 +3,7 @@ let baselineW, baselineH;
 let currentTreemapMode = 'category';
 let genderGraphActive = false;
 let treemapFilterOrigin = null;   // 'category' or 'tradition'
+let skipNextTreemapRedraw = false;
 const periodOrder = [
   "Indeterminada",
   "Época Arcaica (VIII-V aC)",
@@ -18,65 +19,67 @@ window.clearPeriodHighlights = () => {};
 function showNoResultsPopup(prevSel) {
   pendingUndoNodes = prevSel;
   document.getElementById('no-results-popup').hidden = false;
+  document.getElementById('modal-shield' ).hidden = false;
 }
 
 function hideNoResultsPopup() {
   pendingUndoNodes = null;
   document.getElementById('no-results-popup').hidden = true;
+  document.getElementById('modal-shield' ).hidden = true;
 }
 
 window.showNoResultsPopup  = showNoResultsPopup;
 window.hideNoResultsPopup  = hideNoResultsPopup;
 
 function getConflictingFilters(rows, skip = []) {
-  const ignore = new Set(['network', ...skip]);
-  return Object.keys(activeFilters)
-    .filter(k => !ignore.has(k))
-    .filter(k => rows.every(r => !activeFilters[k].fn(r)));
+    const ignore = new Set(skip);
+    return Object.keys(activeFilters)
+        .filter(k => !ignore.has(k))
+        .filter(k => rows.every(r => !activeFilters[k].fn(r)));
 }
 
 function getConflictingFiltersForPeriod(periodName) {
-  const rowsOfPeriod = globalData.filter(r =>
-    r.EpocaHistorica_Autor === periodName
-  );
+    const rowsOfPeriod = globalData
+        .filter(r => r.EpocaHistorica_Autor === periodName);
 
-  return Object.keys(activeFilters)
-    .filter(src => src !== 'period' && src !== 'byPeriod' && src !== 'network')
-    .filter(src => {
-      const fn = activeFilters[src];
-
-      return rowsOfPeriod.every(row => !fn(row));
-    });
+    return Object.keys(activeFilters)
+     .filter(src => src !== 'period' && src !== 'byPeriod')
+     .filter(src => rowsOfPeriod.every(row => !activeFilters[src].fn(row)));
 }
 
 function showConflictPopup(subjectLabel, filters, kind = 'library') {
-  const prefix = {
-    library : 'The library',
-    period  : 'The historical period'
-  }[kind] || 'The item';
+    const prefix = {
+        library : 'The library',
+        period  : 'The historical period'
+    }[kind] || 'The item';
 
-  const msg = document.getElementById('conflict-msg');
-  msg.innerHTML =
-      `${prefix} “<strong>${subjectLabel}</strong>” has no books that match:` +
-      '<br>' +
-      filters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
+    const msg = document.getElementById('conflict-msg');
+    msg.innerHTML =
+        `${prefix} “<strong>${subjectLabel}</strong>” has no books that match:` +
+        '<br>' +
+        filters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
 
-  document.getElementById('conflict-popup').hidden = false;
+    document.getElementById('conflict-popup').hidden = false;
+    document.getElementById('modal-shield' ).hidden = false;
 }
 
-function showPeriodConflictPopup(periodName, conflictingFilters) {
-  const msg = document.getElementById('conflict-msg');
-  msg.innerHTML =
-    `The historical period “<strong>${periodName}</strong>” has no books that match:` +
-    '<br>' +
-    conflictingFilters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
+function getConflictingFiltersForPeriod(periodName) {
+    const rowsOfPeriod = globalData.filter(r =>
+        r.EpocaHistorica_Autor === periodName
+    );
 
-  document.getElementById('conflict-popup').hidden = false;
+    return Object.keys(activeFilters)
+        .filter(src => src !== 'period' && src !== 'byPeriod')
+        .filter(src => {
+            const fn = activeFilters[src];
+            return rowsOfPeriod.every(row => !fn(row));
+        });
 }
 
 function hideConflictPopup() {
     pendingNode   = null;
     document.getElementById('conflict-popup').hidden = true;
+    document.getElementById('modal-shield' ).hidden = true;
 }
 
 window.hideConflictPopup = hideConflictPopup;
@@ -87,9 +90,16 @@ function prettyFilterName(src) {
         byCategory : 'Literary category',
         byAuthor   : 'Author',
         byIdioma   : 'Language',
-        treemap    : 'Treemap filter',
-        network    : 'Network filter'
+        byLibrary  : 'Library',
+        treemap    : "Books' classification",
+        network    : 'Library'
     };
+
+    if (src === 'byLibrary' || src === 'network') {
+        const libs = activeFilters[src]?.values || [];
+        const list = libs.length ? `: ${libs.join(', ')}` : '';
+        return `Library${list}`;
+   }
 
     /* add the concrete period(s) that are selected */
     if (src === 'period' || src === 'byPeriod') {
@@ -99,6 +109,17 @@ function prettyFilterName(src) {
 
         const list = labels.length ? `: ${labels.join(', ')}` : '';
         return `Historical period${list}`;
+    }
+
+    if (src === 'treemap') {
+        if (treemapSelection) {
+            if (currentTreemapMode === 'category') {
+                const {cat, gen} = treemapSelection;
+                return `Books' classification: ${cat}${gen ? ' › ' + gen : ''}`;
+            }
+            return `Books' classification: ${treemapSelection.trad}`;
+        }
+        return "Books' classification";
     }
 
     return map[src] || src;
@@ -305,6 +326,7 @@ function rebuildFilterTags () {
                                     currentTreemapMode,
                                     updateDashboard,
                                     genderGraphActive);
+                    updateTreemapBadge();
                 });
             } else addTag('Treemap', () => {
                 clearGlobalFilter('treemap');

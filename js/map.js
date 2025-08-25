@@ -348,9 +348,22 @@ function makeMap () {
                             }
                         }
 
-                        const idx = selectedPeriods.indexOf(period);
-                        if (idx > -1) selectedPeriods.splice(idx, 1);
-                        else          selectedPeriods.push(period);
+                        const next     = [...selectedPeriods];
+                        const already  = next.indexOf(period) > -1;
+                        already ? next.splice(next.indexOf(period), 1) : next.push(period);
+
+                        const pretendFn = row => next.includes(row.EpocaHistorica_Autor);
+                        const pretendSet = applyFiltersExcept(['period','byPeriod'])
+                                            .filter(pretendFn);
+
+                        if (next.length > 0 && pretendSet.length === 0) {
+                            showConflictPopup(period,
+                            getConflictingFiltersForPeriod(period), 'period');
+                            return;
+                        }
+
+                        selectedPeriods = next;
+                        d3.select(this).classed('selected', !already);
 
                         d3.select(this).classed('selected', selectedPeriods.includes(period));
 
@@ -429,21 +442,18 @@ function updateDashboard() {
     const allowedSet = new Set(filtered.map(r => r.Proprietario_Nome));
     updateNetworkStyles(allowedSet);
 
-    createTreemap(
-        '#treemap-area',
-        filtered,
-        currentTreemapMode,
-        () => {
-            const newlyFiltered = applyGlobalFilters(globalData);
-            const newlyFilteredNoPeriod= applyFiltersExcept(['period','byPeriod']);
-            repaintPeriodBars(newlyFilteredNoPeriod);
-            const sortedAgain = [...newlyFiltered]
-                .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
-            createBooksCatalog(sortedAgain);
-            updateNetworkStyles(new Set(newlyFiltered.map(r => r.Proprietario_Nome)));
-        },
-        genderGraphActive
-    );
+    const skipTreemap =
+        treemapFilterActive() && treemapFilterOrigin === currentTreemapMode;
+
+    if (!skipTreemap) {
+        createTreemap(
+            '#treemap-area',
+            filtered,
+            currentTreemapMode,
+            null,
+            genderGraphActive
+        );
+    }
 }
 
 function repaintPeriodBars(rowSetWithoutPeriod) {
