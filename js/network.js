@@ -470,13 +470,14 @@ function createNetworkGraph(containerSelector, data) {
             const prevSelection = new Set(selectedNodes);
 
             const allowedSet = new Set(
-                applyGlobalFilters(globalData)
+                applyFiltersExcept(['network'])
                     .map(r => r.Proprietario_Nome.trim())
             );
 
             if (!allowedSet.has(d.id)) {
                 const blockers = getConflictingFilters(
-                    globalData.filter(r => r.Proprietario_Nome.trim() === d.id)
+                    globalData.filter(r => r.Proprietario_Nome.trim() === d.id),
+                    ['network']
                 );
 
                 if (blockers.length) {
