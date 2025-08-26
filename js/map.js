@@ -10,12 +10,53 @@ const zoomMax = 4;
 const width = 380;
 const height = 200;
 
+function positionOffMsg(legendEl) {
+  const el = document.getElementById('map-offmsg');
+  if(!el || !legendEl) return;
+
+  const legendW = legendEl.getBoundingClientRect().width;
+  const padL = parseFloat(getComputedStyle(legendEl).paddingLeft) || 0;
+
+  const extra   = 6;
+
+  el.style.paddingRight = (legendW + padL + extra) + 'px';
+}
+
+function parseDMS(str) {
+    if (!str) return NaN;
+    const m = str.match(/(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEW])/);
+    if (!m) return NaN;
+    let [,deg,min,sec,dir] = m;
+    let dec = +deg + +min/60 + +sec/3600;
+    if (dir==='S'||dir==='W') dec = -dec;
+    return dec;
+}
+
+function updateUnlocatedBadge(rowSet){
+    const n = rowSet.filter(r=>{
+        const lat = parseDMS(r.Latitude_Autor);
+        const lon = parseDMS(r.Longitude_Autor);
+        return isNaN(lat) || isNaN(lon);
+    }).length;
+
+    const el = document.getElementById('map-offmsg');
+    if (!el) return;
+
+    if (n) {
+        el.textContent = `${n} book${n>1?'s':''} with no location`;
+        el.hidden = false;
+    } else {
+        el.hidden = true;
+    }
+}
+
 function makeMap () {
 
     if (mapSvg) {
         const containerEl = document.getElementById('map-area');
         const legendEl    = containerEl.querySelector('.map-color-scale');
         const legendW     = legendEl.clientWidth;
+        positionOffMsg(legendEl);
         const mapW        = containerEl.clientWidth - legendW;
         const isExpanded = document
             .getElementById('map-visualization')
@@ -51,6 +92,7 @@ function makeMap () {
     const containerEl = document.getElementById('map-area');
     const legendEl    = containerEl.querySelector('.map-color-scale');
     const legendW = legendEl.clientWidth;
+    positionOffMsg(legendEl);
     const mapW    = containerEl.clientWidth - legendW;
     const mapH = containerEl.clientHeight;
 
@@ -423,6 +465,7 @@ function makeMap () {
 
 function updateDashboard() {
     const filtered = applyGlobalFilters(globalData);
+    updateUnlocatedBadge(filtered);
     const filteredNoPeriod   = applyFiltersExcept(['period','byPeriod']);
     repaintPeriodBars(filteredNoPeriod);
 

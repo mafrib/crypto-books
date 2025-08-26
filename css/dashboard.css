@@ -168,11 +168,17 @@ a {
   padding-left: 6px;
   position: relative;
   z-index: 1;
-}
-
-.map-color-scale{
   flex: 0 1 70px;
   min-width: 70px;
+}
+
+.map-offhint {
+  margin: 4px 0 0;
+  font-size: 0.6rem;
+  font-style: italic;
+  color: #606060;
+  text-align: right;
+  position: relative;
 }
 
 .map-color-scale .legend-title {

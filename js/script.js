@@ -576,6 +576,7 @@ function startDashboard() {
         .then((data) => {
             globalData = data;
             const filteredData = applyGlobalFilters(globalData);
+            updateUnlocatedBadge(filteredData);
             updateTreemapBadge();
 
             populateFilterOptions();
