@@ -5,6 +5,12 @@ const clickedLinks = new Set();   // only those links the user explicitly clicke
 const selectedNodes = new Set();  // libraries clicked
 const linkKey = d => `${d.source.id || d.source}|${d.target.id || d.target}|${d.type}`;
 
+function linkLabel(key) {
+    const [a, b, type] = key.split('|');
+    const kind = type === 'book' ? 'Books' : 'Authors';
+    return `${kind} in common: ${a} ↔ ${b}`;
+}
+
 function handleLinkClick(d, allData) {
     const lk = linkKey(d);
 
@@ -85,10 +91,15 @@ function handleLinkClick(d, allData) {
 
     if (filters.length > 0) {
         const libs = Array.from(selectedNodes);
+        const labels = [
+            ...libs,
+            ...Array.from(selectedLinks).map(linkLabel)
+        ];
+
         setGlobalFilter(
             'network',
             row => filters.some(fn => fn(row)),
-            libs
+            labels
         );
     } else {
     clearGlobalFilter('network');

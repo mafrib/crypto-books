@@ -340,6 +340,14 @@ function rebuildFilterTags () {
                     selectedLinks.clear();
                     clickedLinks.clear();
                     clearGlobalFilter('network');
+                    svg.selectAll('.link')
+                                .classed('active', false)
+                                .style('opacity', null);
+
+                    svg.selectAll('g.node')
+                                .classed('active', false)
+                                .classed('selected-by-link', false);
+
                     updateNetworkStyles(null);
                 });
             });
