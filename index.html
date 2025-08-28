@@ -5,6 +5,9 @@
 
     <link href="css/dashboard.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- D3.js library -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
@@ -14,8 +17,9 @@
     <script src="js/treemap.js"></script>
     <script src="js/catalog.js"></script>
     <script src="js/filter.js"></script>
-    <script src="js/script.js"></script>
+    <script defer src="js/script.js"></script>
     <script src="js/details-panel.js"></script>
+    <script defer src="js/export.js"></script>
   </head>
 
   <body onload="startDashboard()">
@@ -23,8 +27,17 @@
       <h1 class="title">Crypto-Books</h1>
       <ul>
         <li><a target="_blank" rel="noopener noreferrer" href="https://cryptobooksim.wixsite.com/cryptobooks">About</a></li>
-        <li><a>Database</a></li>
-      </div>
+        <li class="dropdown">
+          <button id="export-btn" aria-haspopup="true" aria-expanded="false">
+            <span>Export</span>
+            <img src="../img/icons/download.png" id="download-icon" alt="download">
+          </button>
+          <ul id="export-menu" class="dropdown-menu">
+            <li><a id="export-csv">Dataset (.csv)</a></li>
+            <li><a id="export-pdf">PDF report</a></li>
+          </ul>
+        </li>
+      </ul>
     </nav>
     <div id="modal-shield" hidden></div>
     <div id="no-results-popup" class="empty-state" hidden>

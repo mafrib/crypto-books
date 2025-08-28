@@ -38,20 +38,66 @@ html, body {
   font-size: x-large;
 }
 
-.navbar ul,
-.navbar li {
-  list-style-type: none; /* remove the bullets */
-  display: inline;
+.navbar > ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
   color: #FAF7F4;
   font-weight: 500;
-  display: flex;
-  justify-content: space-between;
-  gap: 2rem;
+}
+
+.navbar > ul > li {
+  display: inline-flex;
+  align-items: center;
+}
+
+#download-icon {
+  width: 1.2rem;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+#export-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.dropdown { position: relative; }
+
+.dropdown-menu {
+  position: absolute; right: 0; top: 100%;
+  background: #F5ECD5; border: 1px solid #16404D;
+  border-radius: 6px; list-style: none; padding: 4px 0;
+  min-width: 140px; z-index: 100;
+  display: none;
+  flex-direction: column;
+}
+
+.dropdown-menu.open { display: flex; }
+
+.dropdown-menu li a {
+  display: block; padding: 6px 12px; font-size: .75rem;
+  color: #16404D; text-decoration: none; white-space: nowrap;
+}
+
+.dropdown-menu li a:hover { background: #D6E5DB; }
+
+.dropdown-menu li {
+  display: block;        /* overrides “inline” from .navbar li */
+}
+
+.dropdown-menu li a:hover {
+  background: #D6E5DB;
+  cursor: pointer;       /* visible hover feedback */
 }
 
 .dashboard-wrap {
@@ -1333,6 +1379,11 @@ details[open] > summary::after {
   color: #aaa;
   font-style: italic;
   font-size: 0.7rem;
+}
+
+/* ensure html2canvas captures the placeholder exactly as seen */
+#search-input::placeholder {
+  opacity: 1;          /* make it render */
 }
 
 #search-icon {
