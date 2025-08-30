@@ -366,6 +366,14 @@ a {
   z-index: 0;
 }
 
+.library-point.dimmed {
+  opacity: .30;
+}
+
+.library-point.highlighted {
+  filter: drop-shadow(0 0 4px rgba(0,0,0,.35));
+}
+
 .period-filter-wrapper {
   display: flex;
   flex-direction: column;

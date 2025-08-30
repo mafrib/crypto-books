@@ -8,6 +8,8 @@ let selectedPeriods = [];
 const zoomMin = 0.8;
 const zoomMax = 4;
 
+let currentZoomK = 1;
+
 const width = 380;
 const height = 200;
 
@@ -64,6 +66,25 @@ function updateUnlocatedBadge(rowSet) {
     }
 }
 
+function highlightPoint(el, d) {
+    el.raise()
+        .classed('highlighted', true)
+        .transition().duration(120)
+        .attr('r', (d.baseR * 2) / currentZoomK);
+
+    d3.selectAll('circle.library-point')
+        .filter(p => p !== d)
+        .classed('dimmed', true);
+}
+
+function clearPointHighlight(el, d) {
+    el.classed('highlighted', false)
+        .transition().duration(120)
+        .attr('r', d.baseR / currentZoomK);
+
+    d3.selectAll('circle.library-point').classed('dimmed', false);
+}
+
 function clickZoom(event, factor) {
     event.stopPropagation();
     mapSvg.interrupt();
@@ -105,8 +126,11 @@ function makeMap () {
             .attr('cx', d => proj(d)[0])
             .attr('cy', d => proj(d)[1]);
 
+        mapGroup.selectAll("circle.library-point.highlighted")
+            .attr("r", d => (d.baseR * 2) / event.transform.k);
+
         d3.select('#map-area .map-color-scale , #map-area .bar-wrapper')
-        .style('height', mapH + 'px');
+            .style('height', mapH + 'px');
 
         return;
     }
@@ -191,13 +215,17 @@ function makeMap () {
     zoom = d3.zoom()
         .scaleExtent([zoomMin, zoomMax])
         .on("zoom", (event) => {
+            currentZoomK = event.transform.k;
+
             mapGroup.attr("transform", event.transform);
 
-            const k = event.transform.k;
             mapGroup.selectAll("circle.library-point")
-                .attr("r", d => d.baseR / event.transform.k);
+                    .attr("r", d => d.baseR / currentZoomK);
 
-             updateZoomButtons(event.transform.k);
+            mapGroup.selectAll("circle.library-point.highlighted")
+                    .attr("r", d => (d.baseR * 2) / currentZoomK);
+
+            updateZoomButtons(currentZoomK);
         });
 
     mapSvg.call(zoom);
@@ -303,29 +331,30 @@ function makeMap () {
                     })
                     .attr("cx", d => mapProjection([d.lon,d.lat])[0])
                     .attr("cy", d => mapProjection([d.lon,d.lat])[1])
-                      .on("mouseover", (event, d) => {
-                        const location = d.entries[0].LocalNasc_Autor || "Unknown location";
+                    .on("mouseover", function (event, d) {
+                        highlightPoint(d3.select(this), d);
 
+                        const location   = d.entries[0].LocalNasc_Autor || "Unknown location";
                         const numAuthors = new Set(d.entries.map(e => e.Nome_Autor)).size;
-
-                        const numBooks = d.entries.length;
+                        const numBooks   = d.entries.length;
 
                         tooltip
-                        .style("opacity", 1)
-                        .html(
+                            .style("opacity", 1)
+                            .html(
                             `<strong>Location:</strong> ${location}<br/>` +
                             `<strong>No. of authors:</strong> ${numAuthors}<br/>` +
                             `<strong>No. of books:</strong> ${numBooks}`
-                        )
-                        .style("left", (event.pageX + 8) + "px")
-                        .style("top",  (event.pageY - 28) + "px");
+                            )
+                            .style("left", (event.pageX + 8) + "px")
+                            .style("top",  (event.pageY - 28) + "px");
                     })
-                    .on("mousemove", (event) => {
+                    .on("mousemove", event => {
                         tooltip
                             .style("left", (event.pageX + 8) + "px")
                             .style("top",  (event.pageY - 28) + "px");
                     })
-                    .on("mouseout", () => {
+                    .on("mouseout", function (event, d) {
+                        clearPointHighlight(d3.select(this), d);
                         tooltip.style("opacity", 0);
                     });
 
