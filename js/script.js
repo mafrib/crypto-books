@@ -30,6 +30,16 @@ function hideNoResultsPopup() {
 window.showNoResultsPopup  = showNoResultsPopup;
 window.hideNoResultsPopup  = hideNoResultsPopup;
 
+function handleEsc (evt) {
+    if (evt.key === 'Escape') closeModal();
+}
+
+function handleOutsideClick (evt) {
+    const clickedOnScrim   = evt.target.classList.contains('modal-scrim');
+    const clickedOnBackdrop= evt.target === evt.currentTarget;
+    if (clickedOnScrim || clickedOnBackdrop) closeModal();
+}
+
 function getConflictingFilters(rows, skip = []) {
     const ignore = new Set(skip);
     return Object.keys(activeFilters)
@@ -132,9 +142,16 @@ function openModal ()  {
     rebuildFilterTags();
 
     modal.querySelectorAll('details[open]').forEach(d => d.open = false);
+
+    document.addEventListener('keydown', handleEsc,  { once:false });
+    modal.addEventListener   ('click',  handleOutsideClick);
 }
 
-function closeModal () { document.getElementById('filter-modal').classList.remove('open'); }
+function closeModal () {
+    document.getElementById('filter-modal').classList.remove('open');
+    document.removeEventListener('keydown', handleEsc);
+    modal.removeEventListener   ('click',  handleOutsideClick);
+}
 
 function updateFilterBadge() {
   const count = Object.keys(activeFilters || {}).length;
