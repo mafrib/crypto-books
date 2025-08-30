@@ -148,7 +148,8 @@ function openModal ()  {
 }
 
 function closeModal () {
-    document.getElementById('filter-modal').classList.remove('open');
+    const modal = document.getElementById('filter-modal');
+    modal.classList.remove('open');
     document.removeEventListener('keydown', handleEsc);
     modal.removeEventListener   ('click',  handleOutsideClick);
 }
@@ -551,6 +552,12 @@ function openVizModal(viz) {
         if (e.target === modal) closeVizModal(modal, viz);
     });
 
+    function escListener (e) {
+        if (e.key === 'Escape') closeVizModal(modal, viz);
+    }
+    document.addEventListener('keydown', escListener);
+    modal.__escListener = escListener;
+
     document.body.appendChild(modal);
     requestAnimationFrame(()=>{
         redrawVisualisation(viz);
@@ -568,6 +575,12 @@ function closeVizModal(modal, viz) {
         viz.__placeholder.remove();
         delete viz.__placeholder;
     }
+
+    if (modal.__escListener) {
+        document.removeEventListener('keydown', modal.__escListener);
+        delete modal.__escListener;
+    }
+
     modal.remove();
     requestAnimationFrame(()=>{
         redrawVisualisation(viz);
