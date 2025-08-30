@@ -34,8 +34,6 @@ function createBooksCatalog(data) {
         .text(d => d.Proprietario_Nome);
 
     newEntries.merge(entries)
-        .classed("male",   d => genderGraphActive && !isFemaleLibrary(d.Proprietario_Nome))
-        .classed("female", d => genderGraphActive &&  isFemaleLibrary(d.Proprietario_Nome))
         .select(".obra").text(d => d.Obra);
 
     newEntries.merge(entries).select(".descricao").text(d => d.Descricao);

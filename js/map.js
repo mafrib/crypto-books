@@ -493,8 +493,7 @@ function updateDashboard() {
             '#treemap-area',
             filtered,
             currentTreemapMode,
-            null,
-            genderGraphActive
+            null
         );
     }
 }

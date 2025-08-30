@@ -1,7 +1,6 @@
 let globalData;
 let baselineW, baselineH;
 let currentTreemapMode = 'category';
-let genderGraphActive = false;
 let treemapFilterOrigin = null;   // 'category' or 'tradition'
 let skipNextTreemapRedraw = false;
 const periodOrder = [
@@ -188,8 +187,7 @@ function switchMode(mode) {
         '#treemap-area',
         filteredData,
         currentTreemapMode,
-        updateDashboard,
-        genderGraphActive
+        updateDashboard
     );
 
     d3.selectAll('.mode-button').classed('active', false);
@@ -324,8 +322,7 @@ function rebuildFilterTags () {
                     createTreemap('#treemap-area',
                                     applyGlobalFilters(globalData),
                                     currentTreemapMode,
-                                    updateDashboard,
-                                    genderGraphActive);
+                                    updateDashboard);
                     updateTreemapBadge();
                 });
             } else addTag('Treemap', () => {
@@ -458,13 +455,7 @@ function redrawVisualisation(vizEl){
             updateDashboard();
             break;
         case 'network-graph':
-            const cont = '#network-graph .network-wrapper';
-
-            if (genderGraphActive) {
-                createGenderGraph(cont, globalData);
-            } else {
-                createNetworkGraph(cont, globalData);
-            }
+            createNetworkGraph('#network-graph .network-wrapper', globalData);
 
             const allowedSet = new Set(
                 applyGlobalFilters(globalData)
@@ -478,8 +469,7 @@ function redrawVisualisation(vizEl){
                 '#treemap-area',
                 applyGlobalFilters(globalData),
                 currentTreemapMode,
-                updateDashboard,
-                genderGraphActive
+                updateDashboard
             );
             break;
         case 'catalog':
@@ -495,8 +485,7 @@ function redrawAllViz () {
         '#treemap-area',
         applyGlobalFilters(globalData),
         currentTreemapMode,
-        updateDashboard,
-        genderGraphActive
+        updateDashboard
     );
 }
 
@@ -625,13 +614,7 @@ function startDashboard() {
                     nodeGroup.selectAll('g.node').classed('active', false).classed('selected-by-link', false);
                     linkGroup.selectAll('.link').classed('active', false).style('opacity', null);
 
-                    if (!isOn) {
-                        genderGraphActive = true;
-                        createGenderGraph('#network-graph .network-wrapper', globalData);
-                    } else {
-                        genderGraphActive = false;
-                        createNetworkGraph('#network-graph .network-wrapper', globalData);
-                    }
+                    createNetworkGraph('#network-graph .network-wrapper', globalData);
 
                     const filtered = applyGlobalFilters(globalData);
                     createBooksCatalog(filtered);
@@ -639,8 +622,7 @@ function startDashboard() {
                         '#treemap-area',
                         filteredData,
                         currentTreemapMode,
-                        updateDashboard,
-                        genderGraphActive
+                        updateDashboard
                     );
                 });
                 toggle.addEventListener('keydown', e => {
@@ -655,8 +637,7 @@ function startDashboard() {
                 '#treemap-area',
                 filteredData,
                 currentTreemapMode,
-                updateDashboard,
-                genderGraphActive
+                updateDashboard
             );
 
             d3.selectAll('.mode-button')
@@ -699,17 +680,12 @@ function startDashboard() {
 
                 const cleanData = applyGlobalFilters(globalData);
                 const networkContainer = '#network-graph .network-wrapper';
-                if (genderGraphActive) {
-                    createGenderGraph(networkContainer, globalData);
-                } else {
-                    createNetworkGraph(networkContainer, globalData);
-                }
+                createNetworkGraph('#network-graph .network-wrapper', globalData);
                 createTreemap(
                     '#treemap-area',
                     filteredData,
                     currentTreemapMode,
-                    updateDashboard,
-                    genderGraphActive
+                    updateDashboard
                 );
                 createBooksCatalog(cleanData);
 

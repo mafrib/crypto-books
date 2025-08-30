@@ -511,11 +511,6 @@ g.node.hovered-network-node circle {
   height: 100%;
 }
 
-#network-graph .legend,
-#network-graph .group-toggle {
-  flex: 0 0 auto;
-}
-
 .network-wrapper {
   margin: 0;
 }
@@ -532,22 +527,6 @@ g.node.hovered-network-node circle {
   visibility: hidden;
   transition: opacity 0.2s ease;
   z-index: 10;
-}
-
-.node circle,
-.gender-circle {
-  fill: #FFFAEC;
-  stroke: #16404D;
-  stroke-width: 1px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-}
-
-.gender-circle.female {
-  fill: #dd9298;
-}
-
-.gender-circle.male {
-  fill: #d0a07d;
 }
 
 .node text {
@@ -585,10 +564,6 @@ g.node.hovered-network-node circle {
   fill: #FFFAEC;
 }
 
-.node text.gender-label {
-  font-size: 14px;
-}
-
 svg:not(.node-active-mode) .node:hover text {
   fill: #FFFAEC;
   fill-opacity: 1;
@@ -604,21 +579,11 @@ svg:not(.node-active-mode) .node:hover text {
   font-weight: 600;
 }
 
-.gender-circle.female:hover {
-  fill: #D1848A;
-  cursor: pointer;
-}
-
-.gender-circle.male:hover {
-  fill: #C3957A;
-  cursor: pointer;
-}
-
-.node.active .gender-circle.female {
-  fill: #DB6D76;
-}
-.node.active .gender-circle.male {
-  fill: #D79260;
+.node circle {
+  fill: #FFFAEC;
+  stroke: #16404D;
+  stroke-width: 1px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .link {
@@ -712,70 +677,6 @@ svg:not(.node-active-mode) .node:hover text {
   font-weight: 400;
   white-space: nowrap;
   line-height: 1;
-}
-
-.group-toggle {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.toggle-label {
-  color: #16404D;
-  font-family: Inter, Helvetica, sans-serif;
-  font-size: 0.6rem;
-  font-weight: 500;
-}
-
-.switch {
-  position: relative;
-  width: 38px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.switch::before {
-  content: '';
-  position: absolute;
-  top: 0.5px;
-  left: 0.5px;
-  width: 37px;
-  height: 17px;
-  background: rgba(225, 216, 192, 0.66);
-  border: 1px solid #16404D;
-  border-radius: 8.5px;
-  box-sizing: border-box;
-}
-
-.switch::after {
-  content: '';
-  position: absolute;
-  top: 9px;
-  left: 9px;
-  width: 17px;
-  height: 17px;
-  background: #FAF7F4;
-  border: 1px solid #16404D;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-sizing: border-box;
-}
-
-.switch:hover::before {
-  background: rgba(225, 216, 192, 0.8);
-}
-
-.switch[aria-pressed="true"]::before {
-  background: #16404D;
-}
-
-.switch[aria-pressed="true"]::after {
-  left: 29px;
-  top: 9px;
 }
 
 .info-btn {

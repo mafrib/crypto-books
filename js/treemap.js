@@ -1,6 +1,6 @@
 let treemapSelection = null;
 
-function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphActive = false) {
+function createTreemap(selector, data, mode = 'category', onUpdate) {
 
     // Cleanup before redraw
     const container = d3.select(selector);
@@ -18,14 +18,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                     ([category, genres]) => ({
                         name: category,
                         children: Array.from(genres, ([genre, records]) => {
-                            const femaleCount = records.filter(r => isFemaleLibrary(r.Proprietario_Nome)).length;
-                            const maleCount   = records.length - femaleCount;
-
                             return {
                                 name: genre,
-                                value: records.length,
-                                femaleCount,
-                                maleCount
+                                value: records.length
                             };
                         })
                     })
@@ -37,14 +32,10 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
                 children: Array.from(
                     d3.group(data, d => d.TradicaoIntelectual_Obra),
                     ([tradition, records]) => {
-                        const femaleCount = records.filter(r => isFemaleLibrary(r.Proprietario_Nome)).length;
-                        const maleCount   = records.length - femaleCount;
 
                         return {
                             name: tradition,
-                            value: records.length,
-                            femaleCount,
-                            maleCount
+                            value: records.length
                         };
                     }
                 )
@@ -338,20 +329,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate, genderGraphA
             });
 
         const rectEnter = cellEnter.append("rect")
-            .attr("fill", d => {
-                if (genderGraphActive) {
-                    // compute the fraction of female books in this cell
-                    const total   = d.data.femaleCount + d.data.maleCount;
-                    const fracF   = total > 0
-                                 ? d.data.femaleCount / total
-                                 : 0.5;
-                    // pick the female color if >50%, otherwise the male color
-                    return fracF > 0.5
-                        ? "#dd9298"
-                        : "#d0a07d";
-                }
-                return color;
-            })
+            .attr("fill", color)
             .on("mousemove", (event, d) => {
                 const treemapRect = d3.select("#treemap").node().getBoundingClientRect();
                 const x = event.pageX - treemapRect.left - window.scrollX;
