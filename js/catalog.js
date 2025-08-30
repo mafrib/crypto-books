@@ -46,6 +46,11 @@ function createBooksCatalog(data) {
         d3.select(event.currentTarget)
           .classed('hovered-entry', true);
 
+        const missing =
+            isNaN(window.parseDMS(d.Latitude_Autor)) ||
+            isNaN(window.parseDMS(d.Longitude_Autor));
+
+        window.showNoLocationOverlay(missing);
         window.highlightMapPoint(d);
         window.highlightNetworkNode(d.Proprietario_Nome);
         window.highlightTreemapRect(d);
@@ -54,7 +59,7 @@ function createBooksCatalog(data) {
       .on('mouseout', (event, d) => {
         d3.select(event.currentTarget)
           .classed('hovered-entry', false);
-
+        window.showNoLocationOverlay(false);
         window.clearMapHighlights();
         window.clearNetworkHighlights();
         window.clearTreemapHighlights();

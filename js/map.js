@@ -32,6 +32,11 @@ function parseDMS(str) {
     return dec;
 }
 
+function showNoLocationOverlay(show){
+    const overlay = document.getElementById('map-nolocation-overlay');
+    if (overlay) overlay.hidden = !show;
+}
+
 function updateUnlocatedBadge(rowSet){
     const n = rowSet.filter(r=>{
         const lat = parseDMS(r.Latitude_Autor);

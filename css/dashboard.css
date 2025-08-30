@@ -199,10 +199,35 @@ a {
   flex: 2 1 0;
 }
 
+.map-canvas {
+  flex: 1 1 0;
+  position: relative;
+  display: flex;
+}
+
+.map-canvas svg { width: 100%; height: auto; }
+
 #map-area svg#map {
   width: auto;
   background-color: white;
 }
+
+.map-nolocation-overlay {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 250, 236, 0.75);
+  backdrop-filter: blur(2.5px) brightness(.8);
+  -webkit-backdrop-filter: blur(2.5px) brightness(.8);
+  font: 600 0.85rem/1 Inter, sans-serif;
+  color: #16404D;
+  text-align: center;
+  pointer-events: none;
+  z-index:3;
+}
+
+.map-nolocation-overlay[hidden] { display:none !important; }
 
 .library-point.hovered-map-point {
   fill: red !important;
@@ -873,6 +898,7 @@ summary::after {
   transition:.2s transform;
   font-size:.7rem; pointer-events:none;
 }
+
 details[open] > summary::after {
   transform:translateY(-50%) rotate(180deg);
 }
@@ -1435,3 +1461,4 @@ details[open] > summary::after {
   top:  var(--pad-v);
   right:var(--pad-h);
 }
+

@@ -66,7 +66,12 @@
             <div class="viz-actions"></div>
           </div>
           <div id="map-area">
-            <svg id="map"></svg>
+            <div class="map-canvas">
+              <svg id="map"></svg>
+              <div id="map-nolocation-overlay" class="map-nolocation-overlay" hidden>
+                No location associated with the author of this book
+              </div>
+            </div>
             <div class="map-color-scale">
               <div class="legend-title">No. of Books</div>
               <div class="bar-wrapper"></div>
