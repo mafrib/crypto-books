@@ -317,6 +317,20 @@ a {
   font-weight: 900;
 }
 
+.zoom-button.disabled {
+    pointer-events: none;
+    cursor: default;
+}
+
+.zoom-button.disabled .zoom-button-bg {
+    fill: #d0d0d0;
+    stroke: #9a9a9a;
+}
+
+.zoom-button.disabled .zoom-icon {
+    fill: #9a9a9a;
+}
+
 .library-point {
   stroke: #16404D;
   stroke-width: 0.5;

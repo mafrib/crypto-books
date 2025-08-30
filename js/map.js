@@ -2,6 +2,7 @@ let mapSvg;
 let mapProjection;
 let mapGroup;
 let baseScale, baseWidth, baseHeight;
+let zoom;
 let selectedPeriods = [];
 
 const zoomMin = 0.8;
@@ -11,16 +12,24 @@ const width = 380;
 const height = 200;
 
 function positionOffMsg(legendEl) {
-  const el = document.getElementById('map-offmsg');
-  if(!el || !legendEl) return;
+    const el = document.getElementById('map-offmsg');
+    if(!el || !legendEl) return;
 
-  const legendW = legendEl.getBoundingClientRect().width;
-  const padL = parseFloat(getComputedStyle(legendEl).paddingLeft) || 0;
+    const legendW = legendEl.getBoundingClientRect().width;
+    const padL = parseFloat(getComputedStyle(legendEl).paddingLeft) || 0;
 
-  const extra   = 6;
+    const extra   = 6;
 
-  el.style.paddingRight = (legendW + padL + extra) + 'px';
+    el.style.paddingRight = (legendW + padL + extra) + 'px';
 }
+
+function updateZoomButtons(k) {
+    d3.select('.zoom-in' )
+        .classed('disabled', k >= zoomMax - 1e-6);
+    d3.select('.zoom-out')
+        .classed('disabled', k <= zoomMin + 1e-6);
+}
+
 
 function parseDMS(str) {
     if (!str) return NaN;
@@ -32,12 +41,12 @@ function parseDMS(str) {
     return dec;
 }
 
-function showNoLocationOverlay(show){
+function showNoLocationOverlay(show) {
     const overlay = document.getElementById('map-nolocation-overlay');
     if (overlay) overlay.hidden = !show;
 }
 
-function updateUnlocatedBadge(rowSet){
+function updateUnlocatedBadge(rowSet) {
     const n = rowSet.filter(r=>{
         const lat = parseDMS(r.Latitude_Autor);
         const lon = parseDMS(r.Longitude_Autor);
@@ -53,6 +62,14 @@ function updateUnlocatedBadge(rowSet){
     } else {
         el.hidden = true;
     }
+}
+
+function clickZoom(event, factor) {
+    event.stopPropagation();
+    mapSvg.interrupt();
+    mapSvg.transition()
+            .duration(150)
+            .call(zoom.scaleBy, factor);
 }
 
 function makeMap () {
@@ -124,8 +141,8 @@ function makeMap () {
 
     // Zoom in button (top)
     zoomControl.append("g")
-        .attr("class", "zoom-button")
-        .on("click", () => zoom.scaleBy(mapSvg, 1.2))
+        .attr("class", "zoom-button zoom-in")
+        .on("click",  e => clickZoom(e, 1.2))
         .on("dblclick", function(event) {
             event.stopPropagation(); // Prevent zoom in behind the button
         })
@@ -142,9 +159,9 @@ function makeMap () {
 
     // Zoom out button (bottom)
     zoomControl.append("g")
-        .attr("class", "zoom-button")
+        .attr("class", "zoom-button zoom-out")
         .attr("transform", "translate(0,25)")
-        .on("click", () => zoom.scaleBy(mapSvg.transition().duration(50), 0.8))
+        .on("click",  e => clickZoom(e, 0.8))
         .on("dblclick", function(event) {
             event.stopPropagation(); // Prevent zoom in behind the button
         })
@@ -171,18 +188,20 @@ function makeMap () {
     const path = d3.geoPath().projection(mapProjection);
 
     // Initialize zoom
-    const zoom = d3.zoom()
+    zoom = d3.zoom()
         .scaleExtent([zoomMin, zoomMax])
-        .translateExtent([[0, 0], [mapW, mapH]])
         .on("zoom", (event) => {
             mapGroup.attr("transform", event.transform);
 
             const k = event.transform.k;
             mapGroup.selectAll("circle.library-point")
-            .attr("r", d => d.baseR / event.transform.k)
+                .attr("r", d => d.baseR / event.transform.k);
+
+             updateZoomButtons(event.transform.k);
         });
 
     mapSvg.call(zoom);
+    updateZoomButtons(1);
 
     // Country names that are visible on the map
     const visibleCountries = new Set([
