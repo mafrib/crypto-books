@@ -332,21 +332,22 @@ function makeMap () {
                     .attr("cx", d => mapProjection([d.lon,d.lat])[0])
                     .attr("cy", d => mapProjection([d.lon,d.lat])[1])
                     .on("mouseover", function (event, d) {
+                        const rows      = d.filteredEntries ?? d.entries;
+                        const location  = rows[0].LocalNasc_Autor || "Unknown location";
+                        const numAuthors= new Set(rows.map(e => e.Nome_Autor)).size;
+                        const numBooks  = rows.length;
+
                         highlightPoint(d3.select(this), d);
 
-                        const location   = d.entries[0].LocalNasc_Autor || "Unknown location";
-                        const numAuthors = new Set(d.entries.map(e => e.Nome_Autor)).size;
-                        const numBooks   = d.entries.length;
-
                         tooltip
-                            .style("opacity", 1)
-                            .html(
+                        .style("opacity", 1)
+                        .html(
                             `<strong>Location:</strong> ${location}<br/>` +
                             `<strong>No. of authors:</strong> ${numAuthors}<br/>` +
                             `<strong>No. of books:</strong> ${numBooks}`
-                            )
-                            .style("left", (event.pageX + 8) + "px")
-                            .style("top",  (event.pageY - 28) + "px");
+                        )
+                        .style("left", (event.pageX + 8) + "px")
+                        .style("top",  (event.pageY - 28) + "px");
                     })
                     .on("mousemove", event => {
                         tooltip
@@ -511,6 +512,7 @@ function makeMap () {
 
             window.highlightPeriodBar   = highlightPeriodBar;
             window.clearPeriodHighlights = clearPeriodHighlights;
+            refreshMapPoints(applyGlobalFilters(globalData));
         })
 
     .catch(err => console.error("Error loading map or data:", err));
@@ -519,6 +521,7 @@ function makeMap () {
 
 function updateDashboard() {
     const filtered = applyGlobalFilters(globalData);
+    refreshMapPoints(filtered);
     updateUnlocatedBadge(filtered);
     const filteredNoPeriod   = applyFiltersExcept(['period','byPeriod']);
     repaintPeriodBars(filteredNoPeriod);
@@ -574,3 +577,27 @@ function repaintPeriodBars(rowSetWithoutPeriod) {
 }
 
 window.repaintPeriodBars = repaintPeriodBars;
+
+function refreshMapPoints(filteredRows) {
+
+    if (!mapGroup) return;
+
+    const allowedIds = new Set(filteredRows.map(r => r.ID_Cod));
+
+    mapGroup.selectAll('circle.library-point')
+        .each(function (d){
+
+        d.filteredEntries = d.entries.filter(e => allowedIds.has(e.ID_Cod));
+
+        const nCopies  = d.filteredEntries.reduce((s,e)=>s + +e.NumCopias,0);
+        const nVisible = d.filteredEntries.length;
+
+        let bucket = 'books-1to5';
+        if (nCopies >= 15) bucket = 'books-15plus';
+        else if (nCopies >= 6) bucket = 'books-6to14';
+
+        d3.select(this)
+            .attr('class', `library-point ${bucket}`)
+            .style('display', nVisible ? null : 'none');
+        });
+}
