@@ -360,13 +360,14 @@ function makeMap () {
 
             function highlightMapPoint(book) {
                 d3.selectAll('circle.library-point')
-                    .classed('hovered-map-point',
-                        p => p.entries.some(e =>
-                            e.Obra              === book.Obra &&
-                            e.Nome_Autor        === book.Nome_Autor &&
-                            e.Proprietario_Nome === book.Proprietario_Nome
-                        )
-                    );
+                    .classed('hovered-map-point', false)
+                    .classed('dimmed',            false);
+
+                const sel = d3.selectAll('circle.library-point')
+                    .filter(p => p.entries.some(e => e.ID_Cod === book.ID_Cod));
+
+                sel.classed('hovered-map-point', true)
+                .raise();
             }
 
             function clearMapHighlights() {
