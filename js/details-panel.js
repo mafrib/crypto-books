@@ -89,7 +89,7 @@ function updateDetailsPanel(libName, allData) {
     const info = allData.find(r => r.Proprietario_Nome === libName) || {};
     datesEl.innerHTML = `<strong>Lifespan:</strong> ${info.Proprietario_DatasExtremas || '—'}`;
     titleEl.innerHTML = `<strong>Royal title:</strong> ${info.Proprietario_Titulo || '—'}`;
-    reignEl.innerHTML = `<strong>Reign period:</strong> ${info.Proprietario_Titulo_DatasExtremas || '—'}`;
+    reignEl.innerHTML = `<strong>Tenure period:</strong> ${info.Proprietario_Titulo_DatasExtremas || '—'}`;
 }
 
 function clearDetailsPanel() {
