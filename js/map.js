@@ -43,6 +43,26 @@ function parseDMS(str) {
     return dec;
 }
 
+function locKeyFromLatLon(lat, lon) {
+    return `${(+lat).toFixed(6)},${(+lon).toFixed(6)}`;
+}
+
+function locKeyFromRow(r) {
+    const lat = parseDMS(r.Latitude_Autor);
+    const lon = parseDMS(r.Longitude_Autor);
+    if (isNaN(lat) || isNaN(lon)) return null;
+    return locKeyFromLatLon(lat, lon);
+}
+
+function updateMapLocationStyles() {
+    const selected = new Set(activeFilters.byLocation?.values || []);
+    const any = selected.size > 0;
+
+    d3.selectAll('circle.library-point')
+        .classed('location-selected', function(d){ return any && selected.has(d.key); })
+        .classed('location-dim',      function(d){ return any && !selected.has(d.key); });
+}
+
 function showNoLocationOverlay(show) {
     const overlay = document.getElementById('map-nolocation-overlay');
     if (overlay) overlay.hidden = !show;
@@ -307,64 +327,87 @@ function makeMap () {
 
             const agg = {};
             points.forEach(d => {
-                const key = `${d.lat},${d.lon}`;
+                const key = locKeyFromLatLon(d.lat, d.lon);
                 if (!agg[key]) {
+                    const label = (d.LocalNasc_Autor || 'Unknown location').trim();
                     agg[key] = {
-                        lat: d.lat,
-                        lon: d.lon,
-                        totalBooks: 0,
-                        entries: []
+                    key,
+                    lat: d.lat,
+                    lon: d.lon,
+                    label,
+                    totalBooks: 0,
+                    entries: []
                     };
                 }
                 agg[key].totalBooks += +d.NumCopias;
                 agg[key].entries.push(d);
             });
-
             const aggregatedPoints = Object.values(agg);
 
             mapGroup.selectAll("circle.library-point")
                 .data(aggregatedPoints)
                 .enter().append("circle")
                     .attr("class", d => {
-                        const n = +d.totalBooks;
-                        let bucket = "";
-                        if      (n >= 15) bucket = "books-15plus";
-                        else if (n >= 6)  bucket = "books-6to14";
-                        else              bucket = "books-1to5";
-                        return `library-point ${bucket}`;
+                    const n = +d.totalBooks;
+                    let bucket = "";
+                    if      (n >= 15) bucket = "books-15plus";
+                    else if (n >= 6)  bucket = "books-6to14";
+                    else              bucket = "books-1to5";
+                    return `library-point ${bucket}`;
                     })
-                    .attr("r", d => {
-                        d.baseR = 3;
-                        return d.baseR;
-                    })
+                    .attr("data-key", d => d.key)
+                    .attr("r", d => { d.baseR = 3; return d.baseR; })
                     .attr("cx", d => mapProjection([d.lon,d.lat])[0])
                     .attr("cy", d => mapProjection([d.lon,d.lat])[1])
+                    .on("click", function (event, d) {
+                        event.stopPropagation();
+
+                        const key = d.key;
+                        const cur = activeFilters.byLocation?.values || [];
+                        const isSelected = cur.includes(key);
+
+                        const next = isSelected ? cur.filter(v => v !== key) : cur.concat(key);
+
+                        if (next.length) {
+                            setGlobalFilter(
+                            'byLocation',
+                            row => {
+                                const k = locKeyFromRow(row);
+                                return k ? next.includes(k) : false;
+                            },
+                            next,
+                            'filter-location'
+                            );
+                        } else {
+                            clearGlobalFilter('byLocation');
+                        }
+                    })
                     .on("mouseover", function (event, d) {
-                        const rows      = d.filteredEntries ?? d.entries;
-                        const location  = rows[0].LocalNasc_Autor || "Unknown location";
-                        const numAuthors= new Set(rows.map(e => e.Nome_Autor)).size;
-                        const numBooks  = rows.length;
+                    const rows       = d.filteredEntries ?? d.entries;
+                    const location   = d.label || "Unknown location";
+                    const numAuthors = new Set(rows.map(e => e.Nome_Autor)).size;
+                    const numBooks   = rows.length;
 
-                        highlightPoint(d3.select(this), d);
+                    highlightPoint(d3.select(this), d);
 
-                        tooltip
+                    tooltip
                         .style("opacity", 1)
                         .html(
-                            `<strong>Location:</strong> ${location}<br/>` +
-                            `<strong>No. of authors:</strong> ${numAuthors}<br/>` +
-                            `<strong>No. of books:</strong> ${numBooks}`
+                        `<strong>Location:</strong> ${location}<br/>` +
+                        `<strong>No. of authors:</strong> ${numAuthors}<br/>` +
+                        `<strong>No. of books:</strong> ${numBooks}`
                         )
                         .style("left", (event.pageX + 8) + "px")
                         .style("top",  (event.pageY - 28) + "px");
                     })
                     .on("mousemove", event => {
-                        tooltip
-                            .style("left", (event.pageX + 8) + "px")
-                            .style("top",  (event.pageY - 28) + "px");
+                    tooltip
+                        .style("left", (event.pageX + 8) + "px")
+                        .style("top",  (event.pageY - 28) + "px");
                     })
                     .on("mouseout", function (event, d) {
-                        clearPointHighlight(d3.select(this), d);
-                        tooltip.style("opacity", 0);
+                    clearPointHighlight(d3.select(this), d);
+                    tooltip.style("opacity", 0);
                     });
 
             function highlightMapPoint(book) {
@@ -516,6 +559,7 @@ function makeMap () {
             window.highlightPeriodBar   = highlightPeriodBar;
             window.clearPeriodHighlights = clearPeriodHighlights;
             refreshMapPoints(applyGlobalFilters(globalData));
+            updateMapLocationStyles();
         })
 
     .catch(err => console.error("Error loading map or data:", err));
@@ -524,22 +568,25 @@ function makeMap () {
 
 function updateDashboard() {
     const filtered = applyGlobalFilters(globalData);
-    refreshMapPoints(filtered);
+
+    // For map visibility and per-point entries, ignore the location filter
+    const filteredForMap = applyFiltersExcept(['byLocation']);
+    refreshMapPoints(filteredForMap);
     updateUnlocatedBadge(filtered);
-    const filteredNoPeriod   = applyFiltersExcept(['period','byPeriod']);
+
+    const filteredNoPeriod = applyFiltersExcept(['period','byPeriod']);
     repaintPeriodBars(filteredNoPeriod);
 
     d3.selectAll('circle.library-point')
         .style('display', d =>
-        filtered.some(r =>
+        filteredForMap.some(r =>
             d.entries.some(e => e.ID_Cod === r.ID_Cod)
-        )
-            ? null
-            : 'none'
+        ) ? null : 'none'
         );
 
-    const sorted = [...filtered]
-        .sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
+    updateMapLocationStyles(); // apply dimming/selection ring
+
+    const sorted = [...filtered].sort((a, b) => a.Proprietario_Nome.localeCompare(b.Proprietario_Nome));
     createBooksCatalog(sorted);
 
     const allowedSet = new Set(filtered.map(r => r.Proprietario_Nome));
@@ -549,12 +596,7 @@ function updateDashboard() {
         treemapFilterActive() && treemapFilterOrigin === currentTreemapMode;
 
     if (!skipTreemap) {
-        createTreemap(
-            '#treemap-area',
-            filtered,
-            currentTreemapMode,
-            null
-        );
+        createTreemap('#treemap-area', filtered, currentTreemapMode, null);
     }
 }
 

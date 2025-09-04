@@ -295,6 +295,20 @@ a {
   pointer-events: none;
 }
 
+circle.library-point.location-dim {
+  opacity: 0.25;
+}
+
+circle.library-point.location-selected {
+  opacity: 1;
+  stroke: #ffffff;
+  stroke-width: 1.5px;
+}
+
+#map.is-expanded circle.library-point.location-selected {
+  stroke-width: 2px;
+}
+
 .zoom-button {
     cursor: pointer;
 }

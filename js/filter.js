@@ -124,7 +124,8 @@ const sourceToList = {
     byPeriod    : 'filter-period',
     period      : 'filter-period',
     byProbObra  : 'filter-probobra',
-    byProbAutor : 'filter-probautor'
+    byProbAutor : 'filter-probautor',
+    byLocation  : 'filter-location'
 };
 
 const listIdToField = {
@@ -187,6 +188,20 @@ function commitChecklistFilters () {
 
     const probOb  = getChecked('filter-probobra');
     const probAu  = getChecked('filter-probautor');
+
+    const locs = getChecked('filter-location');
+
+    locs.length
+        ? setGlobalFilter(
+            'byLocation',
+            r => {
+                const k = locKeyFromRow(r);
+                return k ? locs.includes(k) : false;
+            },
+            locs,
+            'filter-location'
+            )
+        : clearGlobalFilter('byLocation');
 
     // Genre requires a selected Category
     if (!cats.length && gens.length) {
@@ -350,5 +365,30 @@ function updateChecklistAvailability () {
         );
         lis.forEach(li => ul.appendChild(li));
     });
+
+    const ulLoc = document.getElementById('filter-location');
+    if (ulLoc) {
+        const ownKeys = Object.entries(activeFilters)
+            .filter(([src,obj]) => (obj.listId ?? sourceToList[src]) === 'filter-location')
+            .map(([src]) => src);
+
+        const rows = ownKeys.length ? applyFiltersExcept(ownKeys) : fullyFilteredRows;
+        const allowed = new Set(rows.map(r => locKeyFromRow(r)).filter(Boolean));
+
+        ulLoc.querySelectorAll('input').forEach(cb => {
+            const selectable = allowed.has(cb.value) || cb.checked;
+            cb.disabled = !selectable;
+            cb.closest('li').classList.toggle('disabled-option', !selectable);
+            if (!selectable) cb.parentElement.title = 'No books match the current filters';
+            else cb.parentElement.removeAttribute('title');
+        });
+
+        const lis = Array.from(ulLoc.children);
+        lis.sort((a,b)=>
+            a.classList.contains('disabled-option') -
+            b.classList.contains('disabled-option')
+        );
+        lis.forEach(li => ulLoc.appendChild(li));
+    }
 }
 

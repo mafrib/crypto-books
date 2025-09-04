@@ -103,8 +103,19 @@ function prettyFilterName(src) {
         byIdioma   : 'Language',
         byLibrary  : 'Library',
         treemap    : "Books' classification",
-        network    : 'Library'
+        network    : 'Library',
+        byLocation : 'Location'
     };
+
+    if (src === 'byLocation') {
+        const vals = activeFilters[src]?.values || [];
+        const labels = vals.map(v => {
+            const input = document.querySelector(`#filter-location input[value="${CSS.escape(v)}"]`);
+            return input ? input.nextElementSibling.textContent.trim() : v;
+        });
+        const list = labels.length ? `: ${labels.join(', ')}` : '';
+        return `Location${list}`;
+    }
 
     if (src === 'byLibrary' || src === 'network') {
         const libs = activeFilters[src]?.values || [];
@@ -185,18 +196,37 @@ function updateTreemapBadge() {
     });
 }
 
+function buildLocationOptions(data) {
+    const map = new Map();
+    data.forEach(r => {
+        const key = locKeyFromRow(r);
+        if (!key) return;
+        const name = (r.LocalNasc_Autor || 'Unknown location').trim();
+        const cur = map.get(key) || { value: key, label: name, count: 0 };
+        cur.count++;
+        if (!cur.label || cur.label === 'Unknown location') cur.label = name;
+        map.set(key, cur);
+    });
+    return Array.from(map.values())
+        .sort((a, b) => a.label.localeCompare(b.label));
+}
+
 function fillChecklist(listId, values, multi = true) {
     const ul = document.getElementById(listId);
+    if (!ul) { console.warn(`[fillChecklist] Missing list #${listId}`); return; }
+
     ul.innerHTML = '';
     values.forEach(v => {
-        const id = `${listId}-${CSS.escape(v)}`;
+        const value = (typeof v === 'object' && v !== null) ? v.value : v;
+        const label = (typeof v === 'object' && v !== null) ? (v.label ?? v.value) : v;
+        const id = `${listId}-${CSS.escape(value)}`;
         const li = document.createElement('li');
         const type = multi ? 'checkbox' : 'radio';
         const nameAttr = type === 'radio' ? `name="${listId}"` : '';
         li.innerHTML =
         `<label for="${id}">` +
-        `<input id="${id}" ${nameAttr} type="${type}" value="${v}">` +
-        `<span class="chk-txt">${v || '–'}</span>` +
+        `<input id="${id}" ${nameAttr} type="${type}" value="${value}">` +
+        `<span class="chk-txt">${label || '–'}</span>` +
         `</label>`;
         ul.appendChild(li);
     });
@@ -248,6 +278,7 @@ function populateFilterOptions() {
     fillChecklist('filter-category',  u('CatLit_Descricao'),  false);
     fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'), false);
     fillChecklist('filter-genre',     u('GenLit_Descricao'),  false);
+    fillChecklist('filter-location', buildLocationOptions(globalData));
 
     const normPeriodSet = new Set(globalData.map(d => normalizePeriod(d.EpocaHistorica_Autor)));
     const periods = periodOrder.filter(p => normPeriodSet.has(p));
@@ -284,6 +315,33 @@ function rebuildFilterTags () {
     for (const key of Object.keys(activeFilters)) {
 
         switch (key){
+
+        case 'byLocation':
+            getChecked('filter-location').forEach(v => {
+                const input = document.querySelector(`#filter-location input[value="${CSS.escape(v)}"]`);
+                const label = input ? input.nextElementSibling.textContent.trim() : v;
+
+                addTag(`Location: ${label}`, () => {
+
+                    uncheckValue('filter-location', v);
+
+                    const remaining = getChecked('filter-location');
+                    if (remaining.length) {
+                        setGlobalFilter(
+                        'byLocation',
+                        r => {
+                            const k = locKeyFromRow(r);
+                            return k ? remaining.includes(k) : false;
+                        },
+                        remaining,
+                        'filter-location'
+                        );
+                    } else {
+                        clearGlobalFilter('byLocation');
+                    }
+                });
+            });
+            break;
 
         case 'byLibrary'  : getChecked('filter-library'  )
                             .forEach(v => addTag(v, () => {
@@ -639,6 +697,10 @@ function startDashboard() {
             wireSearch(
                 document.querySelector('#filter-author').previousElementSibling,
                 document.getElementById('filter-author')
+            );
+            wireSearch(
+                document.querySelector('#filter-location').previousElementSibling,
+                document.getElementById('filter-location')
             );
             wireSearch(
                 document.querySelector('#filter-tradition').previousElementSibling,
