@@ -643,7 +643,7 @@ svg:not(.node-active-mode) .node:hover text {
 }
 
 .link.book {
-  stroke: #A6CDC6;
+  stroke: #B65B8C;
 }
 
 .link.author {
@@ -652,6 +652,7 @@ svg:not(.node-active-mode) .node:hover text {
 
 .link.active.book,
 .link.hovered {
+  stroke: #8F3E6A;
   opacity: 1;
 }
 
@@ -707,7 +708,7 @@ svg:not(.node-active-mode) .node:hover text {
 }
 
 .legend-item.book::before {
-  background-color: #A6CDC6;
+  background-color: #B65B8C;
 }
 
 .legend-item.author::after {
