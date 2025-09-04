@@ -5,13 +5,13 @@ let treemapFilterOrigin = null;   // 'category' or 'tradition'
 let lastClassificationMode = null;
 let skipNextTreemapRedraw = false;
 const periodOrder = [
-  "Indeterminada",
-  "Época Arcaica (VIII-V aC)",
-  "Antiguidade Clássica (V aC-III)",
-  "Antiguidade Tardia (III-VIII)",
-  "Alta Idade Média (VIII-XI)",
-  "Idade Média Central (XI-XIII)",
-  "Baixa Idade Média (XIV-XV)"
+    'Por determinar',
+    'Época Arcaica (VIII-V aC)',
+    'Antiguidade Clássica (V aC-III)',
+    'Antiguidade Tardia (III-VIII)',
+    'Alta Idade Média (VIII-XI)',
+    'Idade Média Central (XI-XIII)',
+    'Baixa Idade Média (XIV-XV)'
 ];
 window.highlightPeriodBar    = () => {};
 window.clearPeriodHighlights = () => {};
@@ -49,12 +49,13 @@ function getConflictingFilters(rows, skip = []) {
 }
 
 function getConflictingFiltersForPeriod(periodName) {
-    const rowsOfPeriod = globalData
-        .filter(r => r.EpocaHistorica_Autor === periodName);
+    const rowsOfPeriod = globalData.filter(r =>
+        normalizePeriod(r.EpocaHistorica_Autor) === periodName
+    );
 
     return Object.keys(activeFilters)
-     .filter(src => src !== 'period' && src !== 'byPeriod')
-     .filter(src => rowsOfPeriod.every(row => !activeFilters[src].fn(row)));
+        .filter(src => src !== 'period' && src !== 'byPeriod')
+        .filter(src => rowsOfPeriod.every(row => !activeFilters[src].fn(row)));
 }
 
 function showConflictPopup(subjectLabel, filters, kind = 'library') {
@@ -239,21 +240,21 @@ function uniq(key) {
 }
 
 function populateFilterOptions() {
-  // distinct & sorted helpers
-  const u = key => Array.from(new Set(globalData.map(d=>d[key]).filter(Boolean))).sort();
+    const u = key => Array.from(new Set(globalData.map(d=>d[key]).filter(Boolean))).sort();
 
-  fillChecklist('filter-library',   u('Proprietario_Nome'));
-  fillChecklist('filter-author',    u('Nome_Autor'));
-  fillChecklist('filter-idioma',    u('Idioma'));
-  fillChecklist('filter-category',  u('CatLit_Descricao'),  false);
-  fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'), false);
-  fillChecklist('filter-genre',     u('GenLit_Descricao'),  false);
+    fillChecklist('filter-library',   u('Proprietario_Nome'));
+    fillChecklist('filter-author',    u('Nome_Autor'));
+    fillChecklist('filter-idioma',    u('Idioma'));
+    fillChecklist('filter-category',  u('CatLit_Descricao'),  false);
+    fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'), false);
+    fillChecklist('filter-genre',     u('GenLit_Descricao'),  false);
 
-  const periods = periodOrder.filter(p=>globalData.some(d=>d.EpocaHistorica_Autor===p));
-  fillChecklist('filter-period', periods);
+    const normPeriodSet = new Set(globalData.map(d => normalizePeriod(d.EpocaHistorica_Autor)));
+    const periods = periodOrder.filter(p => normPeriodSet.has(p));
+    fillChecklist('filter-period', periods);
 
-  fillChecklist('filter-probobra',  u('ProbAtribObra'));
-  fillChecklist('filter-probautor', u('ProbAtribAutor'));
+    fillChecklist('filter-probobra',  u('ProbAtribObra'));
+    fillChecklist('filter-probautor', u('ProbAtribAutor'));
 }
 
 function rebuildFilterTags () {

@@ -93,6 +93,14 @@ function clickZoom(event, factor) {
             .call(zoom.scaleBy, factor);
 }
 
+function normalizePeriod(v) {
+    const t = (v ?? '').toString().trim();
+    if (!t) return 'Por determinar';
+    const lc = t.toLowerCase();
+    if (lc === 'indeterminada' || lc === 'por determinar') return 'Por determinar';
+    return t;
+}
+
 function makeMap () {
 
     if (mapSvg) {
@@ -277,8 +285,8 @@ function makeMap () {
             const periodCounts = d3.rollup(
                 libraries,
                 v => v.length,
-                d => d.EpocaHistorica_Autor
-                );
+                d => normalizePeriod(d.EpocaHistorica_Autor)
+            );
 
             const parseDMS = str => {
                 const m = str.match(/(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEW])/);
@@ -410,21 +418,18 @@ function makeMap () {
                 .text(d => d.label);
 
             const periodOrder = [
-                "Indeterminada",
-                "Época Arcaica (VIII-V aC)",
-                "Antiguidade Clássica (V aC-III)",
-                "Antiguidade Tardia (III-VIII)",
-                "Alta Idade Média (VIII-XI)",
-                "Idade Média Central (XI-XIII)",
-                "Baixa Idade Média (XIV-XV)"
+                'Por determinar',
+                'Época Arcaica (VIII-V aC)',
+                'Antiguidade Clássica (V aC-III)',
+                'Antiguidade Tardia (III-VIII)',
+                'Alta Idade Média (VIII-XI)',
+                'Idade Média Central (XI-XIII)',
+                'Baixa Idade Média (XIV-XV)'
             ];
 
             const allPeriods = Array.from(
-                new Set(libraries.map(d => d.EpocaHistorica_Autor).filter(Boolean))
-            )
-            .sort((a, b) =>
-                periodOrder.indexOf(a) - periodOrder.indexOf(b)
-            );
+                new Set(libraries.map(d => normalizePeriod(d.EpocaHistorica_Autor)))
+                ).sort((a, b) => periodOrder.indexOf(a) - periodOrder.indexOf(b));
 
             const pf = d3.select('#period-filter');
             const periodBars = pf.selectAll('.period-bar')
@@ -432,46 +437,40 @@ function makeMap () {
                 .enter().append('div')
                     .attr('class', 'period-bar')
                     .on('click', function (event, period) {
-
                         const adding = !selectedPeriods.includes(period);
                         if (adding) {
                             const blockers = getConflictingFilters(
-                                globalData.filter(r => r.EpocaHistorica_Autor === period),
-                                ['period','byPeriod']
+                            globalData.filter(r => normalizePeriod(r.EpocaHistorica_Autor) === period),
+                            ['period','byPeriod']
                             );
                             if (blockers.length) {
-                                showConflictPopup(period, blockers, 'period');
-                                return;
+                            showConflictPopup(period, blockers, 'period');
+                            return;
                             }
                         }
 
-                        const next     = [...selectedPeriods];
-                        const already  = next.indexOf(period) > -1;
+                        const next = [...selectedPeriods];
+                        const already = next.indexOf(period) > -1;
                         already ? next.splice(next.indexOf(period), 1) : next.push(period);
 
-                        const pretendFn = row => next.includes(row.EpocaHistorica_Autor);
-                        const pretendSet = applyFiltersExcept(['period','byPeriod'])
-                                            .filter(pretendFn);
+                        const pretendFn = row => next.includes(normalizePeriod(row.EpocaHistorica_Autor));
+                        const pretendSet = applyFiltersExcept(['period','byPeriod']).filter(pretendFn);
 
                         if (next.length > 0 && pretendSet.length === 0) {
-                            showConflictPopup(period,
-                            getConflictingFiltersForPeriod(period), 'period');
+                            showConflictPopup(period, getConflictingFiltersForPeriod(period), 'period');
                             return;
                         }
 
                         selectedPeriods = next;
-                        d3.select(this).classed('selected', !already);
-
-                        d3.select(this).classed('selected', selectedPeriods.includes(period));
+                        d3.select(this).classed('selected', !already)
+                                        .classed('selected', selectedPeriods.includes(period));
 
                         if (selectedPeriods.length) {
-                            // Normalize to the primary key used by bars
                             clearGlobalFilter('byPeriod');
-
                             setGlobalFilter(
-                                'period',
-                                d => selectedPeriods.includes(d.EpocaHistorica_Autor),
-                                selectedPeriods
+                            'period',
+                            d => selectedPeriods.includes(normalizePeriod(d.EpocaHistorica_Autor)),
+                            selectedPeriods
                             );
                         } else {
                             clearGlobalFilter('period');
@@ -500,13 +499,13 @@ function makeMap () {
                         const n = periodCounts.get(d) || 0;
                         return `${n} book${n === 1 ? '' : 's'}`;
                     });
+
             repaintPeriodBars(libraries);
 
             function highlightPeriodBar(book) {
+                const bookPeriod = normalizePeriod(book.EpocaHistorica_Autor);
                 d3.selectAll('#period-filter .period-bar')
-                .classed('hovered-period-bar',
-                    period => period === book.EpocaHistorica_Autor
-                );
+                    .classed('hovered-period-bar', period => period === bookPeriod);
             }
 
             function clearPeriodHighlights() {
@@ -563,22 +562,22 @@ function repaintPeriodBars(rowSetWithoutPeriod) {
     const counts = d3.rollup(
         rowSetWithoutPeriod,
         v => v.length,
-        d => d.EpocaHistorica_Autor
+        d => normalizePeriod(d.EpocaHistorica_Autor)
     );
 
-    d3.selectAll('#period-filter .period-bar')
-        .each(function (period) {
-        const sel  = selectedPeriods.includes(period);
-        const n    = counts.get(period) || 0;
+    d3.selectAll('#period-filter .period-bar').each(function (period) {
+        const sel = selectedPeriods.includes(period);
+        const n   = counts.get(period) || 0;
 
         d3.select(this)
-            .classed('selected', sel)
-            .classed('inactive', n === 0)
-            .classed('dimmed',  !sel && selectedPeriods.length > 0)
-            .select('.count')
-            .text(`${n} book${n === 1 ? '' : 's'}`);
-        });
+        .classed('selected', sel)
+        .classed('inactive', n === 0)
+        .classed('dimmed',  !sel && selectedPeriods.length > 0)
+        .select('.count')
+        .text(`${n} book${n === 1 ? '' : 's'}`);
+    });
 }
+
 
 window.repaintPeriodBars = repaintPeriodBars;
 
