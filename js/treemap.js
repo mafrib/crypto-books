@@ -12,33 +12,32 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     const rootData = (() => {
         if (mode === 'category') {
             return {
-                name: "Literary Categories",
-                children: Array.from(
-                    d3.group(data, d => d.CatLit_Descricao, d => d.GenLit_Descricao),
-                    ([category, genres]) => ({
-                        name: category,
-                        children: Array.from(genres, ([genre, records]) => {
-                            return {
-                                name: genre,
-                                value: records.length
-                            };
-                        })
-                    })
-                )
+            name: "Literary Categories",
+            children: Array.from(
+                d3.group(
+                data,
+                d => normalizeLabel(d.CatLit_Descricao),
+                d => normalizeLabel(d.GenLit_Descricao)
+                ),
+                ([category, genres]) => ({
+                name: category,
+                children: Array.from(genres, ([genre, records]) => ({
+                    name: genre,
+                    value: records.length
+                }))
+                })
+            )
             };
         } else {
             return {
-                name: "Intellectual Tradition",
-                children: Array.from(
-                    d3.group(data, d => d.TradicaoIntelectual_Obra),
-                    ([tradition, records]) => {
-
-                        return {
-                            name: tradition,
-                            value: records.length
-                        };
-                    }
-                )
+            name: "Intellectual Tradition",
+            children: Array.from(
+                d3.group(data, d => normalizeLabel(d.TradicaoIntelectual_Obra)),
+                ([tradition, records]) => ({
+                name: tradition,
+                value: records.length
+                })
+            )
             };
         }
     })();
@@ -241,7 +240,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                     treemapSelection = { cat: catName };
 
                     setGlobalFilter('byCategory',
-                        r => r.CatLit_Descricao === catName,
+                        r => normalizeLabel(r.CatLit_Descricao) === catName,
                         [catName],
                         'filter-category'
                     );
@@ -255,9 +254,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                 const tradName = a.data.name;
                 treemapSelection = { trad: tradName };
                 setGlobalFilter('byTradition',
-                r => r.TradicaoIntelectual_Obra === tradName,
-                [tradName],
-                'filter-tradition'
+                    r => normalizeLabel(r.TradicaoIntelectual_Obra) === tradName,
+                    [tradName],
+                    'filter-tradition'
                 );
             }
 
@@ -301,12 +300,12 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                         treemapSelection = { cat: catName, gen: genName };
 
                         setGlobalFilter('byCategory',
-                            r => r.CatLit_Descricao === catName,
+                            r => normalizeLabel(r.CatLit_Descricao) === catName,
                             [catName],
                             'filter-category'
                         );
                         setGlobalFilter('byGenre',
-                            r => r.GenLit_Descricao === genName,
+                            r => normalizeLabel(r.GenLit_Descricao) === genName,
                             [genName],
                             'filter-genre'
                         );
@@ -317,9 +316,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                         treemapSelection = { trad: tradName };
 
                         setGlobalFilter('byTradition',
-                        r => r.TradicaoIntelectual_Obra === tradName,
-                        [tradName],
-                        'filter-tradition'
+                            r => normalizeLabel(r.TradicaoIntelectual_Obra) === tradName,
+                            [tradName],
+                            'filter-tradition'
                         );
                     }
 
@@ -347,7 +346,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                     treemapSelection = { cat: catName };
 
                     setGlobalFilter('byCategory',
-                        r => r.CatLit_Descricao === catName,
+                        r => normalizeLabel(r.CatLit_Descricao) === catName,
                         [catName],
                         'filter-category'
                     );
@@ -371,7 +370,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                 clearGlobalFilter('byGenre');
 
                 setGlobalFilter('byTradition',
-                    r => r.TradicaoIntelectual_Obra === tradName,
+                    r => normalizeLabel(r.TradicaoIntelectual_Obra) === tradName,
                     [tradName],
                     'filter-tradition'
                 );
@@ -432,14 +431,23 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         const cellUpdate = cellEnter.merge(cell);
 
         function highlightTreemapRect(book) {
+            const bookCat = normalizeLabel(book.CatLit_Descricao);
+            const bookGen = normalizeLabel(book.GenLit_Descricao);
+            const bookTrad = normalizeLabel(book.TradicaoIntelectual_Obra);
+
             d3.selectAll(selector + " rect")
                 .classed("hovered-treemap-rect", d => {
                 if (mode === "category") {
-                    const cat = (book.CatLit_Descricao   || '').trim();
-                    const gen = (book.GenLit_Descricao   || '').trim();
-                    return d.data.name === gen || d.data.name === cat;
+                    const isLeaf = !d.children; // in the current zoom level
+                    const parentName = d.parent?.data?.name || null;
+
+                    // Highlight the category rect, and the matching genre within that category
+                    if (isLeaf) {
+                    return parentName === bookCat && d.data.name === bookGen;
+                    }
+                    return d.data.name === bookCat;
                 } else if (mode === "tradition") {
-                    return d.data.name === book.TradicaoIntelectual_Obra;
+                    return d.data.name === bookTrad;
                 }
                 return false;
                 });
@@ -476,5 +484,10 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                     text.style("opacity", 0);
                 }
             });
+    }
+
+    function normalizeLabel(v) {
+        const t = (v ?? '').toString().trim();
+        return t ? t : 'Por classificar';
     }
 }
