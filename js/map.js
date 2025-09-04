@@ -465,6 +465,9 @@ function makeMap () {
                         d3.select(this).classed('selected', selectedPeriods.includes(period));
 
                         if (selectedPeriods.length) {
+                            // Normalize to the primary key used by bars
+                            clearGlobalFilter('byPeriod');
+
                             setGlobalFilter(
                                 'period',
                                 d => selectedPeriods.includes(d.EpocaHistorica_Autor),
@@ -472,6 +475,7 @@ function makeMap () {
                             );
                         } else {
                             clearGlobalFilter('period');
+                            clearGlobalFilter('byPeriod');
                         }
 
                         updateDashboard();

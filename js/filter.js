@@ -183,6 +183,8 @@ function commitChecklistFilters () {
                           ? 'period'
                           : 'byPeriod';
 
+    selectedPeriods = [...pers];
+
     const probOb  = getChecked('filter-probobra');
     const probAu  = getChecked('filter-probautor');
 
