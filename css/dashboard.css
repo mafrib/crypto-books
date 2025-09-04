@@ -909,6 +909,13 @@ summary .count { font-weight:500; font-size:.7rem; }
   max-width:100%;
 }
 
+.guard-msg {
+  margin: 0 .75rem .5rem;
+  color: #606060;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
 .modal-footer {
   border-top:1px solid #D9D4C1; padding:.75rem 1.5rem;
   display:flex; justify-content:flex-end; gap:.5rem;

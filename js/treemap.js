@@ -73,13 +73,23 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     const tooltip = d3.select("#tooltip");
 
     svg.on("click", () => {
-        // Clear filter when clicking background (root zoom)
+        skipNextTreemapRedraw = true;
+
+        // Clear all classification filters
+        clearGlobalFilter('byGenre');
+        clearGlobalFilter('byCategory');
+        clearGlobalFilter('byTradition');
         clearGlobalFilter('treemap');
-        treemapSelection = null;
+
+        treemapSelection    = null;
         treemapFilterOrigin = null;
+        lastClassificationMode = null;
+
         updateTreemapBadge();
-        zoom(root, null, true);
-    });
+
+        createTreemap('#treemap-area', applyGlobalFilters(globalData), currentTreemapMode, updateDashboard);
+        setTimeout(() => { skipNextTreemapRedraw = false; }, 0);
+        });
 
     goToStoredPosition();
 
@@ -195,7 +205,19 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             .on('click', e => {
                 e.stopPropagation();
                 if (names.length === 1) return;
-                zoom(root, null, true);
+
+                skipNextTreemapRedraw = true;
+                clearGlobalFilter('byGenre');
+                clearGlobalFilter('byCategory');
+                clearGlobalFilter('byTradition');
+                clearGlobalFilter('treemap');
+                treemapSelection    = null;
+                treemapFilterOrigin = null;
+                lastClassificationMode = null;
+                updateTreemapBadge();
+
+                createTreemap('#treemap-area', applyGlobalFilters(globalData), currentTreemapMode, updateDashboard);
+                setTimeout(() => { skipNextTreemapRedraw = false; }, 0);
             });
 
         path.selectAll('.crumb-intermediate').on('click', (e) => {
@@ -210,40 +232,47 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             }
             if (!a) return;
 
+            skipNextTreemapRedraw = true;
+
             if (currentTreemapMode === 'category') {
                 if (targetLevel === 1) {
-                    setGlobalFilter('treemap',
-                                    r => r.CatLit_Descricao === a.data.name,
-                                    [a.data.name],
-                                    'filter-category');
-                    treemapSelection   = { cat : a.data.name };
+                    // Go to category level: keep category, drop genre
+                    const catName = a.data.name;
+                    treemapSelection = { cat: catName };
+
+                    setGlobalFilter('byCategory',
+                        r => r.CatLit_Descricao === catName,
+                        [catName],
+                        'filter-category'
+                    );
+                    clearGlobalFilter('byGenre');
                 } else {
-                clearGlobalFilter('treemap');
                     treemapSelection = null;
+                    clearGlobalFilter('byGenre');
+                    clearGlobalFilter('byCategory');
                 }
             } else {
-                if (targetLevel === 1) {
-                    setGlobalFilter('treemap',
-                                    r => r.TradicaoIntelectual_Obra === a.data.name,
-                                    [a.data.name],
-                                    'filter-tradition');
-                    treemapSelection   = { trad : a.data.name };
-                } else {
-                    clearGlobalFilter('treemap');
-                    treemapSelection = null;
-                }
+                const tradName = a.data.name;
+                treemapSelection = { trad: tradName };
+                setGlobalFilter('byTradition',
+                r => r.TradicaoIntelectual_Obra === tradName,
+                [tradName],
+                'filter-tradition'
+                );
             }
+
             treemapFilterOrigin = currentTreemapMode;
+            lastClassificationMode = currentTreemapMode;
             updateTreemapBadge();
+            createTreemap(
+                '#treemap-area',
+                applyGlobalFilters(globalData),
+                currentTreemapMode,
+                updateDashboard
+            );
 
-            zoom(a, null, true);
+            setTimeout(() => { skipNextTreemapRedraw = false; }, 0);
         });
-
-        if (!node.parent && fromUser) {
-            clearGlobalFilter('treemap');
-            treemapFilterOrigin = null;
-            updateTreemapBadge();
-        }
 
         const t = group.transition().duration(750);
 
@@ -257,75 +286,108 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             .on("click", (event, d) => {
                 event.stopPropagation();
 
-                // If already fully zoomed in, do nothing
-                if (d.x0 === 0 && d.y0 === 0 && d.x1 === width && d.y1 === height) return;
-
-                const isLeaf = !d.children;
-
+                const isLeaf   = !d.children;
+                const isFull = (d.x0 === 0 && d.y0 === 0 && d.x1 === width && d.y1 === height);
                 const initRect = { x0: d.x0, y0: d.y0, x1: d.x1, y1: d.y1 };
 
-                if (isLeaf) {
-                    // Leaf‐level filter
-                    const filterFn = currentTreemapMode === 'category'
-                        ? book =>
-                            book.CatLit_Descricao === d.parent.data.name &&
-                            book.GenLit_Descricao === d.data.name
-                        : book => book.TradicaoIntelectual_Obra === d.data.name;
+                skipNextTreemapRedraw = true;
 
-                    setGlobalFilter(
-                        'treemap',
-                        filterFn,
-                        [ d.data.name ],
-                        currentTreemapMode === 'category'
-                            ? 'filter-genre'
-                            : 'filter-tradition'
-                    );
+                if (isLeaf) {
+                    if (currentTreemapMode === 'category') {
+                        // Leaf in category mode = a Genre. Set BOTH Category and Genre.
+                        const catName = d.parent.data.name;
+                        const genName = d.data.name;
+
+                        treemapSelection = { cat: catName, gen: genName };
+
+                        setGlobalFilter('byCategory',
+                            r => r.CatLit_Descricao === catName,
+                            [catName],
+                            'filter-category'
+                        );
+                        setGlobalFilter('byGenre',
+                            r => r.GenLit_Descricao === genName,
+                            [genName],
+                            'filter-genre'
+                        );
+
+                    } else {
+                        // Leaf in tradition mode
+                        const tradName = d.data.name;
+                        treemapSelection = { trad: tradName };
+
+                        setGlobalFilter('byTradition',
+                        r => r.TradicaoIntelectual_Obra === tradName,
+                        [tradName],
+                        'filter-tradition'
+                        );
+                    }
 
                     treemapFilterOrigin = currentTreemapMode;
+                    lastClassificationMode = currentTreemapMode;
                     updateTreemapBadge();
 
-                    if (currentTreemapMode === 'category')
-                        treemapSelection = {cat: d.parent.data.name, gen: d.data.name};
-                    else
-                        treemapSelection = {trad: d.data.name};
+                    if (isFull) {
+                        createTreemap('#treemap-area',
+                        applyGlobalFilters(globalData),
+                        currentTreemapMode,
+                        updateDashboard
+                        );
+                    } else {
+                        zoom(d, initRect);
+                    }
 
-                    zoom(d, initRect);
-
+                    setTimeout(() => { skipNextTreemapRedraw = false; }, 0);
                     return;
                 }
 
-                // Intermediate‐level filter (non‐leaf category/tradition)
-                if (d.children) {
-                    let filterFn;
-                    if (currentTreemapMode === 'category' && d.depth === 1) {
-                        filterFn = book => book.CatLit_Descricao === d.data.name;
-                    } else if (currentTreemapMode !== 'category') {
-                        filterFn = book => book.TradicaoIntelectual_Obra === d.data.name;
-                    }
-                    if (filterFn) {
-                        setGlobalFilter(
-                            'treemap',
-                            filterFn,
-                            [d.data.name],
-                            currentTreemapMode === 'category'
-                                ? 'filter-category'
-                                : 'filter-tradition'
-                        );
-                        treemapFilterOrigin = currentTreemapMode;
-                    }
-                    else {
-                        clearGlobalFilter('treemap');
-                        treemapFilterOrigin = null;
-                    }
-                    updateTreemapBadge();
+                // Non-leaf (intermediate) click
+                if (currentTreemapMode === 'category' && d.depth === 1) {
+                    const catName = d.data.name;
+                    treemapSelection = { cat: catName };
 
-                    if (currentTreemapMode === 'category')
-                        treemapSelection = {cat: d.data.name};
-                    else
-                        treemapSelection = {trad: d.data.name};
+                    setGlobalFilter('byCategory',
+                        r => r.CatLit_Descricao === catName,
+                        [catName],
+                        'filter-category'
+                    );
+                    // Drop any previous genre (we're at category level)
+                    clearGlobalFilter('byGenre');
 
-                    zoom(d, initRect);
+                    lastClassificationMode = currentTreemapMode;
+                    createTreemap(
+                        '#treemap-area',
+                        applyGlobalFilters(globalData),
+                        currentTreemapMode,
+                        updateDashboard
+                    );
+
+                } else if (currentTreemapMode !== 'category') {
+                const tradName = d.data.name;
+                treemapSelection = { trad: tradName };
+
+                // Exclusivity with category/genre
+                clearGlobalFilter('byCategory');
+                clearGlobalFilter('byGenre');
+
+                setGlobalFilter('byTradition',
+                    r => r.TradicaoIntelectual_Obra === tradName,
+                    [tradName],
+                    'filter-tradition'
+                );
+                } else {
+                // Fallback: clear classification filters
+                treemapSelection = null;
+                clearGlobalFilter('byCategory');
+                clearGlobalFilter('byGenre');
+                clearGlobalFilter('byTradition');
                 }
+
+                treemapFilterOrigin = currentTreemapMode;
+                updateTreemapBadge();
+
+                zoom(d, initRect);
+                setTimeout(() => { skipNextTreemapRedraw = false; }, 0);
             });
 
         const rectEnter = cellEnter.append("rect")

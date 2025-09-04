@@ -7,6 +7,94 @@ function filterBooks(data, query) {
     );
 }
 
+function deriveTreemapFromActiveFilters() {
+    if (activeFilters.treemap && treemapSelection) {
+        return {
+        mode:   treemapFilterOrigin || currentTreemapMode,
+        selection: treemapSelection,
+        origin: treemapFilterOrigin || currentTreemapMode
+        };
+    }
+
+    const trads = activeFilters.byTradition?.values || [];
+    if (trads.length === 1) {
+        return { mode: 'tradition', selection: { trad: trads[0] }, origin: 'tradition' };
+    }
+
+    const cats = activeFilters.byCategory?.values || [];
+    const gens = activeFilters.byGenre?.values || [];
+    if (gens.length === 1) {
+        const g = gens[0];
+        const cat = cats[0] || categoryOfGenre(g);
+        return { mode: 'category', selection: { cat, gen: g }, origin: 'category' };
+    }
+
+    if (cats.length === 1) {
+        return { mode: 'category', selection: { cat: cats[0] }, origin: 'category' };
+    }
+
+    return { mode: currentTreemapMode, selection: null, origin: null };
+}
+
+function shallowEqualTreemapSel(a, b) {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    const ak = Object.keys(a), bk = Object.keys(b);
+    if (ak.length !== bk.length) return false;
+    return ak.every(k => a[k] === b[k]);
+}
+
+function syncTreemapUIToFilters() {
+  if (skipNextTreemapRedraw) { updateTreemapBadge(); return; }
+
+  const hasCat  = !!(activeFilters.byCategory?.values?.length || activeFilters.byGenre?.values?.length);
+  const hasTrad = !!(activeFilters.byTradition?.values?.length);
+
+  let targetMode = currentTreemapMode;
+  if (lastClassificationMode === 'category'  && hasCat)  targetMode = 'category';
+  else if (lastClassificationMode === 'tradition' && hasTrad) targetMode = 'tradition';
+  else if (hasTrad && !hasCat) targetMode = 'tradition';
+  else if (hasCat && !hasTrad) targetMode = 'category';
+
+  const sel = selectionFromFiltersForMode(targetMode);
+
+  const modeChanged = targetMode !== currentTreemapMode;
+  const selChanged  = !shallowEqualTreemapSel(sel, treemapSelection);
+
+  if (!(modeChanged || selChanged)) {
+    updateTreemapBadge();
+    return;
+  }
+
+  currentTreemapMode = targetMode;
+  treemapSelection   = sel;
+
+  d3.selectAll('.mode-button').classed('active', false);
+  d3.select(`.mode-button[data-mode="${currentTreemapMode}"]`).classed('active', true);
+
+  createTreemap(
+    '#treemap-area',
+    applyGlobalFilters(globalData),
+    currentTreemapMode,
+    updateDashboard
+  );
+
+  updateTreemapBadge();
+}
+
+function selectionFromFiltersForMode(mode) {
+    if (mode === 'category') {
+        const g = activeFilters.byGenre?.values?.[0];
+        const c = activeFilters.byCategory?.values?.[0] || (g ? categoryOfGenre(g) : null);
+        if (g && c) return { cat: c, gen: g };
+        if (c)      return { cat: c };
+        return null;
+    } else {
+        const t = activeFilters.byTradition?.values?.[0];
+        return t ? { trad: t } : null;
+  }
+}
+
 function syncPeriodChecklist () {
     const ul = document.getElementById('filter-period');
     if (!ul) return;
@@ -84,13 +172,12 @@ function syncModalLists () {
 }
 
 function commitChecklistFilters () {
-
     const libs    = getChecked('filter-library');
     const auths   = getChecked('filter-author');
     const idioma  = getChecked('filter-idioma');
-    const cats    = getChecked('filter-category');
-    const trads   = getChecked('filter-tradition');
-    const gens    = getChecked('filter-genre');
+    let   cats    = getChecked('filter-category');
+    let   trads   = getChecked('filter-tradition');
+    let   gens    = getChecked('filter-genre');
     const pers    = getChecked('filter-period');
     const periodKey = activeFilters.hasOwnProperty('period')
                           ? 'period'
@@ -99,6 +186,22 @@ function commitChecklistFilters () {
     const probOb  = getChecked('filter-probobra');
     const probAu  = getChecked('filter-probautor');
 
+    // Genre requires a selected Category
+    if (!cats.length && gens.length) {
+        setChecked('filter-genre', []);
+        gens = [];
+    }
+
+    // If a genre is selected, it must belong to the selected category
+    if (cats.length && gens.length) {
+        const g = gens[0];
+        if (categoryOfGenre(g) !== cats[0]) {
+            setChecked('filter-genre', []);
+            gens = [];
+        }
+    }
+
+    // Apply filters
     libs.length   ? setGlobalFilter('byLibrary',   r => libs.includes(r.Proprietario_Nome)          , libs) : clearGlobalFilter('byLibrary');
     auths.length  ? setGlobalFilter('byAuthor',    r => auths.includes(r.Nome_Autor)                , auths): clearGlobalFilter('byAuthor');
     idioma.length ? setGlobalFilter('byIdioma',    r => idioma.includes(r.Idioma)                   , idioma): clearGlobalFilter('byIdioma');
@@ -122,10 +225,16 @@ function notifyFilterChange () {
     rebuildFilterTags();
     scheduleAvailUpdate();
     scheduleDashboardUpdate();
+    syncTreemapUIToFilters();
 }
 
 // Centralized filtering system
 let activeFilters = {};
+
+function categoryOfGenre(genre) {
+    const row = globalData?.find(r => r.GenLit_Descricao === genre);
+    return row ? row.CatLit_Descricao : '';
+}
 
 function applyGlobalFilters(rawData) {
     return Object.values(activeFilters)
@@ -135,7 +244,7 @@ function applyGlobalFilters(rawData) {
 function setGlobalFilter(source, filterFn, values = [], listId = null) {
     activeFilters[source] = { fn : filterFn, values, listId };
     notifyFilterChange();
- }
+}
 
 function clearGlobalFilter(source) {
     delete activeFilters[source];
@@ -148,6 +257,8 @@ function clearAllFilters() {
 
     treemapSelection     = null;
     treemapFilterOrigin  = null;
+    lastClassificationMode = null;
+
     selectedNodes.clear();
     selectedLinks.clear();
     clickedLinks.clear();
@@ -178,14 +289,36 @@ function applyFiltersExcept(keysToSkip = []) {
                 .reduce((data, [,obj]) => data.filter(obj.fn), globalData);
 }
 
-
 function updateChecklistAvailability () {
-
     const fullyFilteredRows = applyGlobalFilters(globalData);
+
+    // Determine whether a category is selected (either via checklist or treemap)
+    const hasCategory =
+        !!(activeFilters.byCategory?.values?.length || activeFilters.byGenre?.values?.length);
+
+    const genreGuard = document.getElementById('genre-guard-msg');
+    if (genreGuard) genreGuard.hidden = !!hasCategory;
 
     Object.entries(listIdToField).forEach(([listId, field]) => {
         const ul = document.getElementById(listId);
         if (!ul) return;
+
+        // Special gating for genres: block if there is no category selected
+        if (listId === 'filter-genre' && !hasCategory) {
+            ul.querySelectorAll('input').forEach(cb => {
+                cb.disabled = true;
+                cb.closest('li').classList.add('disabled-option');
+                cb.parentElement.title = 'Select a Literary Category first';
+            });
+            // keep disabled items sorted to the bottom behavior
+            const lis = Array.from(ul.children);
+            lis.sort((a,b)=>
+                a.classList.contains('disabled-option') -
+                b.classList.contains('disabled-option')
+            );
+            lis.forEach(li => ul.appendChild(li));
+            return;
+        }
 
         const ownFilterKeys = Object.entries(activeFilters)
             .filter(([src,obj]) => (obj.listId ?? sourceToList[src]) === listId)
@@ -203,8 +336,7 @@ function updateChecklistAvailability () {
             cb.closest('li').classList.toggle('disabled-option', !selectable);
 
             if (!selectable)
-                cb.parentElement.title =
-                  'No books match the current filters';
+                cb.parentElement.title = 'No books match the current filters';
             else
                 cb.parentElement.removeAttribute('title');
         });

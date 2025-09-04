@@ -2,6 +2,7 @@ let globalData;
 let baselineW, baselineH;
 let currentTreemapMode = 'category';
 let treemapFilterOrigin = null;   // 'category' or 'tradition'
+let lastClassificationMode = null;
 let skipNextTreemapRedraw = false;
 const periodOrder = [
   "Indeterminada",
@@ -155,23 +156,32 @@ function closeModal () {
 }
 
 function updateFilterBadge() {
-  const count = Object.keys(activeFilters || {}).length;
-  const btn   = document.getElementById('filter-btn');
-  const badge = document.getElementById('filter-badge');
-  badge.textContent = count > 0 ? count : '';
-  btn.classList.toggle('filters-active', count > 0);
+    const count = Object.keys(activeFilters || {}).length;
+    const btn   = document.getElementById('filter-btn');
+    const badge = document.getElementById('filter-badge');
+    badge.textContent = count > 0 ? count : '';
+    btn.classList.toggle('filters-active', count > 0);
 }
 
 function treemapFilterActive() {
-  return activeFilters && activeFilters.hasOwnProperty('treemap');
+    return !!(activeFilters && (
+        activeFilters.treemap ||
+        activeFilters.byCategory ||
+        activeFilters.byGenre ||
+        activeFilters.byTradition
+    ));
 }
 
 function updateTreemapBadge() {
-  document.querySelectorAll('.mode-button').forEach(btn => {
-    const mode   = btn.dataset.mode;
-    const show   = treemapFilterActive() && mode === treemapFilterOrigin;
-    btn.classList.toggle('has-filter', show);
-  });
+    const hasCat  = !!(activeFilters.byCategory?.values?.length || activeFilters.byGenre?.values?.length);
+    const hasTrad = !!(activeFilters.byTradition?.values?.length);
+
+    document.querySelectorAll('.mode-button').forEach(btn => {
+        const mode = btn.dataset.mode;
+        const show = (mode === 'category'  && hasCat) ||
+                    (mode === 'tradition' && hasTrad);
+        btn.classList.toggle('has-filter', show);
+    });
 }
 
 function fillChecklist(listId, values, multi = true) {
@@ -180,9 +190,11 @@ function fillChecklist(listId, values, multi = true) {
     values.forEach(v => {
         const id = `${listId}-${CSS.escape(v)}`;
         const li = document.createElement('li');
+        const type = multi ? 'checkbox' : 'radio';
+        const nameAttr = type === 'radio' ? `name="${listId}"` : '';
         li.innerHTML =
         `<label for="${id}">` +
-        `<input id="${id}" type="${multi ? 'checkbox' : 'radio'}" value="${v}">` +
+        `<input id="${id}" ${nameAttr} type="${type}" value="${v}">` +
         `<span class="chk-txt">${v || '–'}</span>` +
         `</label>`;
         ul.appendChild(li);
@@ -198,6 +210,8 @@ function getChecked(listId) {
 
 function switchMode(mode) {
     currentTreemapMode = mode;
+
+    treemapSelection = selectionFromFiltersForMode(mode);
 
     const filteredData = applyGlobalFilters(globalData);
 
@@ -231,9 +245,9 @@ function populateFilterOptions() {
   fillChecklist('filter-library',   u('Proprietario_Nome'));
   fillChecklist('filter-author',    u('Nome_Autor'));
   fillChecklist('filter-idioma',    u('Idioma'));
-  fillChecklist('filter-category',  u('CatLit_Descricao'));
-  fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'));
-  fillChecklist('filter-genre',     u('GenLit_Descricao'));
+  fillChecklist('filter-category',  u('CatLit_Descricao'),  false);
+  fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'), false);
+  fillChecklist('filter-genre',     u('GenLit_Descricao'),  false);
 
   const periods = periodOrder.filter(p=>globalData.some(d=>d.EpocaHistorica_Autor===p));
   fillChecklist('filter-period', periods);
@@ -291,25 +305,36 @@ function rebuildFilterTags () {
                             }));
                             break;
 
-        case 'byCategory' : getChecked('filter-category' )
-                            .forEach(v => addTag(v, () => {
+        case 'byCategory' : getChecked('filter-category')
+                            .forEach(v => addTag(`Literary Categories › ${v}`, () => {
+                                // Uncheck category
                                 uncheckValue('filter-category', v);
                                 clearGlobalFilter('byCategory');
+                                // Also uncheck/clear any genre
+                                const curGenre = getChecked('filter-genre');
+                                if (curGenre.length) {
+                                    setChecked('filter-genre', []);
+                                    clearGlobalFilter('byGenre');
+                                }
                             }));
                             break;
 
         case 'byTradition': getChecked('filter-tradition')
-                            .forEach(v => addTag(v, () => {
+                            .forEach(v => addTag(`Intellectual Tradition › ${v}`, () => {
                                 uncheckValue('filter-tradition', v);
                                 clearGlobalFilter('byTradition');
                             }));
                             break;
 
-        case 'byGenre'    : getChecked('filter-genre'    )
-                            .forEach(v => addTag(v, () => {
-                                uncheckValue('filter-genre', v);
-                                clearGlobalFilter('byGenre');
-                            }));
+        case 'byGenre'    : getChecked('filter-genre')
+                            .forEach(v => {
+                                const cat = categoryOfGenre(v) || getChecked('filter-category')[0] || '';
+                                const label = cat ? `${cat} › ${v}` : v;
+                                addTag(label, () => {
+                                    uncheckValue('filter-genre', v);
+                                    clearGlobalFilter('byGenre');
+                                });
+                            });
                             break;
 
         case 'byPeriod' :
@@ -326,15 +351,16 @@ function rebuildFilterTags () {
             break;
 
         case 'treemap' :
-            if (treemapSelection){
-                const tagLabel = currentTreemapMode === 'category'
-                    ? ( treemapSelection.gen
-                            ? `${treemapSelection.cat} › ${treemapSelection.gen}`
-                            : treemapSelection.cat )
-                    : treemapSelection.trad;
-
+            if (treemapSelection) {
+                let tagLabel = '';
+                if (currentTreemapMode === 'category') {
+                    const {cat, gen} = treemapSelection;
+                    tagLabel = gen ? `${cat} › ${gen}` : `Literary Categories › ${cat}`;
+                } else {
+                    tagLabel = `Intellectual Tradition › ${treemapSelection.trad}`;
+                }
                 addTag(tagLabel, () => {
-                    treemapSelection   = null;
+                    treemapSelection    = null;
                     treemapFilterOrigin = null;
                     clearGlobalFilter('treemap');
                     createTreemap('#treemap-area',
@@ -343,9 +369,9 @@ function rebuildFilterTags () {
                                     updateDashboard);
                     updateTreemapBadge();
                 });
-            } else addTag('Treemap', () => {
-                clearGlobalFilter('treemap');
-            });
+            } else {
+                addTag('Treemap', () => { clearGlobalFilter('treemap'); });
+            }
             break;
 
         case 'network' :
@@ -421,6 +447,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // hook every checklist once the DOM exists
     document.querySelectorAll('.checklist').forEach(list => {
         list.addEventListener('change', () => {
+
+            const id = list.id;
+            if (id === 'filter-category' || id === 'filter-genre') {
+            lastClassificationMode = 'category';
+            }
+            if (id === 'filter-tradition') {
+            lastClassificationMode = 'tradition';
+            }
+
             commitChecklistFilters();
             bumpCounter(list);
             refreshFilterTags();
@@ -686,6 +721,7 @@ function startDashboard() {
                 Object.keys(activeFilters).forEach(src => clearGlobalFilter(src));
 
                 treemapFilterOrigin = null;
+                lastClassificationMode = null;
                 updateTreemapBadge();
 
                 updateClearButton();
