@@ -411,20 +411,32 @@ function makeMap () {
                     });
 
             function highlightMapPoint(book) {
-                d3.selectAll('circle.library-point')
-                    .classed('hovered-map-point', false)
-                    .classed('dimmed',            false);
+                d3.selectAll('circle.library-point.hovered-map-point')
+                    .classed('hovered-map-point', false);
+
+                d3.selectAll('circle.library-point.highlighted')
+                    .each(function(d) { clearPointHighlight(d3.select(this), d); });
 
                 const sel = d3.selectAll('circle.library-point')
                     .filter(p => p.entries.some(e => e.ID_Cod === book.ID_Cod));
 
-                sel.classed('hovered-map-point', true)
-                .raise();
+                const node = sel.node();
+                if (node) {
+                    const el = d3.select(node);
+                    const d  = el.datum();
+
+                    highlightPoint(el, d);
+
+                    el.classed('hovered-map-point', true);
+                }
             }
 
             function clearMapHighlights() {
-                d3.selectAll('circle.library-point')
+                d3.selectAll('circle.library-point.hovered-map-point')
                     .classed('hovered-map-point', false);
+
+                d3.selectAll('circle.library-point.highlighted')
+                    .each(function(d) { clearPointHighlight(d3.select(this), d); });
             }
 
             window.highlightMapPoint   = highlightMapPoint;
