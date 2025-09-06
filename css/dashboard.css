@@ -345,6 +345,10 @@ circle.library-point.location-selected {
     fill: #9a9a9a;
 }
 
+.world-land {
+  fill: #16404D;
+}
+
 .library-point {
   stroke: #16404D;
   stroke-width: 0.5;

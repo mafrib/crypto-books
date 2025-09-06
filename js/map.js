@@ -7,6 +7,13 @@ let selectedPeriods = [];
 let hoverRecentered = false;
 let hoverResetTimeout = null;
 
+let mapPoints = [];
+let defaultTransform = d3.zoomIdentity;
+let minZoomK = 1;
+
+const fitPaddingPx = 24;
+const panSlackPx   = 30; //extra panning allowed
+
 const zoomMin = 0.8;
 const zoomMax = 4;
 
@@ -31,7 +38,7 @@ function updateZoomButtons(k) {
     d3.select('.zoom-in' )
         .classed('disabled', k >= zoomMax - 1e-6);
     d3.select('.zoom-out')
-        .classed('disabled', k <= zoomMin + 1e-6);
+        .classed('disabled', k <= minZoomK + 1e-6);
 }
 
 function resetToDefaultView(duration = 400) {
@@ -41,7 +48,42 @@ function resetToDefaultView(duration = 400) {
         .transition()
         .duration(duration)
         .ease(d3.easeCubicOut)
-        .call(zoom.transform, d3.zoomIdentity);
+        .call(zoom.transform, defaultTransform);
+}
+
+function computePointsBounds(points) {
+    let minX =  Infinity, minY =  Infinity, maxX = -Infinity, maxY = -Infinity;
+    points.forEach(p => {
+        const [x, y] = mapProjection([p.lon, p.lat]);
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    });
+    return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY };
+}
+
+function fitTransformToBounds(bounds, w, h, padPx = 24) {
+    const k = Math.min((w - 2 * padPx) / Math.max(bounds.w, 1),
+                        (h - 2 * padPx) / Math.max(bounds.h, 1));
+    const cx = (bounds.minX + bounds.maxX) / 2;
+    const cy = (bounds.minY + bounds.maxY) / 2;
+    const x = (w / 2) - k * cx;
+    const y = (h / 2) - k * cy;
+    return d3.zoomIdentity.translate(x, y).scale(k);
+}
+
+function applyZoomConstraints(bounds, kFit, slackPx = 80) {
+    const padContent   = fitPaddingPx / kFit;
+    const slackContent = slackPx       / kFit;
+    const minX = bounds.minX - padContent - slackContent;
+    const minY = bounds.minY - padContent - slackContent;
+    const maxX = bounds.maxX + padContent + slackContent;
+    const maxY = bounds.maxY + padContent + slackContent;
+
+    zoom
+        .scaleExtent([kFit, zoomMax])
+        .translateExtent([[minX, minY], [maxX, maxY]]);
 }
 
 function centerOnProjectedPointIfOffscreen(px, py, margin = 16) {
@@ -182,12 +224,15 @@ function makeMap () {
 
         const k = mapW / baseWidth;
         mapProjection
-                .scale(baseScale * k)
-                .translate([mapW / 2, mapH / 2]);
+            .scale(baseScale * k)
+            .translate([mapW / 2, mapH / 2]);
 
         const path = d3.geoPath().projection(mapProjection);
+
+        mapGroup.select('path.world-land')
+            .attr('d', path);
         mapGroup.select('path.europe-outline')
-                .attr('d', path);
+            .attr('d', path);
 
         const proj = d => mapProjection([d.lon, d.lat]);
 
@@ -200,6 +245,37 @@ function makeMap () {
 
         d3.select('#map-area .map-color-scale , #map-area .bar-wrapper')
             .style('height', mapH + 'px');
+
+        if (mapPoints && mapPoints.length) {
+            const w = +mapSvg.attr('width');
+            const h = +mapSvg.attr('height');
+
+            const bounds = computePointsBounds(mapPoints);
+
+            defaultTransform = fitTransformToBounds(bounds, w, h, fitPaddingPx);
+            minZoomK = defaultTransform.k;
+
+            applyZoomConstraints(bounds, minZoomK, panSlackPx);
+
+            const t = d3.zoomTransform(mapSvg.node());
+            const [[minX, minY], [maxX, maxY]] = zoom.translateExtent();
+            const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+            let nextT = t;
+            if (t.k < minZoomK - 1e-6) {
+                nextT = defaultTransform;
+            } else {
+                const newX = clamp(t.x, w - t.k * maxX, -t.k * minX);
+                const newY = clamp(t.y, h - t.k * maxY, -t.k * minY);
+                if (Math.abs(newX - t.x) > 0.5 || Math.abs(newY - t.y) > 0.5) {
+                    nextT = d3.zoomIdentity.translate(newX, newY).scale(t.k);
+                }
+            }
+            if (nextT !== t) {
+                mapSvg.call(zoom.transform, nextT);
+            }
+            updateZoomButtons(d3.zoomTransform(mapSvg.node()).k);
+        }
 
         return;
     }
@@ -282,10 +358,9 @@ function makeMap () {
 
     // Initialize zoom
     zoom = d3.zoom()
-        .scaleExtent([zoomMin, zoomMax])
+        .scaleExtent([1, zoomMax])
         .on("zoom", (event) => {
             currentZoomK = event.transform.k;
-
             mapGroup.attr("transform", event.transform);
 
             mapGroup.selectAll("circle.library-point")
@@ -320,20 +395,17 @@ function makeMap () {
     // File originally got from https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json
     d3.json("data/countries-110m.json")
         .then(data => {
-            // Filter visible countries by name
+            const path = d3.geoPath().projection(mapProjection);
+
+            const land = topojson.feature(data, data.objects.land);
+            mapGroup.append("path")
+            .datum(land)
+            .attr("class", "world-land")
+            .attr("d", path);
+
             const visibleGeometries = data.objects.countries.geometries
                 .filter(d => visibleCountries.has(d.properties.name));
-
-            // Merge the geometries
             mergedGeometries = topojson.merge(data, visibleGeometries);
-            countryFeatures = visibleGeometries.map(geom =>
-                topojson.feature(data, geom)
-            );
-
-            fullCountryFeatures = data.objects.countries.geometries.map(geom =>
-            topojson.feature(data, geom)
-          );
-
             mapGroup.append("path")
                 .datum(mergedGeometries)
                 .attr("class", "europe-outline")
@@ -450,6 +522,19 @@ function makeMap () {
                     clearPointHighlight(d3.select(this), d);
                     tooltip.style("opacity", 0);
                     });
+
+            mapPoints = aggregatedPoints;
+
+            const w = +mapSvg.attr('width');
+            const h = +mapSvg.attr('height');
+            const bounds = computePointsBounds(mapPoints);
+            defaultTransform = fitTransformToBounds(bounds, w, h, fitPaddingPx);
+            minZoomK = defaultTransform.k;
+
+            applyZoomConstraints(bounds, minZoomK, panSlackPx);
+
+            mapSvg.call(zoom.transform, defaultTransform);
+            updateZoomButtons(minZoomK);
 
             function highlightMapPoint(book) {
                 if (hoverResetTimeout) { clearTimeout(hoverResetTimeout); hoverResetTimeout = null; }
