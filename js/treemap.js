@@ -400,10 +400,11 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                     .html(`<strong>${d.data.name}</strong><br>${d.value} books`)
                     .style("left", `${x + 20}px`)
                     .style("top", `${y - 30}px`)
-                    .style("visibility", "visible");
+                    .style("visibility", "visible")
+                    .style("opacity", "1");
             })
             .on("mouseout", () => {
-                tooltip.style("visibility", "hidden");
+                tooltip.style("opacity", "0").style("visibility", "hidden");
             });
 
         if (initRect) {

@@ -1372,19 +1372,6 @@ details[open] > summary::after {
   cursor: pointer;
 }
 
-.mode-button.has-filter::after {
-  content: '';
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 10px;
-  height: 10px;
-  background: #E03B3B;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px #F5ECD5;
-  pointer-events: none;
-}
-
 .mode-button:not(.active):hover {
   background-color: #DCDED4;
 }
@@ -1392,6 +1379,55 @@ details[open] > summary::after {
 .mode-button.active {
   background-color: #16404D;
   color: white;
+}
+
+.mode-button .filter-indicator {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 10px;
+  height: 10px;
+  background: #A6CDC6;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #F5ECD5;
+  display: none;
+  cursor: default;
+  outline: none;
+  z-index: 2;
+}
+
+.mode-button.has-filter .filter-indicator { display: block; }
+
+.mode-button .filter-indicator::after {
+  content: 'Filter active';
+  position: absolute;
+  --tip-x: 20px;
+  --tip-y: -18px;
+
+  top: 0;
+  right: 0;
+  transform: translate(var(--tip-x), var(--tip-y)) scale(0.85);
+  transform-origin: top right;
+
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  line-height: 1.2;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .14s ease, opacity .14s ease;
+  z-index: 3;
+}
+
+.mode-button .filter-indicator:hover::after,
+.mode-button .filter-indicator:focus-visible::after {
+  opacity: 1;
+  transform: translate(calc(var(--tip-x) + 4px), calc(var(--tip-y) - 4px)) scale(1);
 }
 
 #treemap {

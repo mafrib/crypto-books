@@ -205,7 +205,49 @@ function updateTreemapBadge() {
         const show = (mode === 'category'  && hasCat) ||
                     (mode === 'tradition' && hasTrad);
         btn.classList.toggle('has-filter', show);
+        ensureTreemapIndicator(btn);
     });
+}
+
+function ensureTreemapIndicator(btn) {
+    let dot = btn.querySelector('.filter-indicator');
+    if (!dot) {
+        dot = document.createElement('span');
+        dot.className = 'filter-indicator';
+        dot.tabIndex = 0;
+        dot.setAttribute('aria-label', 'Filter active');
+        btn.appendChild(dot);
+    }
+}
+
+function showModeDotTooltip(targetEl) {
+    const tip = document.getElementById('tooltip');
+    if (!tip) return;
+
+    tip.textContent = 'Filter active';
+
+    tip.style.visibility = 'visible';
+    tip.style.opacity = '1';
+
+    const host = document.getElementById('treemap');
+    const hostRect = host.getBoundingClientRect();
+    const dotRect  = targetEl.getBoundingClientRect();
+
+    const tipW = tip.offsetWidth;
+    const tipH = tip.offsetHeight;
+
+    const left = Math.max(4, (dotRect.left + dotRect.width / 2) - hostRect.left - (tipW / 2));
+    const top  = Math.max(4, dotRect.top - hostRect.top - tipH - 8);
+
+    tip.style.left = `${left}px`;
+    tip.style.top  = `${top}px`;
+}
+
+function hideModeDotTooltip() {
+    const tip = document.getElementById('tooltip');
+    if (!tip) return;
+    tip.style.opacity = '0';
+    tip.style.visibility = 'hidden';
 }
 
 function buildLocationOptions(data) {
@@ -568,6 +610,11 @@ document.addEventListener('DOMContentLoaded', () => {
         .addEventListener('click', ()=> {
             document.getElementById('clear-btn').click();
             hideNoResultsPopup();
+        });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('#treemap-controls .mode-button')
+            .forEach(ensureTreemapIndicator);
         });
 
 });
