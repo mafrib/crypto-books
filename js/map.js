@@ -27,11 +27,8 @@ function positionOffMsg(legendEl) {
     if(!el || !legendEl) return;
 
     const legendW = legendEl.getBoundingClientRect().width;
-    const padL = parseFloat(getComputedStyle(legendEl).paddingLeft) || 0;
 
-    const extra   = 6;
-
-    el.style.paddingRight = (legendW + padL + extra) + 'px';
+    el.style.paddingRight = (legendW) + 'px';
 }
 
 function updateZoomButtons(k) {
