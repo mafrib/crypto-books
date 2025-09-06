@@ -71,7 +71,13 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
 
     const tooltip = d3.select("#tooltip");
 
+    const hideTreemapTip = () =>
+        tooltip.style("opacity", "0").style("visibility", "hidden");
+
+    hideTreemapTip();
+
     svg.on("click", () => {
+        hideTreemapTip();
         skipNextTreemapRedraw = true;
 
         // Clear all classification filters
@@ -159,6 +165,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     }
 
     function zoom(node, initRect = null, fromUser = false) {
+        hideTreemapTip();
+
         const childData = node.children
             ? node.children.map(d => d.data)
             : [node.data];
@@ -202,6 +210,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
 
         path.select('.crumb-root')
             .on('click', e => {
+                hideTreemapTip();
                 e.stopPropagation();
                 if (names.length === 1) return;
 
@@ -220,6 +229,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             });
 
         path.selectAll('.crumb-intermediate').on('click', (e) => {
+            hideTreemapTip();
             e.stopPropagation();
 
             const targetLevel = +e.currentTarget.dataset.level;
@@ -283,6 +293,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         const cellEnter = cell.enter().append("g")
             .classed("cell", true)
             .on("click", (event, d) => {
+                hideTreemapTip();
                 event.stopPropagation();
 
                 const isLeaf   = !d.children;
@@ -403,9 +414,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                     .style("visibility", "visible")
                     .style("opacity", "1");
             })
-            .on("mouseout", () => {
-                tooltip.style("opacity", "0").style("visibility", "hidden");
-            });
+            .on("mouseleave", hideTreemapTip)
+            .on("mousedown", hideTreemapTip)
+            .on("touchstart", hideTreemapTip);
 
         if (initRect) {
             rectEnter
