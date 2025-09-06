@@ -4,6 +4,8 @@ let mapGroup;
 let baseScale, baseWidth, baseHeight;
 let zoom;
 let selectedPeriods = [];
+let hoverRecentered = false;
+let hoverResetTimeout = null;
 
 const zoomMin = 0.8;
 const zoomMax = 4;
@@ -32,6 +34,45 @@ function updateZoomButtons(k) {
         .classed('disabled', k <= zoomMin + 1e-6);
 }
 
+function resetToDefaultView(duration = 400) {
+    if (!mapSvg || !zoom) return;
+    mapSvg.interrupt();
+    mapSvg
+        .transition()
+        .duration(duration)
+        .ease(d3.easeCubicOut)
+        .call(zoom.transform, d3.zoomIdentity);
+}
+
+function centerOnProjectedPointIfOffscreen(px, py, margin = 16) {
+    if (!mapSvg || !zoom) return false;
+
+    const t = d3.zoomTransform(mapSvg.node());
+    const w = +mapSvg.attr('width');
+    const h = +mapSvg.attr('height');
+
+    const sx = px * t.k + t.x;
+    const sy = py * t.k + t.y;
+
+    const inView =
+        sx >= margin && sx <= (w - margin) &&
+        sy >= margin && sy <= (h - margin);
+
+    if (inView) return false;
+
+    const k = t.k;
+    const x = (w / 2) - k * px;
+    const y = (h / 2) - k * py;
+
+    mapSvg.interrupt();
+    mapSvg
+        .transition()
+        .duration(400)
+        .ease(d3.easeCubicOut)
+        .call(zoom.transform, d3.zoomIdentity.translate(x, y).scale(k));
+
+    return true;
+}
 
 function parseDMS(str) {
     if (!str) return NaN;
@@ -155,7 +196,7 @@ function makeMap () {
             .attr('cy', d => proj(d)[1]);
 
         mapGroup.selectAll("circle.library-point.highlighted")
-            .attr("r", d => (d.baseR * 2) / event.transform.k);
+            .attr("r", d => (d.baseR * 2) / currentZoomK);
 
         d3.select('#map-area .map-color-scale , #map-area .bar-wrapper')
             .style('height', mapH + 'px');
@@ -411,6 +452,8 @@ function makeMap () {
                     });
 
             function highlightMapPoint(book) {
+                if (hoverResetTimeout) { clearTimeout(hoverResetTimeout); hoverResetTimeout = null; }
+
                 d3.selectAll('circle.library-point.hovered-map-point')
                     .classed('hovered-map-point', false);
 
@@ -425,11 +468,16 @@ function makeMap () {
                     const el = d3.select(node);
                     const d  = el.datum();
 
-                    highlightPoint(el, d);
+                    const cx = +el.attr('cx');
+                    const cy = +el.attr('cy');
+                    const didPan = centerOnProjectedPointIfOffscreen(cx, cy);
+                    if (didPan) hoverRecentered = true;
 
+                    highlightPoint(el, d);
                     el.classed('hovered-map-point', true);
                 }
             }
+
 
             function clearMapHighlights() {
                 d3.selectAll('circle.library-point.hovered-map-point')
@@ -437,6 +485,15 @@ function makeMap () {
 
                 d3.selectAll('circle.library-point.highlighted')
                     .each(function(d) { clearPointHighlight(d3.select(this), d); });
+
+                if (hoverRecentered) {
+                    if (hoverResetTimeout) clearTimeout(hoverResetTimeout);
+                    hoverResetTimeout = setTimeout(() => {
+                    resetToDefaultView();
+                    hoverRecentered = false;
+                    hoverResetTimeout = null;
+                    }, 100);
+                }
             }
 
             window.highlightMapPoint   = highlightMapPoint;
