@@ -521,7 +521,6 @@ g.node.hovered-network-node circle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 6px 4px 6px;
 }
 
 .viz-header .expand-btn,
@@ -695,11 +694,12 @@ svg:not(.node-active-mode) .node:hover text {
 
 .legend {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
   display: flex;
   flex-direction: column;
   gap: 5px;
+  padding: 0 var(--pad-h) 0 var(--pad-h);
+  left: var(--pad-h);
+  bottom: var(--pad-v);
 }
 
 .legend-item {
@@ -740,6 +740,62 @@ svg:not(.node-active-mode) .node:hover text {
   font-weight: 400;
   white-space: nowrap;
   line-height: 1;
+}
+
+.viz-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#network-graph .gender-tools {
+  position: absolute;
+  right: var(--pad-h);
+  bottom: var(--pad-v);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  z-index: 3;
+  padding: 0 var(--pad-h) 0 var(--pad-h);
+}
+
+#network-graph .tools-label {
+  white-space: normal;
+  text-align: right;
+  max-width: 5rem;
+  font-size: 0.6rem;
+  line-height: 1.15;
+  color: #16404D;
+  opacity: 0.9;
+}
+
+#network-graph .network-gender-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.gender-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.gender-btn:hover,
+.gender-btn.active {
+  background: #D6E5DB;
+}
+
+.gender-btn img {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
 }
 
 .info-btn {

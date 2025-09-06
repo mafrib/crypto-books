@@ -1,5 +1,6 @@
 let svg, linkGroup, nodeGroup, simulation, tooltip;
 let nodes, edges;
+let allDataRef = null;
 const selectedLinks = new Set();  // all currently selected (clicked + auto)
 const clickedLinks = new Set();   // only those links the user explicitly clicked
 const selectedNodes = new Set();  // libraries clicked
@@ -200,6 +201,113 @@ function buildAllowedFromSelection(nodesSet, linksSet) {
   return allowed;
 }
 
+function buildGenderSets(data) {
+    const libs = Array.from(new Set(
+        data.map(r => r.Proprietario_Nome.trim())
+    ));
+    const females = new Set(libs.filter(name => window.isFemaleLibrary(name)));
+    const males   = new Set(libs.filter(name => !window.isFemaleLibrary(name)));
+    return { males, females };
+}
+
+function ensureGenderControls(containerSelector) {
+    const container = d3.select(containerSelector).node();
+    if (!container) return;
+
+    // If the panel already exists, do nothing
+    if (container.parentElement.querySelector('.network-gender-controls')) return;
+
+    // Create the panel right after the wrapper
+    const panel = document.createElement('div');
+    panel.className = 'network-gender-controls';
+    panel.setAttribute('aria-label', 'Quick gender filters');
+
+    const maleBtn = document.createElement('button');
+    maleBtn.id = 'gender-btn-male';
+    maleBtn.className = 'gender-btn male';
+    maleBtn.title = 'Male libraries';
+    maleBtn.setAttribute('aria-pressed', 'false');
+    maleBtn.innerHTML = '<img src="../img/icons/male.svg" alt="Male">';
+
+    const femaleBtn = document.createElement('button');
+    femaleBtn.id = 'gender-btn-female';
+    femaleBtn.className = 'gender-btn female';
+    femaleBtn.title = 'Female libraries';
+    femaleBtn.setAttribute('aria-pressed', 'false');
+    femaleBtn.innerHTML = '<img src="../img/icons/female.svg" alt="Female">';
+
+    panel.appendChild(maleBtn);
+    panel.appendChild(femaleBtn);
+
+    // Insert after the network wrapper so it stays within the viz box
+    container.parentElement.appendChild(panel);
+
+    maleBtn.addEventListener('click', () => toggleGenderSelection('male'));
+    femaleBtn.addEventListener('click', () => toggleGenderSelection('female'));
+}
+
+function toggleGenderSelection(kind) {
+    const maleBtn   = d3.select('#gender-btn-male');
+    const femaleBtn = d3.select('#gender-btn-female');
+
+    const wasActive = (kind === 'male'
+        ? maleBtn.classed('active')
+        : femaleBtn.classed('active'));
+
+    const maleActiveNext   = (kind === 'male')   ? !wasActive : maleBtn.classed('active');
+    const femaleActiveNext = (kind === 'female') ? !wasActive : femaleBtn.classed('active');
+
+    maleBtn.classed('active', maleActiveNext).attr('aria-pressed', maleActiveNext ? 'true' : 'false');
+    femaleBtn.classed('active', femaleActiveNext).attr('aria-pressed', femaleActiveNext ? 'true' : 'false');
+
+    // Simplification rule: clicking these buttons replaces previous library selections
+    selectedNodes.clear();
+    clickedLinks.clear();
+    selectedLinks.clear();
+
+    const { males, females } = buildGenderSets(allDataRef || globalData);
+
+    if (maleActiveNext)   males.forEach(id => selectedNodes.add(id));
+    if (femaleActiveNext) females.forEach(id => selectedNodes.add(id));
+
+    // Update node styles immediately
+    nodeGroup.selectAll('g.node')
+        .classed('active', d => selectedNodes.has(d.id));
+
+    // Apply the network filter with the new selection
+    applyNetworkFilter(
+        buildAllowedFromSelection(selectedNodes, selectedLinks),
+        allDataRef || globalData
+    );
+
+    // Keep details panel in sync (optional)
+    const libs = Array.from(selectedNodes);
+    currentCarouselLibs = libs;
+    currentIndex = 0;
+    renderCarousel();
+    if (libs.length > 0) {
+        updateDetailsPanel(libs[0], globalData);
+    } else {
+        clearDetailsPanel();
+    }
+}
+
+function wireGenderButtons() {
+    const male   = document.getElementById('gender-btn-male');
+    const female = document.getElementById('gender-btn-female');
+    if (!male || !female) return;
+
+    // Avoid double-binding if this runs more than once
+    if (!male.dataset.wired) {
+        male.addEventListener('click', () => toggleGenderSelection('male'));
+        male.dataset.wired = '1';
+    }
+    if (!female.dataset.wired) {
+        female.addEventListener('click', () => toggleGenderSelection('female'));
+        female.dataset.wired = '1';
+  }
+}
+
 function attachLinkTooltip(selection) {
     selection
         .on('mouseover.tooltip', function(event, d) {
@@ -393,6 +501,10 @@ function initNetwork(containerSelector) {
 
 function createNetworkGraph(containerSelector, data) {
     initNetwork(containerSelector);
+
+    allDataRef = data;
+
+    ensureGenderControls(containerSelector);
 
     nodes = processNodes(data);
     edges = processEdges(data);

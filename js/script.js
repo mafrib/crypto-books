@@ -568,6 +568,7 @@ function redrawVisualisation(vizEl){
             break;
         case 'network-graph':
             createNetworkGraph('#network-graph .network-wrapper', globalData);
+            wireGenderButtons();
 
             const allowedSet = new Set(
                 applyGlobalFilters(globalData)
@@ -724,6 +725,7 @@ function startDashboard() {
             setupSorting(sortedData, initialSortColumn);
 
             createNetworkGraph('#network-graph .network-wrapper', globalData);
+            wireGenderButtons();
 
             const toggle = document.querySelector('.switch');
             if (toggle) {
@@ -743,6 +745,7 @@ function startDashboard() {
                     linkGroup.selectAll('.link').classed('active', false).style('opacity', null);
 
                     createNetworkGraph('#network-graph .network-wrapper', globalData);
+                    wireGenderButtons();
 
                     const filtered = applyGlobalFilters(globalData);
                     createBooksCatalog(filtered);
@@ -810,6 +813,7 @@ function startDashboard() {
                 const cleanData = applyGlobalFilters(globalData);
                 const networkContainer = '#network-graph .network-wrapper';
                 createNetworkGraph('#network-graph .network-wrapper', globalData);
+                wireGenderButtons();
                 createTreemap(
                     '#treemap-area',
                     filteredData,
