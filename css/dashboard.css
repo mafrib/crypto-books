@@ -147,6 +147,10 @@ a {
   z-index: 9999;
 }
 
+#conflict-keep-btn {
+  border: none;
+}
+
 /* EXPANDABLE VISUALIZATION DETAILS */
 
 .expand-btn {
