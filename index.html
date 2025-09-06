@@ -225,85 +225,75 @@
 
         <header class="modal-header">
           <h2>Advanced filters</h2>
-          <button id="close-modal" class="icon-btn" aria-label="Close">&times;</button>
+          <div class="modal-actions">
+            <button id="clear-modal-filters" class="solid-btn outline">Clear all</button>
+            <button id="close-modal" class="icon-btn" aria-label="Close">&times;</button>
+          </div>
         </header>
 
         <div id="filter-tags" class="filter-tags"></div>
-        <button id="clear-modal-filters" class="solid-btn outline">Clear all</button>
 
         <div class="modal-body">
+          <details>
+            <summary>
+              Library <span class="count" data-for="filter-library"></span>
+            </summary>
+            <ul id="filter-library" class="checklist" data-multi></ul>
+          </details>
 
-          <section class="filter-group">
-            <h3 class="group-title">Context</h3>
+          <details>
+            <summary>
+              Author <span class="count" data-for="filter-author"></span>
+            </summary>
+            <input type="text" class="quick-search" placeholder="Search authors…">
+            <ul id="filter-author" class="checklist" data-multi></ul>
+          </details>
 
-            <details>
-              <summary>
-                Library <span class="count" data-for="filter-library"></span>
-              </summary>
-              <ul id="filter-library" class="checklist" data-multi></ul>
-            </details>
+          <details>
+            <summary>
+              Location <span class="count" data-for="filter-location"></span>
+            </summary>
+            <input type="text" class="quick-search" placeholder="Search locations…">
+            <ul id="filter-location" class="checklist" data-multi></ul>
+          </details>
 
-            <details>
-              <summary>
-                Author <span class="count" data-for="filter-author"></span>
-              </summary>
-              <input type="text" class="quick-search" placeholder="Search authors…">
-              <ul id="filter-author" class="checklist" data-multi></ul>
-            </details>
+          <details>
+            <summary>Historical period <span class="count" data-for="filter-period"></span></summary>
+            <ul id="filter-period" class="checklist" data-multi></ul>
+          </details>
 
-            <details>
-              <summary>
-                Location <span class="count" data-for="filter-location"></span>
-              </summary>
-              <input type="text" class="quick-search" placeholder="Search locations…">
-              <ul id="filter-location" class="checklist" data-multi></ul>
-            </details>
-          </section>
+          <details>
+            <summary>Book Attribution Probability</summary>
+            <ul id="filter-probobra" class="checklist"></ul>
+          </details>
 
-          <section class="filter-group">
-            <h3 class="group-title">Attribution</h3>
+          <details>
+            <summary>Author Attribution Probability</summary>
+            <ul id="filter-probautor" class="checklist"></ul>
+          </details>
 
-            <details>
-              <summary>Prob. Atrib. Obra</summary>
-              <ul id="filter-probobra" class="checklist"></ul>
-            </details>
+          <details>
+            <summary>Literary Category <span class="count" data-for="filter-category"></span></summary>
+            <ul id="filter-category" class="checklist" data-multi></ul>
+          </details>
 
-            <details>
-              <summary>Prob. Atrib. Autor</summary>
-              <ul id="filter-probautor" class="checklist"></ul>
-            </details>
-          </section>
+          <details>
+            <summary>Literary Genre <span class="count" data-for="filter-genre"></span></summary>
+            <input type="text" class="quick-search" placeholder="Search literary genres…">
+            <div id="genre-guard-msg" class="guard-msg" hidden>Select a Literary Category first</div>
+            <ul id="filter-genre" class="checklist" data-multi></ul>
+          </details>
 
-          <section class="filter-group two-col">
-            <details>
-              <summary>Language <span class="count" data-for="filter-idioma"></span></summary>
-              <ul id="filter-idioma" class="checklist" data-multi></ul>
-            </details>
+          <details>
+            <summary>Intellectual Tradition <span class="count" data-for="filter-tradition"></span></summary>
+            <input type="text" class="quick-search" placeholder="Search intellectual traditions…">
+            <ul id="filter-tradition" class="checklist" data-multi></ul>
+          </details>
 
-            <details>
-              <summary>Literary Category <span class="count" data-for="filter-category"></span></summary>
-              <ul id="filter-category" class="checklist" data-multi></ul>
-            </details>
-
-            <details>
-              <summary>Intellectual Tradition <span class="count" data-for="filter-tradition"></span></summary>
-              <input type="text" class="quick-search" placeholder="Search intellectual traditions…">
-              <ul id="filter-tradition" class="checklist" data-multi></ul>
-            </details>
-
-            <details>
-              <summary>Literary Genre <span class="count" data-for="filter-genre"></span></summary>
-              <input type="text" class="quick-search" placeholder="Search literary genres…">
-              <div id="genre-guard-msg" class="guard-msg" hidden>Select a Literary Category first</div>
-              <ul id="filter-genre" class="checklist" data-multi></ul>
-            </details>
-
-            <details>
-              <summary>Historical period <span class="count" data-for="filter-period"></span></summary>
-              <ul id="filter-period" class="checklist" data-multi></ul>
-            </details>
-          </section>
-
+          <details>
+            <summary>Language <span class="count" data-for="filter-idioma"></span></summary>
+            <ul id="filter-idioma" class="checklist" data-multi></ul>
+          </details>
         </div>
       </div>
     </div>

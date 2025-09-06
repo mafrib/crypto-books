@@ -22,6 +22,14 @@ function showNoResultsPopup(prevSel) {
   document.getElementById('modal-shield' ).hidden = false;
 }
 
+function updateModalClearButton() {
+    const btn = document.getElementById('clear-modal-filters');
+    if (!btn) return;
+    const isAny = Object.keys(activeFilters || {}).length > 0;
+    btn.classList.toggle('disabled', !isAny);
+    btn.disabled = !isAny;
+}
+
 function hideNoResultsPopup() {
   pendingUndoNodes = null;
   document.getElementById('no-results-popup').hidden = true;
@@ -158,6 +166,10 @@ function openModal ()  {
 
     document.addEventListener('keydown', handleEsc,  { once:false });
     modal.addEventListener   ('click',  handleOutsideClick);
+
+    updateModalClearButton();
+    wireFilterAccordionAndScroll();
+
 }
 
 function closeModal () {
@@ -454,14 +466,14 @@ function rebuildFilterTags () {
             break;
 
         case 'byProbObra' :
-            getChecked('filter-probobra').forEach(v=>addTag(`Prob. Obra: ${v}`, ()=>{
+            getChecked('filter-probobra').forEach(v=>addTag(`Book Attribution Probability: ${v}`, ()=>{
                 uncheckValue('filter-probobra', v);
                 clearGlobalFilter('byProbObra');
             }));
             break;
 
         case 'byProbAutor':
-            getChecked('filter-probautor').forEach(v=>addTag(`Prob. Autor: ${v}`, ()=>{
+            getChecked('filter-probautor').forEach(v=>addTag(`Author Attribution Probability: ${v}`, ()=>{
                 uncheckValue('filter-probautor', v);
                 clearGlobalFilter('byProbAutor');
             }));
@@ -620,6 +632,26 @@ function enableVizExpand() {
                 : openVizModal(viz);
         });
   });
+}
+
+function wireFilterAccordionAndScroll() {
+    const modal = document.getElementById('filter-modal');
+    if (!modal) return;
+    const container = modal.querySelector('.modal-body');
+    if (!container) return;
+
+    const groups = container.querySelectorAll('details');
+    groups.forEach(d => {
+        if (d.__wired) return;
+        d.__wired = true;
+        d.addEventListener('toggle', () => {
+        if (!d.open) return;
+
+        groups.forEach(other => { if (other !== d) other.open = false; });
+
+        d.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        });
+    });
 }
 
 function openVizModal(viz) {
@@ -868,6 +900,7 @@ function startDashboard() {
                 .addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
             enableVizExpand();
+            wireFilterAccordionAndScroll();
         })
         .catch((error) => {
             console.error("Error loading the CSV file:", error);

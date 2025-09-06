@@ -935,13 +935,20 @@ svg:not(.node-active-mode) .node:hover text {
 }
 
 .modal-header {
-  padding:1rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   border-bottom:1px solid #D9D4C1;
   display:flex;
   align-items:center;
   justify-content:space-between;
 }
+
 .modal-header h2 { margin:0; font-size:1.1rem; }
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 .icon-btn {
   background:none; border:none; cursor:pointer;
@@ -951,6 +958,30 @@ svg:not(.node-active-mode) .node:hover text {
 .modal-body {
   flex:1 1 auto; overflow-y:auto; padding:1rem 1.5rem;
   display:flex; flex-direction:column; gap:1.25rem;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable both-edges;
+  scrollbar-color: #A6CDC6 #D6E5DB;
+  scrollbar-width: thin;
+  margin-right: 8px;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-body::-webkit-scrollbar-track {
+  background: #D6E5DB;
+}
+.modal-body::-webkit-scrollbar-thumb {
+  background-color: #A6CDC6;
+  border-radius: 4px;
+  border: 2px solid #D6E5DB;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:active {
+  background-color: #16404D;
 }
 
 .filter-group { display:flex; flex-direction:column; gap:.75rem; }
@@ -972,7 +1003,15 @@ summary {
 summary::-webkit-details-marker { display:none; }
 summary .count { font-weight:500; font-size:.7rem; }
 
-.checklist { max-height:140px; overflow:auto; margin:0; padding:.5rem .75rem; list-style:none; }
+.checklist {
+  max-height:140px;
+  overflow:auto;
+  margin:0;
+  padding:.5rem .75rem;
+  list-style:none;
+  margin-right: 6px;
+}
+
 .checklist li { display:flex; align-items:center; gap:.45rem; font-size:.75rem; }
 .checklist input { accent-color:#16404D; }
 
@@ -1027,6 +1066,11 @@ details[open] > summary::after {
   font-size:.7rem; padding:.2rem .3rem;
 }
 
+.text-btn.small.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .solid-btn.outline{
   background:#D6E5DB;
   border:1px solid #16404D;
@@ -1034,8 +1078,8 @@ details[open] > summary::after {
 }
 .solid-btn.outline:hover{ background:#cddad2; }
 
-.filter-tags        { margin: .5rem   1.5rem 0; }
-#clear-modal-filters{ margin:  .3rem  1.5rem;   }
+.filter-tags        { margin: .5rem   1.5rem; }
+#clear-modal-filters{ margin: .3rem  1.5rem;   }
 
 .checklist li label {
   display:flex; align-items:center; gap:.45rem;
@@ -1266,7 +1310,7 @@ details[open] > summary::after {
 
 .filter-tags {
   display:flex; flex-wrap:wrap; gap:6px;
-  margin:.5rem 1.5rem 0;
+  margin:.5rem 1.5rem;
 }
 
 #filter-btn.filters-active .filter-badge {
@@ -1276,6 +1320,11 @@ details[open] > summary::after {
 
 #filter-modal .modal-panel {
   font-size: 0.70rem;
+}
+
+.modal-panel,
+.details-panel {
+  overflow: hidden;
 }
 
 #filter-modal h2           { font-size: 0.85rem; }
@@ -1470,7 +1519,7 @@ details[open] > summary::after {
   overflow-y: scroll;
   padding-right: 0.8rem;
   scrollbar-gutter: stable both-edges;
-  scrollbar-color: #16404D #D6E5DB;
+  scrollbar-color: #A6CDC6 #D6E5DB;
   scrollbar-width: auto;
 }
 
@@ -1492,16 +1541,6 @@ details[open] > summary::after {
   color: #FFFAEC;
 }
 
-.catalog-entry.male   {
-  background:#D0A07D;
-  color:#FFFAEC;
-}
-
-.catalog-entry.female {
-  background:#DD9298;
-  color:#FFFAEC;
-}
-
 /* Scrollbar styling */
 #catalog-entries::-webkit-scrollbar {
   width: 8px
@@ -1512,9 +1551,14 @@ details[open] > summary::after {
 }
 
 #catalog-entries::-webkit-scrollbar-thumb {
-  background-color: #16404D;
+  background-color: #A6CDC6;
   border-radius: 4px;
   border: 2px solid #D6E5DB;
+}
+
+#catalog-entries::-webkit-scrollbar-thumb:hover,
+#catalog-entries::-webkit-scrollbar-thumb:active {
+  background-color: #16404D;
 }
 
 #book-count {

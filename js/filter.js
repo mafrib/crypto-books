@@ -243,6 +243,10 @@ function notifyFilterChange () {
     scheduleAvailUpdate();
     scheduleDashboardUpdate();
     syncTreemapUIToFilters();
+
+    if (typeof updateModalClearButton === 'function') {
+        updateModalClearButton();
+    }
 }
 
 // Centralized filtering system
