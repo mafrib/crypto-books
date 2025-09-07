@@ -17,10 +17,104 @@ window.highlightPeriodBar    = () => {};
 window.clearPeriodHighlights = () => {};
 
 function showNoResultsPopup(prevSel) {
-  pendingUndoNodes = prevSel;
-  document.getElementById('no-results-popup').hidden = false;
-  document.getElementById('modal-shield' ).hidden = false;
+    pendingUndoNodes = prevSel;
+    document.getElementById('no-results-popup').hidden = false;
+    document.getElementById('modal-shield' ).hidden = false;
 }
+
+function installLocationLimitGuards() {
+    const ul = document.getElementById('filter-location');
+    if (!ul || ul.__limitGuardsInstalled) return;
+    ul.__limitGuardsInstalled = true;
+
+    const overCapAndUnchecked = (input) => {
+        const selected = (activeFilters.byLocation?.values) || getChecked('filter-location');
+        return selected.length >= 5 && input && !input.checked;
+    };
+
+    ul.addEventListener('click', (e) => {
+        const input = e.target.closest('input[type="checkbox"]');
+        if (!input) return;
+        if (overCapAndUnchecked(input)) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.showLocationLimitToast) {
+            window.showLocationLimitToast('You can select up to 5 locations.');
+        }
+        }
+    }, true);
+
+    ul.addEventListener('keydown', (e) => {
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        const input = e.target.closest('input[type="checkbox"]');
+        if (!input) return;
+        if (overCapAndUnchecked(input)) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.showLocationLimitToast) {
+            window.showLocationLimitToast('You can select up to 5 locations.');
+        }
+        }
+    }, true);
+
+    // If the list’s contents are ever rebuilt, re-apply the limit immediately
+    const observer = new MutationObserver(() => {
+        const snapshot = (activeFilters.byLocation?.values) || getChecked('filter-location');
+        if (window.enforceLocationMenuLimit) window.enforceLocationMenuLimit(snapshot);
+    });
+    observer.observe(ul, { childList: true, subtree: true });
+    ul.__limitObserver = observer;
+}
+
+let __locCapRAF = null;
+
+function enforceLocationMenuLimit(selectedOverride) {
+    const list = document.getElementById('filter-location');
+    if (!list) return;
+
+    const snapshot = Array.isArray(selectedOverride)
+        ? [...selectedOverride]
+        : ((activeFilters.byLocation?.values) || getChecked('filter-location'));
+
+    const selectedSet = new Set(snapshot);
+    const limitReached = snapshot.length >= 5;
+
+    list.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        const isChecked = selectedSet.has(input.value);
+
+        if (input.checked !== isChecked) input.checked = isChecked;
+
+        const shouldDisable = !isChecked && limitReached;
+        input.disabled = shouldDisable;
+
+        const li = input.closest('li');
+        if (li) li.classList.toggle('disabled-option', shouldDisable);
+    });
+
+    bumpCounter(list);
+
+    if (__locCapRAF) cancelAnimationFrame(__locCapRAF);
+    __locCapRAF = requestAnimationFrame(() => {
+        const list2 = document.getElementById('filter-location');
+        if (!list2) return;
+
+        const set2 = new Set(snapshot);
+        const limit2 = snapshot.length >= 5;
+
+        list2.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        const isChecked = set2.has(input.value);
+        const shouldDisable = !isChecked && limit2;
+        input.disabled = shouldDisable;
+
+        const li = input.closest('li');
+        if (li) li.classList.toggle('disabled-option', shouldDisable);
+        });
+
+        bumpCounter(list2);
+    });
+}
+
+window.enforceLocationMenuLimit = enforceLocationMenuLimit;
 
 function updateModalClearButton() {
     const btn = document.getElementById('clear-modal-filters');
@@ -393,6 +487,7 @@ function rebuildFilterTags () {
                     } else {
                         clearGlobalFilter('byLocation');
                     }
+                    if (window.enforceLocationMenuLimit) window.enforceLocationMenuLimit(getChecked('filter-location'));
                 });
             });
             break;
@@ -559,9 +654,48 @@ function bumpCounter(list) {
 document.addEventListener('DOMContentLoaded', () => {
     // hook every checklist once the DOM exists
     document.querySelectorAll('.checklist').forEach(list => {
-        list.addEventListener('change', () => {
+        list.addEventListener('change', (evt) => {
 
             const id = list.id;
+
+            if (id === 'filter-location') {
+                const checked = getChecked('filter-location');
+
+                if (checked.length > 5 && evt && evt.target && evt.target.checked) {
+                    evt.target.checked = false;
+
+                    const fixed = getChecked('filter-location');
+
+                    bumpCounter(list);
+                    if (window.showLocationLimitToast) {
+                    window.showLocationLimitToast('You can select up to 5 locations.');
+                    }
+                    enforceLocationMenuLimit(fixed);
+                    return;
+                }
+
+                if (checked.length) {
+                    setGlobalFilter(
+                    'byLocation',
+                    row => {
+                        const k = locKeyFromRow(row);
+                        return k ? checked.includes(k) : false;
+                    },
+                    checked,
+                    'filter-location'
+                    );
+                } else {
+                    clearGlobalFilter('byLocation');
+                }
+
+                enforceLocationMenuLimit(checked);
+                bumpCounter(list);
+                refreshFilterTags();
+                updateFilterBadge();
+                updateDashboard();
+                return;
+            }
+
             if (id === 'filter-category' || id === 'filter-genre') {
             lastClassificationMode = 'category';
             }
@@ -774,11 +908,14 @@ function startDashboard() {
                     Obra: trimmed ? trimmed : 'Por classificar'
                 };
             });
+            window.globalData = globalData;
             const filteredData = applyGlobalFilters(globalData);
             updateUnlocatedBadge(filteredData);
             updateTreemapBadge();
 
             populateFilterOptions();
+            installLocationLimitGuards();
+            enforceLocationMenuLimit();
 
             wireSearch(
                 document.querySelector('#filter-author').previousElementSibling,
@@ -921,6 +1058,9 @@ function startDashboard() {
 
                 refreshFilterTags();
                 hideNoResultsPopup();
+
+                if (window.selectedLocations) window.selectedLocations.clear();
+                if (window.rebuildDetailsItems) window.rebuildDetailsItems();
             });
 
             const modal      = document.getElementById('filter-modal');

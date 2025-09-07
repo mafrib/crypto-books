@@ -211,6 +211,13 @@ a {
 
 .map-canvas svg { width: 100%; height: auto; }
 
+#map-area .map-canvas { position: relative; }
+
+#map-area .map-canvas.blurred svg#map {
+  filter: blur(2px);
+  transition: filter .15s ease;
+}
+
 #map-area svg#map {
   width: auto;
   background-color: white;
@@ -305,12 +312,12 @@ circle.library-point.location-dim {
 
 circle.library-point.location-selected {
   opacity: 1;
-  stroke: #ffffff;
-  stroke-width: 1.5px;
+  stroke: #16404D !important;
+  stroke-width: 1px;
 }
 
 #map.is-expanded circle.library-point.location-selected {
-  stroke-width: 2px;
+  stroke-width: 1px;
 }
 
 .zoom-button {
@@ -375,6 +382,27 @@ circle.library-point.location-selected {
   transition: opacity 0.2s ease-in-out;
   text-align: left;
   z-index: 3000;
+}
+
+.map-limit-toast {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background: #D6E5DB;
+  color: #16404D;
+  border: 1px solid #16404D;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 10;
+}
+
+.map-limit-toast.open {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 #map-visualization {
@@ -1102,6 +1130,7 @@ details[open] > summary::after {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-height: 0;
 }
 
 .button-group {
@@ -1165,21 +1194,35 @@ details[open] > summary::after {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
   padding: 0.5rem;
   border-radius: 24px;
   background: #D6E5DB;
   box-sizing: border-box;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .details-panel__info {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  padding-right: 6px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#hover-details .details-panel__name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  display: block;
+  -webkit-box-orient: unset;
+  max-height: none;
 }
 
 .details-panel__img-wrapper {
@@ -1189,6 +1232,29 @@ details[open] > summary::after {
   border-radius: 0.5rem;
   margin-bottom: 0.5rem;
   display: none;
+}
+
+.details-panel--list-mode .details-panel__info {
+  overflow-y: hidden;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.details-panel--list-mode #details-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.details-panel__carousel .dot {
+  width: 0.6rem; height: 0.6rem; border-radius: 50%;
+  border: 1px solid #16404D; background: transparent; cursor: pointer;
+}
+
+.details-panel__carousel .dot.active { background: #16404D; }
+.details-panel__carousel .dot-ellipsis {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; color: #16404D; padding: 0 2px; cursor: default;
 }
 
 .details-panel__img {
@@ -1207,12 +1273,50 @@ details[open] > summary::after {
   align-items: center;
   justify-content: center;
   margin-top: 1rem;
+  flex: 0 0 auto;
+  background: #D6E5DB;
+  padding: 0 var(--pad-h);
 }
 
+.carousel-arrow.left  { left: var(--pad-h); }
+.carousel-arrow.right { right: var(--pad-h); }
+
 .details-panel__carousel {
+  gap: 0.25rem;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.details-panel__list {
+  margin-top: 0.4rem;
   display: flex;
-  gap: 0.4rem;
-  z-index: 0;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.details-panel__list .list-item {
+  background: #FFFAEC;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 0.65rem;
+  color: #16404D;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.details-panel__list .list-header {
+  background: transparent;
+  padding: 0;
+  margin-top: 0.4rem;
+  font-weight: 700;
+  color: #16404D;
+  font-size: 0.7rem;
+}
+
+.details-panel--list-mode .details-panel__name,
+.details-panel--list-mode .details-panel__books {
+  text-align: left;
+  flex: 0 0 auto;
 }
 
 .carousel-arrow {
@@ -1238,7 +1342,7 @@ details[open] > summary::after {
 }
 
 .details-panel .details-panel__name {
-  max-width: 100%;
+  max-width: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

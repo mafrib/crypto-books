@@ -4,7 +4,11 @@ let allDataRef = null;
 const selectedLinks = new Set();  // all currently selected (clicked + auto)
 const clickedLinks = new Set();   // only those links the user explicitly clicked
 const selectedNodes = new Set();  // libraries clicked
+window.selectedLinks = selectedLinks;
+window.clickedLinks  = clickedLinks;
+window.selectedNodes = selectedNodes;
 const linkKey = d => `${d.source.id || d.source}|${d.target.id || d.target}|${d.type}`;
+window.linkKey = linkKey;
 
 function linkLabel(key) {
     const [a, b, type] = key.split('|');
@@ -24,52 +28,55 @@ function rebuildNetworkFilterFromState(allData) {
     });
 
     selectedLinks.forEach(key => {
-        const [a, b, type] = key.split('|');
+    const [a, b, type] = key.split('|');
 
-        const bothSelected = selectedNodes.has(a) && selectedNodes.has(b);
-        if (bothSelected) return;
+    const isClicked = clickedLinks.has(key);
+    // Only show/apply link filters when the link was explicitly clicked
+    // AND neither endpoint library is selected.
+    if (!isClicked) return;
+    if (selectedNodes.has(a) || selectedNodes.has(b)) return;
 
-        const setA = (type === 'book')
+    const setA = (type === 'book')
         ? new Set(
             (libMap.get(a) || [])
-                .filter(r => {
+            .filter(r => {
                 const t = r.Obra?.trim().toLowerCase();
                 return t && t !== 'por classificar';
-                })
-                .map(r => r.Obra)
-            )
-        : new Set(
-            (libMap.get(a) || [])
-                .filter(r => !isAnonymous(r.Nome_Autor))
-                .map(r => r.Nome_Autor)
-            );
-
-        const setB = (type === 'book')
-        ? new Set(
-            (libMap.get(b) || [])
-                .filter(r => {
-                const t = r.Obra?.trim().toLowerCase();
-                return t && t !== 'por classificar';
-                })
-                .map(r => r.Obra)
-            )
-        : new Set(
-            (libMap.get(b) || [])
-                .filter(r => !isAnonymous(r.Nome_Autor))
-                .map(r => r.Nome_Autor)
-            );
-
-        const common = new Set([...setA].filter(x => setB.has(x)));
-
-        filters.push(row =>
-        (row.Proprietario_Nome === a || row.Proprietario_Nome === b) &&
-        (type === 'book'
-            ? common.has(row.Obra)
-            : common.has(row.Nome_Autor)
+            })
+            .map(r => r.Obra)
         )
+        : new Set(
+            (libMap.get(a) || [])
+            .filter(r => !isAnonymous(r.Nome_Autor))
+            .map(r => r.Nome_Autor)
         );
 
-        labels.push(linkLabel(key));
+    const setB = (type === 'book')
+        ? new Set(
+            (libMap.get(b) || [])
+            .filter(r => {
+                const t = r.Obra?.trim().toLowerCase();
+                return t && t !== 'por classificar';
+            })
+            .map(r => r.Obra)
+        )
+        : new Set(
+            (libMap.get(b) || [])
+            .filter(r => !isAnonymous(r.Nome_Autor))
+            .map(r => r.Nome_Autor)
+        );
+
+    const common = new Set([...setA].filter(x => setB.has(x)));
+
+    filters.push(row =>
+        (row.Proprietario_Nome === a || row.Proprietario_Nome === b) &&
+        (type === 'book'
+        ? common.has(row.Obra)
+        : common.has(row.Nome_Autor)
+        )
+    );
+
+    labels.push(linkLabel(key));
     });
 
     if (filters.length > 0) {
@@ -107,9 +114,9 @@ function handleLinkClick(d, allData) {
 
     svg.selectAll('g.node')
         .classed('selected-by-link', n =>
-        Array.from(selectedLinks).some(key =>
-            key.startsWith(n.id + '|') || key.includes('|' + n.id + '|')
-        )
+            Array.from(selectedLinks).some(key =>
+                key.startsWith(n.id + '|') || key.includes('|' + n.id + '|')
+            )
         );
 
     rebuildNetworkFilterFromState(allData);
@@ -288,15 +295,18 @@ function toggleGenderSelection(kind) {
     );
 
     const libs = Array.from(selectedNodes);
-    currentCarouselLibs = libs;
-    currentIndex = 0;
-    renderCarousel();
-    if (libs.length > 0) {
-        updateDetailsPanel(libs[0], globalData);
+    if (window.rebuildDetailsItems) {
+        window.rebuildDetailsItems(libs[0]);
     } else {
-        clearDetailsPanel();
+        currentCarouselLibs = libs;
+        currentIndex = 0;
+        renderCarousel();
+        if (libs.length > 0) {
+            updateDetailsPanel(libs[0], globalData);
+        } else {
+            clearDetailsPanel();
+        }
     }
-
     syncGenderButtonsWithSelection();
 }
 
@@ -491,6 +501,9 @@ function initNetwork(containerSelector) {
     linkGroup = svg.append('g').attr('class', 'links');
     nodeGroup = svg.append('g').attr('class', 'nodes');
 
+    window.svg       = svg;
+    window.nodeGroup = nodeGroup;
+
     function highlightNetworkNode(libraryName) {
     d3.selectAll('g.node')
         .classed('hovered-network-node',
@@ -533,6 +546,7 @@ function createNetworkGraph(containerSelector, data) {
 
     nodes = processNodes(data);
     edges = processEdges(data);
+    window.edges = edges;
     addParallelMetadata(edges, 80);
 
     // count links for each node
@@ -606,20 +620,25 @@ function createNetworkGraph(containerSelector, data) {
 
             const prevSelection = new Set(selectedNodes);
 
+            const libsFilterVals = (window.activeFilters?.byLibrary?.values) || [];
+            if (selectedNodes.size === 0 && libsFilterVals.length) {
+                libsFilterVals.forEach(id => selectedNodes.add(id));
+                nodeGroup.selectAll('g.node').classed('active', n => selectedNodes.has(n.id));
+            }
+
             const allowedSet = new Set(
-                applyFiltersExcept(['network'])
-                    .map(r => r.Proprietario_Nome.trim())
+                applyFiltersExcept(['network','byLibrary'])
+                .map(r => r.Proprietario_Nome.trim())
             );
 
             if (!allowedSet.has(d.id)) {
                 const blockers = getConflictingFilters(
-                    globalData.filter(r => r.Proprietario_Nome.trim() === d.id),
-                    ['network']
+                globalData.filter(r => r.Proprietario_Nome.trim() === d.id),
+                ['network','byLibrary']
                 );
-
                 if (blockers.length) {
-                    showConflictPopup(d.id, blockers, 'library');
-                    return;
+                showConflictPopup(d.id, blockers, 'library');
+                return;
                 }
             }
 
@@ -678,16 +697,27 @@ function createNetworkGraph(containerSelector, data) {
                     )
                 );
 
-            const externalFiltersActive =
-                Object.keys(activeFilters).some(k => k !== 'network');
+            const curLibs = Array.from(selectedNodes);
 
+            // Sync the Library filter to match current network selection
+            if (curLibs.length > 0) {
+                setGlobalFilter(
+                    'byLibrary',
+                    row => curLibs.includes(row.Proprietario_Nome.trim()),
+                    curLibs,
+                    'filter-library'
+                );
+            } else {
+                clearGlobalFilter('byLibrary');
+            }
+
+            // Rebuild the network filter and UI state
+            const externalFiltersActive = Object.keys(activeFilters).some(k => k !== 'network');
             if (selectedNodes.size === 0 && selectedLinks.size === 0 && externalFiltersActive) {
                 setGlobalFilter('network', () => false);
                 updateDashboard();
-
                 nodeGroup.selectAll('g.node').classed('active', false);
                 linkGroup.selectAll('.link').style('opacity', 0.6);
-
                 window.showNoResultsPopup(prevSelection);
             } else {
                 window.hideNoResultsPopup();
@@ -695,31 +725,18 @@ function createNetworkGraph(containerSelector, data) {
                 syncGenderButtonsWithSelection();
             }
 
-            const libs = Array.from(selectedNodes);
-            currentCarouselLibs = libs;
-            currentIndex = libs.indexOf(id);
-            if (currentIndex < 0) currentIndex = 0;
-
-            renderCarousel();
-
-            if (libs.length > 0) {
-                updateDetailsPanel(libs[currentIndex], globalData);
-            } else {
-                clearDetailsPanel();
+            // Keep details panel current
+            if (window.rebuildDetailsItems) {
+                window.rebuildDetailsItems(d.id);
             }
         });
 
     nodeEnter
         .on('mouseover', (event, d) => {
-            updateDetailsPanel(d.id, globalData);
+            if (window.showDetailsHover) window.showDetailsHover({ type: 'library', id: d.id, label: d.id });
         })
         .on('mouseout',  () => {
-            if (selectedNodes.size > 0) {
-                const libs = Array.from(selectedNodes);
-                updateDetailsPanel(libs[currentIndex], globalData);
-            } else {
-                clearDetailsPanel();
-            }
+            if (window.clearDetailsHover) window.clearDetailsHover();
         });
 
     nodeEnter.append('circle')
@@ -785,3 +802,4 @@ function updateNetworkStyles(allowedSet) {
     );
 }
 
+window.rebuildNetworkFilterFromState = rebuildNetworkFilterFromState;

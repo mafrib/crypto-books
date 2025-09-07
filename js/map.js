@@ -11,6 +11,9 @@ let mapPoints = [];
 let defaultTransform = d3.zoomIdentity;
 let minZoomK = 1;
 
+let selectedLocations = new Set();
+window.selectedLocations = selectedLocations;
+
 const fitPaddingPx = 24;
 const panSlackPx   = 30; //extra panning allowed
 
@@ -360,14 +363,18 @@ function makeMap () {
             currentZoomK = event.transform.k;
             mapGroup.attr("transform", event.transform);
 
+            const strokeW = Math.max(0.25, 0.5 / currentZoomK); // thinner as you zoom in
+
             mapGroup.selectAll("circle.library-point")
-                    .attr("r", d => d.baseR / currentZoomK);
+                .attr("r", d => d.baseR / currentZoomK)
+                .style("stroke-width", strokeW);
 
             mapGroup.selectAll("circle.library-point.highlighted")
-                    .attr("r", d => (d.baseR * 2) / currentZoomK);
+                .attr("r", d => (d.baseR * 2) / currentZoomK)
+                .style("stroke-width", strokeW);
 
             updateZoomButtons(currentZoomK);
-        });
+            });
 
     mapSvg.call(zoom);
     updateZoomButtons(1);
@@ -478,6 +485,12 @@ function makeMap () {
 
                         const next = isSelected ? cur.filter(v => v !== key) : cur.concat(key);
 
+                        const adding = !isSelected;
+                        if (adding && next.length > 5) {
+                            showLocationLimitToast('You can select up to 5 locations.');
+                            return;
+                        }
+
                         if (next.length) {
                             setGlobalFilter(
                             'byLocation',
@@ -490,6 +503,87 @@ function makeMap () {
                             );
                         } else {
                             clearGlobalFilter('byLocation');
+                        }
+
+                        if (window.setChecked) {
+                            const nextVals = (activeFilters.byLocation?.values) || [];
+                            window.setChecked('filter-location', nextVals);
+                        }
+
+                        if (window.enforceLocationMenuLimit) window.enforceLocationMenuLimit(nextVals);
+
+                        if (window.applyGlobalFilters && window.globalData) {
+                            const allowedLibs = new Set(
+                                applyGlobalFilters(globalData).map(r => r.Proprietario_Nome.trim())
+                            );
+
+                            // Remove libraries that no longer have rows
+                            if (window.selectedNodes) {
+                                Array.from(window.selectedNodes).forEach(id => {
+                                if (!allowedLibs.has(id)) window.selectedNodes.delete(id);
+                                });
+                            }
+
+                            // Remove clicked/selected links that no longer connect allowed libs
+                            if (window.clickedLinks && window.selectedLinks) {
+                                Array.from(window.clickedLinks).forEach(key => {
+                                const [a, b] = key.split('|');
+                                if (!allowedLibs.has(a) || !allowedLibs.has(b)) window.clickedLinks.delete(key);
+                                });
+
+                                // Rebuild selectedLinks = clicked + auto (both ends selected)
+                                const auto = new Set();
+                                if (window.edges) {
+                                window.edges.forEach(e => {
+                                    const src = e.source.id || e.source;
+                                    const tgt = e.target.id || e.target;
+                                    if (window.selectedNodes.has(src) && window.selectedNodes.has(tgt)) {
+                                    auto.add(`${src}|${tgt}|${e.type}`);
+                                    }
+                                });
+                                }
+                                window.selectedLinks.clear();
+                                window.clickedLinks.forEach(k => window.selectedLinks.add(k));
+                                auto.forEach(k => window.selectedLinks.add(k));
+                            }
+
+                            // Update network styling and filter tags
+                            if (window.nodeGroup && window.svg && window.linkKey) {
+                                nodeGroup.selectAll('g.node').classed('active', d => window.selectedNodes.has(d.id));
+                                svg.selectAll('.link')
+                                .classed('active', l => window.selectedLinks.has(linkKey(l)))
+                                .style('opacity', l => window.selectedLinks.has(linkKey(l)) ? 1 : 0.6);
+                            }
+
+                            if (window.rebuildNetworkFilterFromState) {
+                                window.rebuildNetworkFilterFromState(globalData);
+                            }
+
+                            const curLibs = Array.from(window.selectedNodes || []);
+                            if (curLibs.length) {
+                            setGlobalFilter(
+                                'byLibrary',
+                                row => curLibs.includes(row.Proprietario_Nome.trim()),
+                                curLibs,
+                                'filter-library'
+                            );
+                            } else {
+                            clearGlobalFilter('byLibrary');
+                            }
+
+                            if (window.refreshFilterTags) window.refreshFilterTags();
+                            if (window.updateFilterBadge) window.updateFilterBadge();
+                        }
+
+                        if (window.rebuildDetailsItems) {
+                            window.rebuildDetailsItems(d.key);
+                        }
+
+                        if (selectedLocations.has(d.key)) selectedLocations.delete(d.key);
+                        else selectedLocations.add(d.key);
+
+                        if (window.rebuildDetailsItems) {
+                            window.rebuildDetailsItems(d.key);
                         }
                     })
                     .on("mouseover", function (event, d) {
@@ -521,6 +615,7 @@ function makeMap () {
                     });
 
             mapPoints = aggregatedPoints;
+            window.mapPoints = mapPoints;
 
             const w = +mapSvg.attr('width');
             const h = +mapSvg.attr('height');
@@ -720,6 +815,10 @@ function makeMap () {
 function updateDashboard() {
     const filtered = applyGlobalFilters(globalData);
 
+    const curLocs = new Set(activeFilters.byLocation?.values || []);
+    window.selectedLocations.clear();
+    curLocs.forEach(v => window.selectedLocations.add(v));
+
     // For map visibility and per-point entries, ignore the location filter
     const filteredForMap = applyFiltersExcept(['byLocation']);
     refreshMapPoints(filteredForMap);
@@ -749,6 +848,10 @@ function updateDashboard() {
     if (!skipTreemap) {
         createTreemap('#treemap-area', filtered, currentTreemapMode, null);
     }
+
+    if (window.rebuildDetailsItems) window.rebuildDetailsItems();
+    if (window.enforceLocationMenuLimit)
+        window.enforceLocationMenuLimit(activeFilters.byLocation?.values || getChecked('filter-location'));
 }
 
 function repaintPeriodBars(rowSetWithoutPeriod) {
@@ -797,3 +900,30 @@ function refreshMapPoints(filteredRows) {
             .style('display', nVisible ? null : 'none');
         });
 }
+
+function showLocationLimitToast(msg) {
+    const host = document.querySelector('#map-area .map-canvas') || document.body;
+
+    // Create/reuse toast anchored inside the map canvas
+    let el = host.querySelector('#map-limit-toast');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'map-limit-toast';
+        el.className = 'map-limit-toast';
+        host.appendChild(el);
+    }
+
+    el.textContent = msg;
+    el.classList.add('open');
+
+    // Blur only the map svg while toast is shown
+    host.classList.add('blurred');
+
+    clearTimeout(el.__t);
+    el.__t = setTimeout(() => {
+        el.classList.remove('open');
+        host.classList.remove('blurred');
+    }, 2000);
+}
+
+window.showLocationLimitToast = showLocationLimitToast;

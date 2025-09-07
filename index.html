@@ -170,6 +170,7 @@
               <p class="details-panel__dates"></p>
               <p class="details-panel__title"></p>
               <p class="details-panel__reign"></p>
+              <div class="details-panel__list" id="details-list" hidden></div>
             </div>
             <div class="details-panel__carousel-container">
               <button class="carousel-arrow left" aria-label="Previous">‹</button>
@@ -254,6 +255,7 @@
               Location <span class="count" data-for="filter-location"></span>
             </summary>
             <input type="text" class="quick-search" placeholder="Search locations…">
+            <div id="location-limit-msg" class="guard-msg">You can select up to 5 locations.</div>
             <ul id="filter-location" class="checklist" data-multi></ul>
           </details>
 
