@@ -257,30 +257,30 @@ function toggleGenderSelection(kind) {
     const maleActiveNext   = (kind === 'male')   ? !wasActive : maleBtn.classed('active');
     const femaleActiveNext = (kind === 'female') ? !wasActive : femaleBtn.classed('active');
 
-    maleBtn.classed('active', maleActiveNext).attr('aria-pressed', maleActiveNext ? 'true' : 'false');
-    femaleBtn.classed('active', femaleActiveNext).attr('aria-pressed', femaleActiveNext ? 'true' : 'false');
+    setGenderButtonState('male',   maleActiveNext);
+    setGenderButtonState('female', femaleActiveNext);
 
     // Simplification rule: clicking these buttons replaces previous library selections
     selectedNodes.clear();
     clickedLinks.clear();
     selectedLinks.clear();
 
+    setGenderButtonState('male', false);
+    setGenderButtonState('female', false);
+
     const { males, females } = buildGenderSets(allDataRef || globalData);
 
     if (maleActiveNext)   males.forEach(id => selectedNodes.add(id));
     if (femaleActiveNext) females.forEach(id => selectedNodes.add(id));
 
-    // Update node styles immediately
     nodeGroup.selectAll('g.node')
         .classed('active', d => selectedNodes.has(d.id));
 
-    // Apply the network filter with the new selection
     applyNetworkFilter(
         buildAllowedFromSelection(selectedNodes, selectedLinks),
         allDataRef || globalData
     );
 
-    // Keep details panel in sync (optional)
     const libs = Array.from(selectedNodes);
     currentCarouselLibs = libs;
     currentIndex = 0;
@@ -290,6 +290,8 @@ function toggleGenderSelection(kind) {
     } else {
         clearDetailsPanel();
     }
+
+    syncGenderButtonsWithSelection();
 }
 
 function wireGenderButtons() {
@@ -306,6 +308,23 @@ function wireGenderButtons() {
         female.addEventListener('click', () => toggleGenderSelection('female'));
         female.dataset.wired = '1';
   }
+}
+
+function setGenderButtonState(kind, active) {
+    const btn = document.getElementById(kind === 'male' ? 'gender-btn-male' : 'gender-btn-female');
+    if (!btn) return;
+    btn.classList.toggle('active', !!active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+}
+
+function syncGenderButtonsWithSelection() {
+    const { males, females } = buildGenderSets(allDataRef || globalData);
+
+    const maleActive = males.size > 0 && [...males].every(id => selectedNodes.has(id));
+    const femaleActive = females.size > 0 && [...females].every(id => selectedNodes.has(id));
+
+    setGenderButtonState('male', maleActive);
+    setGenderButtonState('female', femaleActive);
 }
 
 function attachLinkTooltip(selection) {
@@ -671,6 +690,7 @@ function createNetworkGraph(containerSelector, data) {
                     buildAllowedFromSelection(selectedNodes, selectedLinks),
                     data
                 );
+                syncGenderButtonsWithSelection();
             }
 
             const libs = Array.from(selectedNodes);
