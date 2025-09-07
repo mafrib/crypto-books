@@ -12,6 +12,79 @@ function linkLabel(key) {
     return `${kind} in common: ${a} ↔ ${b}`;
 }
 
+function rebuildNetworkFilterFromState(allData) {
+    const filters = [];
+    const labels  = [];
+
+    const libMap = d3.group(allData, r => r.Proprietario_Nome);
+
+    selectedNodes.forEach(id => {
+        filters.push(r => r.Proprietario_Nome === id);
+        labels.push(id);
+    });
+
+    selectedLinks.forEach(key => {
+        const [a, b, type] = key.split('|');
+
+        const bothSelected = selectedNodes.has(a) && selectedNodes.has(b);
+        if (bothSelected) return;
+
+        const setA = (type === 'book')
+        ? new Set(
+            (libMap.get(a) || [])
+                .filter(r => {
+                const t = r.Obra?.trim().toLowerCase();
+                return t && t !== 'por classificar';
+                })
+                .map(r => r.Obra)
+            )
+        : new Set(
+            (libMap.get(a) || [])
+                .filter(r => !isAnonymous(r.Nome_Autor))
+                .map(r => r.Nome_Autor)
+            );
+
+        const setB = (type === 'book')
+        ? new Set(
+            (libMap.get(b) || [])
+                .filter(r => {
+                const t = r.Obra?.trim().toLowerCase();
+                return t && t !== 'por classificar';
+                })
+                .map(r => r.Obra)
+            )
+        : new Set(
+            (libMap.get(b) || [])
+                .filter(r => !isAnonymous(r.Nome_Autor))
+                .map(r => r.Nome_Autor)
+            );
+
+        const common = new Set([...setA].filter(x => setB.has(x)));
+
+        filters.push(row =>
+        (row.Proprietario_Nome === a || row.Proprietario_Nome === b) &&
+        (type === 'book'
+            ? common.has(row.Obra)
+            : common.has(row.Nome_Autor)
+        )
+        );
+
+        labels.push(linkLabel(key));
+    });
+
+    if (filters.length > 0) {
+        setGlobalFilter(
+        'network',
+        row => filters.some(fn => fn(row)),
+        labels
+        );
+    } else {
+        clearGlobalFilter('network');
+    }
+
+    updateDashboard();
+}
+
 function handleLinkClick(d, allData) {
     const lk = linkKey(d);
 
@@ -39,74 +112,7 @@ function handleLinkClick(d, allData) {
         )
         );
 
-    const libMap = d3.group(allData, r => r.Proprietario_Nome);
-    const filters = [];
-
-    selectedNodes.forEach(id => {
-        filters.push(r => r.Proprietario_Nome === id);
-    });
-
-    selectedLinks.forEach(key => {
-        const [a, b, type] = key.split('|');
-
-        const setA = type === 'book'
-            ? new Set(
-                libMap.get(a)
-                    .filter(r => {
-                    const t = r.Obra?.trim().toLowerCase();
-                    return t && t !== 'por classificar';
-                    })
-                    .map(r => r.Obra)
-                )
-            : new Set(
-                libMap.get(a)
-                    .filter(r => !isAnonymous(r.Nome_Autor))
-                    .map(r => r.Nome_Autor)
-                );
-
-        const setB = type === 'book'
-            ? new Set(
-                libMap.get(b)
-                    .filter(r => {
-                    const t = r.Obra?.trim().toLowerCase();
-                    return t && t !== 'por classificar';
-                    })
-                    .map(r => r.Obra)
-                )
-            : new Set(
-                libMap.get(b)
-                    .filter(r => !isAnonymous(r.Nome_Autor))
-                    .map(r => r.Nome_Autor)
-                );
-
-        const common = new Set([...setA].filter(x => setB.has(x)));
-
-        filters.push(row =>
-            (row.Proprietario_Nome === a || row.Proprietario_Nome === b) &&
-            (type === 'book'
-                ? common.has(row.Obra)
-                : common.has(row.Nome_Autor)
-            )
-        );
-    });
-
-    if (filters.length > 0) {
-        const libs = Array.from(selectedNodes);
-        const labels = [
-            ...libs,
-            ...Array.from(selectedLinks).map(linkLabel)
-        ];
-
-        setGlobalFilter(
-            'network',
-            row => filters.some(fn => fn(row)),
-            labels
-        );
-    } else {
-    clearGlobalFilter('network');
-    }
-
-    updateDashboard();
+    rebuildNetworkFilterFromState(allData);
 }
 
 function distPointToSegment(px, py, x1, y1, x2, y2) {
@@ -675,21 +681,17 @@ function createNetworkGraph(containerSelector, data) {
             const externalFiltersActive =
                 Object.keys(activeFilters).some(k => k !== 'network');
 
-            if (selectedNodes.size === 0 && externalFiltersActive){
-                // remove every library → zero results
-                setGlobalFilter('network', ()=>false);
+            if (selectedNodes.size === 0 && selectedLinks.size === 0 && externalFiltersActive) {
+                setGlobalFilter('network', () => false);
                 updateDashboard();
 
                 nodeGroup.selectAll('g.node').classed('active', false);
                 linkGroup.selectAll('.link').style('opacity', 0.6);
 
                 window.showNoResultsPopup(prevSelection);
-                } else {
+            } else {
                 window.hideNoResultsPopup();
-                applyNetworkFilter(
-                    buildAllowedFromSelection(selectedNodes, selectedLinks),
-                    data
-                );
+                rebuildNetworkFilterFromState(data);
                 syncGenderButtonsWithSelection();
             }
 
