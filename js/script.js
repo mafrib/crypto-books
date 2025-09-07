@@ -274,7 +274,25 @@ function closeModal () {
 }
 
 function updateFilterBadge() {
-    const count = Object.keys(activeFilters || {}).length;
+    const keys = Object.keys(activeFilters || {});
+    const kset = new Set(keys);
+
+    let count = 0;
+
+    if (kset.has('network') || kset.has('byLibrary')) {
+        count += 1;
+        kset.delete('network');
+        kset.delete('byLibrary');
+    }
+
+    if (kset.has('period') || kset.has('byPeriod')) {
+        count += 1;
+        kset.delete('period');
+        kset.delete('byPeriod');
+    }
+
+    count += kset.size;
+
     const btn   = document.getElementById('filter-btn');
     const badge = document.getElementById('filter-badge');
     badge.textContent = count > 0 ? count : '';
@@ -492,12 +510,13 @@ function rebuildFilterTags () {
             });
             break;
 
-        case 'byLibrary'  : getChecked('filter-library'  )
-                            .forEach(v => addTag(v, () => {
-                                uncheckValue('filter-library', v);
-                                clearGlobalFilter('byLibrary');
-                            }));
-                            break;
+        case 'byLibrary':
+            if (activeFilters.network) break;
+            getChecked('filter-library').forEach(v => addTag(v, () => {
+                uncheckValue('filter-library', v);
+                clearGlobalFilter('byLibrary');
+            }));
+            break;
 
         case 'byAuthor'   : getChecked('filter-author'   )
                             .forEach(v => addTag(v, () => {

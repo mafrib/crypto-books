@@ -560,16 +560,8 @@ function makeMap () {
                             }
 
                             const curLibs = Array.from(window.selectedNodes || []);
-                            if (curLibs.length) {
-                            setGlobalFilter(
-                                'byLibrary',
-                                row => curLibs.includes(row.Proprietario_Nome.trim()),
-                                curLibs,
-                                'filter-library'
-                            );
-                            } else {
-                            clearGlobalFilter('byLibrary');
-                            }
+                            if (window.setChecked) window.setChecked('filter-library', curLibs);
+                            if (activeFilters.byLibrary) clearGlobalFilter('byLibrary');
 
                             if (window.refreshFilterTags) window.refreshFilterTags();
                             if (window.updateFilterBadge) window.updateFilterBadge();

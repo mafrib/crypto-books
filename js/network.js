@@ -699,17 +699,8 @@ function createNetworkGraph(containerSelector, data) {
 
             const curLibs = Array.from(selectedNodes);
 
-            // Sync the Library filter to match current network selection
-            if (curLibs.length > 0) {
-                setGlobalFilter(
-                    'byLibrary',
-                    row => curLibs.includes(row.Proprietario_Nome.trim()),
-                    curLibs,
-                    'filter-library'
-                );
-            } else {
-                clearGlobalFilter('byLibrary');
-            }
+            if (window.setChecked) window.setChecked('filter-library', curLibs);
+            if (activeFilters.byLibrary) clearGlobalFilter('byLibrary');
 
             // Rebuild the network filter and UI state
             const externalFiltersActive = Object.keys(activeFilters).some(k => k !== 'network');
