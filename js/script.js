@@ -767,7 +767,13 @@ function startDashboard() {
 
     d3.csv("data/dataset.csv")
         .then((data) => {
-            globalData = data;
+            globalData = data.map(d => {
+                const trimmed = (d.Obra ?? '').toString().trim();
+                return {
+                    ...d,
+                    Obra: trimmed ? trimmed : 'Por classificar'
+                };
+            });
             const filteredData = applyGlobalFilters(globalData);
             updateUnlocatedBadge(filteredData);
             updateTreemapBadge();
