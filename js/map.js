@@ -35,10 +35,9 @@ function positionOffMsg(legendEl) {
 }
 
 function updateZoomButtons(k) {
-    d3.select('.zoom-in' )
-        .classed('disabled', k >= zoomMax - 1e-6);
-    d3.select('.zoom-out')
-        .classed('disabled', k <= minZoomK + 1e-6);
+    d3.select('.zoom-in' ).classed('disabled', k >= zoomMax - 1e-6);
+    d3.select('.zoom-out').classed('disabled', k <= minZoomK + 1e-6);
+    updateResetButtonState();
 }
 
 function resetToDefaultView(duration = 400) {
@@ -48,7 +47,8 @@ function resetToDefaultView(duration = 400) {
         .transition()
         .duration(duration)
         .ease(d3.easeCubicOut)
-        .call(zoom.transform, defaultTransform);
+        .call(zoom.transform, defaultTransform)
+        .on('end', updateResetButtonState);
 }
 
 function computePointsBounds(points) {
@@ -204,6 +204,19 @@ function normalizePeriod(v) {
     return t;
 }
 
+function transformsEqual(a, b, eps = 1e-3) {
+    return Math.abs(a.k - b.k) < eps &&
+            Math.abs(a.x - b.x) < eps &&
+            Math.abs(a.y - b.y) < eps;
+}
+
+function updateResetButtonState() {
+    if (!mapSvg) return;
+    const t = d3.zoomTransform(mapSvg.node());
+    const atDefault = transformsEqual(t, defaultTransform);
+    d3.select('.zoom-reset').classed('disabled', atDefault);
+}
+
 function makeMap () {
 
     if (mapSvg) {
@@ -343,6 +356,36 @@ function makeMap () {
                 .attr("text-anchor", "middle")
                 .attr("dy", "0.3em")
                 .text("-");
+        });
+
+    zoomControl.append("g")
+        .attr("class", "zoom-button zoom-reset")
+        .attr("transform", "translate(0,50)")
+        .attr("role", "button")
+        .attr("tabindex", 0)
+        .on("click", (event) => {
+            event.stopPropagation();
+            resetToDefaultView();
+        })
+        .on("keydown", (event) => {
+            if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                resetToDefaultView();
+            }
+        })
+        .on("dblclick", function(event) {
+            event.stopPropagation();
+        })
+        .call(button => {
+            button.append("circle")
+            .attr("class", "zoom-button-bg")
+            .attr("r", 10);
+            button.append("text")
+            .attr("class", "zoom-icon")
+            .attr("text-anchor", "middle")
+            .attr("dy", "0.3em")
+            .text("⌂");
+            button.append("title").text("Reset view");
         });
 
     mapProjection = d3.geoMercator()
@@ -619,6 +662,7 @@ function makeMap () {
 
             mapSvg.call(zoom.transform, defaultTransform);
             updateZoomButtons(minZoomK);
+            updateResetButtonState();
 
             function highlightMapPoint(book) {
                 if (hoverResetTimeout) { clearTimeout(hoverResetTimeout); hoverResetTimeout = null; }
