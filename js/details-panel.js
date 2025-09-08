@@ -12,17 +12,201 @@ let currentCarouselItems = [];
 let currentIndex = 0;
 
 let hoverItem = null;
+let __catalogOverlayTimer = null;
+
+let pinnedBook = null;
+window.getPinnedBook = () => pinnedBook;
+
+let __catalogToastTimer = null;
+
+function normalizeProbString(v) {
+  return (v || '').toString().trim();
+}
+
+function probLevelFrom(value) {
+    const t = normalizeProbString(value).toLowerCase();
+    if (!t) return 0;
+
+    // Textual buckets
+    if (t.includes('indisputad')) return 3;  // indisputada
+    if (t.includes('prov'))       return 2;  // provável
+    if (t.includes('indet'))      return 1;  // indeterminada
+
+    // Numeric fallback (try to detect %)
+    const m = t.match(/(\d{1,3})\s*%/);
+    if (m) {
+      const p = Math.max(0, Math.min(100, +m[1]));
+      if (p >= 85) return 3;
+      if (p >= 60) return 2;
+      return 1;
+    }
+    return 1;
+}
+
+function buildProbBadge(value, tipText) {
+    const v = normalizeProbString(value);
+    if (!v) return '';
+    const lvl = probLevelFrom(v);
+    const safeTip = tipText || 'Attribution probability';
+    return `<span class="prob-badge level-${lvl || 1}" tabindex="0" data-tip="${safeTip}">${v}</span>`;
+}
+
+function showCatalogToast(msg, timeout = 1800) {
+    const el = document.getElementById('catalog-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+    el.classList.add('open');
+    // blur other entries only within the catalog
+    document.getElementById('catalog')?.classList.add('toast-open');
+
+    clearTimeout(__catalogToastTimer);
+    __catalogToastTimer = setTimeout(() => {
+      el.classList.remove('open');
+      el.hidden = true;
+      document.getElementById('catalog')?.classList.remove('toast-open');
+    }, timeout);
+}
+
+window.showCatalogToast = showCatalogToast;
+
+function showCatalogOverlay(msg, timeout = 2000) {
+    const el = document.getElementById('catalog-overlay');
+    if (!el) return;
+    const panel = el.querySelector('.catalog-overlay__panel');
+    if (panel) panel.textContent = msg;
+
+    el.hidden = false;
+    el.classList.add('open');
+
+    // Blur only entries (on the host)
+    document.getElementById('catalog')?.classList.add('overlay-open');
+
+    clearTimeout(__catalogOverlayTimer);
+    __catalogOverlayTimer = setTimeout(hideCatalogOverlay, timeout);
+    el.onclick = hideCatalogOverlay;
+}
+
+function hideCatalogOverlay() {
+    const el = document.getElementById('catalog-overlay');
+    if (!el) return;
+    el.classList.remove('open');
+    el.hidden = true;
+    el.onclick = null;
+
+    document.getElementById('catalog')?.classList.remove('overlay-open');
+}
+
+window.showCatalogOverlay = showCatalogOverlay;
+window.hideCatalogOverlay = hideCatalogOverlay;
+
+function pinBook(row) {
+    const replacing = !!pinnedBook && pinnedBook !== row;
+    pinnedBook = row;
+    hoverItem = null;
+    renderCurrentItem();
+
+    // Reuse the same highlight logic as hover
+    window.highlightMapPoint && window.highlightMapPoint(row);
+    window.highlightNetworkNode && window.highlightNetworkNode(row.Proprietario_Nome);
+    window.highlightTreemapRect && window.highlightTreemapRect(row);
+    window.highlightPeriodBar && window.highlightPeriodBar(row);
+
+    if (replacing) {
+      showCatalogOverlay('Only 1 book can be pinned. Replacing the previous selection.');
+    }
+
+    const hint = document.getElementById('catalog-hint');
+    if (hint && !hint.hidden) hint.hidden = true;
+}
+
+function unpinBook() {
+    pinnedBook = null;
+    renderCurrentItem();
+
+    // Clear all highlights
+    window.clearMapHighlights && window.clearMapHighlights();
+    window.clearNetworkHighlights && window.clearNetworkHighlights();
+    window.clearTreemapHighlights && window.clearTreemapHighlights();
+    window.clearPeriodHighlights && window.clearPeriodHighlights();
+}
+
+window.pinBook = pinBook;
+window.unpinBook = unpinBook;
 
 function showHoverItem(item) {
+  if (pinnedBook) return; // don't override a pinned book
   hoverItem = item;
   renderHover();
 }
+
 function clearHoverItem() {
+  if (pinnedBook) return; // keep showing the pinned book
   hoverItem = null;
   renderCurrentItem();
 }
+
 window.showDetailsHover = showHoverItem;
 window.clearDetailsHover = clearHoverItem;
+
+function renderBookDetails(row) {
+    const panel       = document.getElementById('hover-details');
+    panel.classList.add('details-panel--list-mode', 'details-panel--book-mode');
+
+    const wrapper     = panel.querySelector('.details-panel__img-wrapper');
+    const nameEl      = panel.querySelector('.details-panel__name');
+    const booksEl     = panel.querySelector('.details-panel__books');
+    const datesEl     = panel.querySelector('.details-panel__dates');
+    const titleEl     = panel.querySelector('.details-panel__title');
+    const reignEl     = panel.querySelector('.details-panel__reign');
+    const placeholder = panel.querySelector('.details-panel__placeholder');
+    const listEl      = panel.querySelector('#details-list');
+
+    // Base visibility
+    placeholder.style.display = 'none';
+    wrapper.style.display     = 'none';
+    nameEl.style.display      = '';
+    // “Book:” label above the title
+    booksEl.style.display     = '';
+    booksEl.textContent       = "Book's title:";
+    datesEl.style.display     = 'none';
+    titleEl.style.display     = 'none';
+    reignEl.style.display     = 'none';
+
+    // Title (emphasized) + standardized book attribution probability badge
+    const probObra = normalizeProbString(row.ProbAtribObra);
+    const title = normalizeProbString(row.Obra) || '—';
+    const obraBadge = buildProbBadge(probObra, 'Book attribution probability');
+    nameEl.innerHTML = `${title}${obraBadge ? ' ' + obraBadge : ''}`;
+
+    // Key/value list
+    if (listEl) {
+      listEl.hidden = false;
+      listEl.innerHTML = '';
+
+      const addItem = (label, val, extraHTML = '') => {
+        const v = normalizeProbString(val);
+        if (!v) return;
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `<strong>${label}:</strong> ${v}${extraHTML}`;
+        listEl.appendChild(div);
+      };
+
+      const probAutor = normalizeProbString(row.ProbAtribAutor);
+      const autorBadge = buildProbBadge(probAutor, 'Author attribution probability');
+
+      addItem('Author', normalizeProbString(row.Nome_Autor) || '—', autorBadge ? ' ' + autorBadge : '');
+
+      addItem('Alternative attribution (Book)', row.AtribuicaoAlternat_Obra);
+      addItem('Alternative attribution (Author)', row.AtribuicaoAlternat_Autor);
+
+      // Accept either canonical or lowercase names if CSV headers vary
+      addItem('Author short bio', row.BioAbreviada_Autor || row.bioabreviada_autor);
+      addItem('Synopsis', row.Sinopse_Obra || row['Sinopse obra']);
+      addItem('Document type', row.TipoDoc);
+    }
+}
 
 function renderHover() {
     if (!hoverItem) return;
@@ -205,7 +389,8 @@ function renderLocationDetails(locKey) {
 }
 
 function renderCurrentItem() {
-    if (hoverItem) { renderHover(); return; }
+    if (pinnedBook) { renderBookDetails(pinnedBook); return; }
+    if (hoverItem)  { renderHover(); return; }
 
     const item = currentCarouselItems[currentIndex];
     if (!item) { clearDetailsPanel(); return; }
@@ -291,10 +476,10 @@ function computeDotModel(n, cur, maxDots) {
     return res;
 }
 
-
 function clearDetailsPanel() {
+    pinnedBook = null;
     const panel = document.getElementById('hover-details');
-    panel.classList.remove('details-panel--list-mode');
+    panel.classList.remove('details-panel--list-mode', 'details-panel--book-mode');
     panel.querySelector('.details-panel__img-wrapper').style.display = 'none';
     panel.querySelector('.details-panel__name').style.display        = 'none';
     panel.querySelector('.details-panel__books').style.display       = 'none';
@@ -311,3 +496,62 @@ function clearDetailsPanel() {
 }
 
 window.clearDetailsPanel = clearDetailsPanel;
+
+let __probTipEl;
+function ensureProbTip() {
+    if (!__probTipEl) {
+      __probTipEl = document.createElement('div');
+      __probTipEl.className = 'prob-tip';
+      __probTipEl.style.display = 'none';
+      document.body.appendChild(__probTipEl);
+    }
+    return __probTipEl;
+  }
+
+  function showProbTip(target, text) {
+    const tip = ensureProbTip();
+    tip.textContent = text || 'Attribution probability';
+    tip.style.display = 'block';
+
+    const rect = target.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    const gap = 8;
+
+    // Center over the badge, above it
+    let left = rect.left + rect.width / 2 - tipRect.width / 2;
+    let top  = rect.top - gap - tipRect.height;
+
+    // Keep inside viewport
+    left = Math.max(6, Math.min(left, window.innerWidth - tipRect.width - 6));
+    top  = Math.max(6, top);
+
+    tip.style.left = `${left}px`;
+    tip.style.top  = `${top}px`;
+}
+
+function hideProbTip() {
+    if (__probTipEl) __probTipEl.style.display = 'none';
+}
+
+document.addEventListener('mouseenter', (e) => {
+    const el = e.target.closest('.prob-badge');
+    if (!el) return;
+    showProbTip(el, el.getAttribute('data-tip'));
+  }, true);
+
+document.addEventListener('mouseleave', (e) => {
+    if (e.target.matches('.prob-badge') || e.target.closest('.prob-badge')) {
+      hideProbTip();
+    }
+  }, true);
+
+document.addEventListener('focusin', (e) => {
+    const el = e.target.closest('.prob-badge');
+    if (!el) return;
+    showProbTip(el, el.getAttribute('data-tip'));
+  });
+  document.addEventListener('focusout', (e) => {
+    if (e.target.matches('.prob-badge') || e.target.closest('.prob-badge')) {
+      hideProbTip();
+    }
+});

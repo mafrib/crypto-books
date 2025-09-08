@@ -40,40 +40,59 @@ function createBooksCatalog(data) {
     newEntries.merge(entries).select(".autor").text(d => d.Nome_Autor);
     newEntries.merge(entries).select(".livraria").text(d => d.Proprietario_Nome);
 
-    newEntries
-      .on('mouseover', (event, d) => {
-        // highlight the entry
-        d3.select(event.currentTarget)
-          .classed('hovered-entry', true);
+    const allEntries = newEntries.merge(entries);
 
-        const missing =
+    allEntries
+      .on('mouseover', (event, d) => {
+          if (window.getPinnedBook && window.getPinnedBook()) return;
+          d3.select(event.currentTarget).classed('hovered-entry', true);
+
+          const missing =
             isNaN(window.parseDMS(d.Latitude_Autor)) ||
             isNaN(window.parseDMS(d.Longitude_Autor));
 
-        window.showNoLocationOverlay(missing);
-        window.highlightMapPoint(d);
-        window.highlightNetworkNode(d.Proprietario_Nome);
-        window.highlightTreemapRect(d);
-        window.highlightPeriodBar(d);
+          window.showNoLocationOverlay(missing);
+          window.highlightMapPoint(d);
+          window.highlightNetworkNode(d.Proprietario_Nome);
+          window.highlightTreemapRect(d);
+          window.highlightPeriodBar(d);
       })
       .on('mouseout', (event, d) => {
-        d3.select(event.currentTarget)
-          .classed('hovered-entry', false);
-        window.showNoLocationOverlay(false);
-        window.clearMapHighlights();
-        window.clearNetworkHighlights();
-        window.clearTreemapHighlights();
-        window.clearPeriodHighlights();
-      });
+          d3.select(event.currentTarget).classed('hovered-entry', false);
 
-    // Update existing entries (if needed)
-    entries.select(".obra").text(d => d.Obra);
-    entries.select(".autor").text(d => d.Nome_Autor);
-    entries.select(".livraria").text(d => d.Proprietario_Nome);
+          if (window.getPinnedBook && window.getPinnedBook()) return;
 
-    const countDisplay = d3.select("#book-count")
-        .text(`${data.length} book${data.length !== 1 ? 's' : ''} found`);
+          window.showNoLocationOverlay(false);
+          window.clearMapHighlights && window.clearMapHighlights();
+          window.clearNetworkHighlights && window.clearNetworkHighlights();
+          window.clearTreemapHighlights && window.clearTreemapHighlights();
+          window.clearPeriodHighlights && window.clearPeriodHighlights();
+        })
+      .on('click', (event, d) => {
+          const cur = window.getPinnedBook ? window.getPinnedBook() : null;
+          if (cur === d) {
+              window.unpinBook && window.unpinBook();
+              d3.select(event.currentTarget).classed('pinned', false);
+          } else {
+              window.pinBook && window.pinBook(d);
 
+              d3.selectAll('#catalog-entries .catalog-entry')
+                .classed('pinned', false)
+                .classed('hovered-entry', false);
+
+              d3.select(event.currentTarget).classed('pinned', true);
+          }
+        });
+
+      allEntries.classed('pinned', d => (window.getPinnedBook && window.getPinnedBook() === d));
+
+      // Update existing entries (if needed)
+      entries.select(".obra").text(d => d.Obra);
+      entries.select(".autor").text(d => d.Nome_Autor);
+      entries.select(".livraria").text(d => d.Proprietario_Nome);
+
+      const countDisplay = d3.select("#book-count")
+          .text(`${data.length} book${data.length !== 1 ? 's' : ''} found`);
 }
 
 function normalizeText(text) {

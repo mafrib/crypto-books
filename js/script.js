@@ -1,5 +1,4 @@
 let globalData;
-let baselineW, baselineH;
 let currentTreemapMode = 'category';
 let treemapFilterOrigin = null;   // 'category' or 'tradition'
 let lastClassificationMode = null;
@@ -176,19 +175,6 @@ function showConflictPopup(subjectLabel, filters, kind = 'library') {
     document.getElementById('modal-shield' ).hidden = false;
 }
 
-function getConflictingFiltersForPeriod(periodName) {
-    const rowsOfPeriod = globalData.filter(r =>
-        r.EpocaHistorica_Autor === periodName
-    );
-
-    return Object.keys(activeFilters)
-        .filter(src => src !== 'period' && src !== 'byPeriod')
-        .filter(src => {
-            const fn = activeFilters[src];
-            return rowsOfPeriod.every(row => !fn(row));
-        });
-}
-
 function hideConflictPopup() {
     pendingNode   = null;
     document.getElementById('conflict-popup').hidden = true;
@@ -332,36 +318,6 @@ function ensureTreemapIndicator(btn) {
     }
 }
 
-function showModeDotTooltip(targetEl) {
-    const tip = document.getElementById('tooltip');
-    if (!tip) return;
-
-    tip.textContent = 'Filter active';
-
-    tip.style.visibility = 'visible';
-    tip.style.opacity = '1';
-
-    const host = document.getElementById('treemap');
-    const hostRect = host.getBoundingClientRect();
-    const dotRect  = targetEl.getBoundingClientRect();
-
-    const tipW = tip.offsetWidth;
-    const tipH = tip.offsetHeight;
-
-    const left = Math.max(4, (dotRect.left + dotRect.width / 2) - hostRect.left - (tipW / 2));
-    const top  = Math.max(4, dotRect.top - hostRect.top - tipH - 8);
-
-    tip.style.left = `${left}px`;
-    tip.style.top  = `${top}px`;
-}
-
-function hideModeDotTooltip() {
-    const tip = document.getElementById('tooltip');
-    if (!tip) return;
-    tip.style.opacity = '0';
-    tip.style.visibility = 'hidden';
-}
-
 function buildLocationOptions(data) {
     const map = new Map();
     data.forEach(r => {
@@ -426,13 +382,6 @@ function switchMode(mode) {
 function isFemaleLibrary(rawName) {
   const lower = rawName.trim().toLowerCase();
   return lower.includes('d. leonor') || lower.includes('d. beatriz');
-}
-
-// helper to grab unique, non‐empty values for a given key
-function uniq(key) {
-  return Array.from(
-    new Set(globalData.map(d => d[key]).filter(v => v))
-  ).sort();
 }
 
 function populateFilterOptions() {
@@ -1067,7 +1016,8 @@ function startDashboard() {
                 currentIndex = 0;
                 renderCarousel();
                 clearDetailsPanel();
-
+                if (window.unpinBook) window.unpinBook();
+                d3.selectAll('#catalog-entries .catalog-entry').classed('pinned', false);
                 updateFilterBadge();
 
                 document.querySelectorAll('.checklist input:checked')
