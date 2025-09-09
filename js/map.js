@@ -152,21 +152,57 @@ function showNoLocationOverlay(show) {
 }
 
 function updateUnlocatedBadge(rowSet) {
-    const n = rowSet.filter(r=>{
+    const noLoc = r => {
         const lat = parseDMS(r.Latitude_Autor);
         const lon = parseDMS(r.Longitude_Autor);
         return isNaN(lat) || isNaN(lon);
-    }).length;
+    };
 
+    const total = rowSet.filter(noLoc).length;
     const el = document.getElementById('map-offmsg');
     if (!el) return;
 
-    if (n) {
-        el.textContent = `${n} book${n>1?'s':''} with no location`;
-        el.hidden = false;
-    } else {
+    if (!total) {
         el.hidden = true;
+        return;
     }
+
+    // If there is an active search, show X/total (X = matched-with-search)
+    let matched = null;
+    const input = document.getElementById('search-input');
+    const q = input ? input.value.trim() : '';
+    if (q) {
+        const terms = q
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean);
+
+        const matcher = (typeof window.itemMatchesAllTerms === 'function')
+        ? window.itemMatchesAllTerms
+        : (item, ts) => {
+            const norm = s => (s ?? '').toString()
+                .normalize('NFD')
+                .replace(/\p{Diacritic}/gu, '')
+                .toLowerCase();
+            const fields = [item.Descricao, item.Obra, item.Nome_Autor, item.Proprietario_Nome].map(norm);
+            return ts.every(term => fields.some(f =>
+                f.split(/\s+/).some(w => w.replace(/^[^\p{L}\p{N}]+/gu, '').startsWith(term))
+            ));
+            };
+
+        const searchRows = rowSet.filter(item => matcher(item, terms));
+        matched = searchRows.filter(noLoc).length;
+    }
+
+    if (matched !== null) {
+        el.innerHTML = `<strong>${matched}</strong>/${total} book${total !== 1 ? 's' : ''} with no location`;
+    } else {
+        el.textContent = `${total} book${total !== 1 ? 's' : ''} with no location`;
+    }
+
+    el.hidden = false;
 }
 
 function highlightPoint(el, d) {
@@ -548,12 +584,13 @@ function makeMap () {
                             clearGlobalFilter('byLocation');
                         }
 
+                        const nextVals = (activeFilters.byLocation?.values) || [];
                         if (window.setChecked) {
-                            const nextVals = (activeFilters.byLocation?.values) || [];
                             window.setChecked('filter-location', nextVals);
                         }
-
-                        if (window.enforceLocationMenuLimit) window.enforceLocationMenuLimit(nextVals);
+                        if (window.enforceLocationMenuLimit) {
+                            window.enforceLocationMenuLimit(nextVals);
+                        }
 
                         if (window.applyGlobalFilters && window.globalData) {
                             const allowedLibs = new Set(
@@ -841,6 +878,7 @@ function makeMap () {
             window.highlightPeriodBar   = highlightPeriodBar;
             window.clearPeriodHighlights = clearPeriodHighlights;
             refreshMapPoints(applyGlobalFilters(globalData));
+            if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
             updateMapLocationStyles();
         })
 
@@ -888,6 +926,7 @@ function updateDashboard() {
     if (window.rebuildDetailsItems) window.rebuildDetailsItems();
     if (window.enforceLocationMenuLimit)
         window.enforceLocationMenuLimit(activeFilters.byLocation?.values || getChecked('filter-location'));
+    if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
 }
 
 function repaintPeriodBars(rowSetWithoutPeriod) {

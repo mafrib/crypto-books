@@ -292,12 +292,16 @@ function clearAllFilters() {
 function updateClearButton() {
     const btn = document.getElementById('clear-btn');
     if (!btn) return;
-    const isAny = Object.keys(activeFilters).length > 0;
+
+    const hasFilters = Object.keys(activeFilters).length > 0;
+    const hasSearch  = !!document.getElementById('search-input')?.value.trim();
+    const isAny = hasFilters || hasSearch;
+
     btn.classList.toggle('active', isAny);
 
     const img = btn.querySelector('img');
     if (img) {
-      img.src = isAny
+        img.src = isAny
         ? '../img/icons/clear-filter-active.png'
         : '../img/icons/clear-filter-inactive.png';
     }

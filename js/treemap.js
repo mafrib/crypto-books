@@ -442,6 +442,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
 
         const cellUpdate = cellEnter.merge(cell);
 
+        if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
+
         function highlightTreemapRect(book) {
             const bookCat = normalizeLabel(book.CatLit_Descricao);
             const bookGen = normalizeLabel(book.GenLit_Descricao);

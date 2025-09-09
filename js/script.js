@@ -2,6 +2,7 @@ let globalData;
 let currentTreemapMode = 'category';
 let treemapFilterOrigin = null;   // 'category' or 'tradition'
 let lastClassificationMode = null;
+let __searchFocusRows = null;
 let skipNextTreemapRedraw = false;
 const periodOrder = [
     'Por determinar',
@@ -14,6 +15,126 @@ const periodOrder = [
 ];
 window.highlightPeriodBar    = () => {};
 window.clearPeriodHighlights = () => {};
+
+function normalizeLabelForSearch(v) {
+    const t = (v ?? '').toString().trim();
+    return t ? t : 'Por classificar';
+}
+
+function normalizePeriod(v) {
+    const t = (v ?? '').toString().trim();
+    if (!t) return 'Por determinar';
+    const lc = t.toLowerCase();
+    if (lc === 'indeterminada' || lc === 'por determinar') return 'Por determinar';
+    return t;
+}
+
+function applySearchFocus(rows) {
+    __searchFocusRows = rows || [];
+
+    const base = applyGlobalFilters(globalData);
+
+    const idSet     = new Set(__searchFocusRows.map(r => r.ID_Cod));
+    const libSet    = new Set(__searchFocusRows.map(r => (r.Proprietario_Nome || '').trim()));
+    const periodSet = new Set(__searchFocusRows.map(r => normalizePeriod(r.EpocaHistorica_Autor)));
+
+    const catSet  = new Set(__searchFocusRows.map(r => normalizeLabelForSearch(r.CatLit_Descricao)));
+    const genSet  = new Set(__searchFocusRows.map(r => normalizeLabelForSearch(r.GenLit_Descricao)));
+    const tradSet = new Set(__searchFocusRows.map(r => normalizeLabelForSearch(r.TradicaoIntelectual_Obra)));
+
+    const genPairs = new Set();
+        __searchFocusRows.forEach(r => {
+            const c = normalizeLabelForSearch(r.CatLit_Descricao);
+            const g = normalizeLabelForSearch(r.GenLit_Descricao);
+            genPairs.add(`${c}|||${g}`);
+    });
+
+    // Map points
+    d3.selectAll('circle.library-point')
+        .classed('search-dim', true)
+        .each(function(d) {
+        const rowsHere = (d.filteredEntries && d.filteredEntries.length) ? d.filteredEntries : d.entries;
+        const match = rowsHere && rowsHere.some(e => idSet.has(e.ID_Cod));
+        if (match) d3.select(this).classed('search-dim', false);
+        });
+
+    // Period bars
+    d3.selectAll('#period-filter .period-bar')
+        .classed('search-dim', function(period) { return !periodSet.has(period); });
+
+    // Treemap rects
+    d3.selectAll('#treemap-area g.cell').each(function(d) {
+        const rect = d3.select(this).select('rect');
+        let match = false;
+
+        if (currentTreemapMode === 'category') {
+            const isLeaf = !d.children;
+
+            if (!isLeaf) {
+            // Category cells
+                const catName = d.data.name;
+                match =
+                    catSet.has(catName) ||
+                    Array.from(genPairs).some(p => p.startsWith(`${catName}|||`));
+            } else {
+                const catName = d.parent?.data?.name || '';
+                const genName = d.data.name;
+
+                match = genPairs.has(`${catName}|||${genName}`);
+
+                if (!match && catSet.has(catName)) match = true;
+            }
+        } else {
+            // Tradition mode
+            match = tradSet.has(d.data.name);
+        }
+
+        rect.classed('search-dim', !match);
+    });
+
+    // Network: nodes
+    const nodeSel = d3.select('#network-graph .network-wrapper').selectAll('g.node');
+    nodeSel.classed('search-dim', d => !libSet.has(d.id));
+
+    const linkSel = d3.select('#network-graph .network-wrapper').selectAll('.link');
+    linkSel
+        .classed('search-dim', l => {
+            const src = l.source.id || l.source;
+            const tgt = l.target.id || l.target;
+            return !(libSet.has(src) && libSet.has(tgt));
+        })
+        .style('opacity', null);
+}
+
+function clearSearchFocus() {
+    __searchFocusRows = null;
+
+    // Map
+    d3.selectAll('circle.library-point').classed('search-dim', false);
+
+    // Period bars
+    d3.selectAll('#period-filter .period-bar').classed('search-dim', false);
+
+    // Treemap
+    d3.selectAll('#treemap-area rect').classed('search-dim', false);
+
+    // Network
+    d3.select('#network-graph .network-wrapper').selectAll('g.node').classed('search-dim', false);
+    d3.select('#network-graph .network-wrapper').selectAll('.link')
+        .classed('search-dim', false)
+        .style('opacity', null); // return to normal
+}
+
+// Reapply after redraws (filters, treemap mode switch, etc.)
+function reapplySearchFocusIfAny() {
+    if (__searchFocusRows && __searchFocusRows.length) {
+        applySearchFocus(__searchFocusRows);
+    }
+}
+
+window.applySearchFocus = applySearchFocus;
+window.clearSearchFocus = clearSearchFocus;
+window.reapplySearchFocusIfAny = reapplySearchFocusIfAny;
 
 function showNoResultsPopup(prevSel) {
     pendingUndoNodes = prevSel;
@@ -974,20 +1095,23 @@ function startDashboard() {
             const clearBtn = document.getElementById('clear-btn');
             clearBtn.addEventListener('click', () => {
                 if (!clearBtn.classList.contains('active')) return;
+
+                const input = document.getElementById('search-input');
+                if (input && input.value) {
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                } else {
+                    if (window.clearSearchFocus) window.clearSearchFocus();
+                }
+
                 Object.keys(activeFilters).forEach(src => clearGlobalFilter(src));
 
                 treemapFilterOrigin = null;
                 lastClassificationMode = null;
                 updateTreemapBadge();
 
-                updateClearButton();
-                document.getElementById('search-input').value = '';
-
                 selectedPeriods = [];
-                d3.selectAll('#period-filter .period-bar')
-                    .classed('selected', false);
-
-                updateDashboard();
+                d3.selectAll('#period-filter .period-bar').classed('selected', false);
 
                 selectedNodes.clear();
                 clickedLinks.clear();
@@ -1001,12 +1125,11 @@ function startDashboard() {
                     .style('opacity', null);
 
                 const cleanData = applyGlobalFilters(globalData);
-                const networkContainer = '#network-graph .network-wrapper';
                 createNetworkGraph('#network-graph .network-wrapper', globalData);
                 wireGenderButtons();
                 createTreemap(
                     '#treemap-area',
-                    filteredData,
+                    cleanData,
                     currentTreemapMode,
                     updateDashboard
                 );
@@ -1018,18 +1141,18 @@ function startDashboard() {
                 clearDetailsPanel();
                 if (window.unpinBook) window.unpinBook();
                 d3.selectAll('#catalog-entries .catalog-entry').classed('pinned', false);
+
+                document.querySelectorAll('.checklist input:checked').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.checklist').forEach(list => bumpCounter(list));
+
                 updateFilterBadge();
-
-                document.querySelectorAll('.checklist input:checked')
-                    .forEach(cb => cb.checked = false);
-                document.querySelectorAll('.checklist')
-                    .forEach(list => bumpCounter(list));
-
                 refreshFilterTags();
                 hideNoResultsPopup();
 
                 if (window.selectedLocations) window.selectedLocations.clear();
                 if (window.rebuildDetailsItems) window.rebuildDetailsItems();
+
+                updateClearButton();
             });
 
             const modal      = document.getElementById('filter-modal');

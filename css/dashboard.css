@@ -425,6 +425,8 @@ circle.library-point.location-selected {
   filter: drop-shadow(0 0 4px rgba(0,0,0,.35));
 }
 
+.library-point.search-dim { opacity: 0.15; }
+
 .period-filter-wrapper {
   display: flex;
   flex-direction: column;
@@ -477,6 +479,8 @@ circle.library-point.location-selected {
 #period-filter .period-bar.dimmed:not(.inactive):not(.selected) {
   opacity: 0.45;
 }
+
+#period-filter .period-bar.search-dim { opacity: 0.25; }
 
 .period-filter-wrapper {
   display: flex;
@@ -809,6 +813,18 @@ svg:not(.node-active-mode) .node:hover text {
 #network-graph .network-gender-controls {
   display: flex;
   gap: 6px;
+}
+
+#network-graph .nodes .node.search-dim { opacity: 0.25; }
+
+#network-graph .links .link.search-dim {
+  opacity: 0.12 !important;
+}
+
+
+#network-graph .links .link.search-dim.hovered,
+#network-graph .links .link.search-dim.active {
+  opacity: 0.12 !important;
 }
 
 .gender-btn {
@@ -1668,6 +1684,16 @@ details[open] > summary::after {
 #treemap-area rect.hovered-treemap-rect {
   stroke: red;
   stroke-width: 2px;
+}
+
+#treemap-area rect.search-dim { opacity: 0.20; }
+
+.library-point,
+#period-filter .period-bar,
+#treemap-area rect,
+#network-graph .nodes .node,
+#network-graph .links .link {
+  transition: opacity .15s ease;
 }
 
 /* ----CATALOG---- */
