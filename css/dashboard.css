@@ -1350,8 +1350,20 @@ details[open] > summary::after {
 .prob-badge::after { content: none !important; }
 
 .details-panel__carousel .dot {
-  width: 0.6rem; height: 0.6rem; border-radius: 50%;
-  border: 1px solid #16404D; background: transparent; cursor: pointer;
+  --dot-size: clamp(8px, 0.6rem, 12px);
+  display: inline-block;
+  inline-size: var(--dot-size);
+  block-size: var(--dot-size);
+  aspect-ratio: 1 / 1;
+  border-radius: 9999px;
+  border: 1px solid #16404D;
+  background: transparent;
+  padding: 0;
+  line-height: 0;
+  vertical-align: middle;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
 }
 
 .details-panel__carousel .dot.active { background: #16404D; }
@@ -1385,7 +1397,12 @@ details[open] > summary::after {
 .carousel-arrow.right { right: var(--pad-h); }
 
 .details-panel__carousel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.25rem;
+  margin-top: 0.5rem;
+  justify-content: center;
   max-width: 100%;
   overflow: hidden;
 }
