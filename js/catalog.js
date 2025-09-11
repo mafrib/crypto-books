@@ -73,6 +73,7 @@ function createBooksCatalog(data) {
           if (cur === d) {
               window.unpinBook && window.unpinBook();
               d3.select(event.currentTarget).classed('pinned', false);
+              window.showNoLocationOverlay && window.showNoLocationOverlay(false);
           } else {
               window.pinBook && window.pinBook(d);
 
@@ -82,6 +83,7 @@ function createBooksCatalog(data) {
 
               d3.select(event.currentTarget).classed('pinned', true);
           }
+          if (window.updateClearButton) window.updateClearButton();
         });
 
       allEntries.classed('pinned', d => (window.getPinnedBook && window.getPinnedBook() === d));

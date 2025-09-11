@@ -1069,6 +1069,8 @@ function startDashboard() {
                 clearDetailsPanel();
                 if (window.unpinBook) window.unpinBook();
                 d3.selectAll('#catalog-entries .catalog-entry').classed('pinned', false);
+                if (window.showNoLocationOverlay) window.showNoLocationOverlay(false);
+                if (window.clearMapHighlights) window.clearMapHighlights();
 
                 document.querySelectorAll('.checklist input:checked').forEach(cb => cb.checked = false);
                 document.querySelectorAll('.checklist').forEach(list => bumpCounter(list));

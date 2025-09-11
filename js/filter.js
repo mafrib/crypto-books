@@ -309,7 +309,9 @@ function updateClearButton() {
 
     const hasFilters = Object.keys(activeFilters).length > 0;
     const hasSearch  = !!document.getElementById('search-input')?.value.trim();
-    const isAny = hasFilters || hasSearch;
+    const hasPinned  = !!(window.getPinnedBook && window.getPinnedBook());
+
+    const isAny = hasFilters || hasSearch || hasPinned;
 
     btn.classList.toggle('active', isAny);
 
