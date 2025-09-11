@@ -125,7 +125,8 @@ const sourceToList = {
     period      : 'filter-period',
     byProbObra  : 'filter-probobra',
     byProbAutor : 'filter-probautor',
-    byLocation  : 'filter-location'
+    byLocation  : 'filter-location',
+    byGeoArea   : 'filter-geoarea'
 };
 
 const listIdToField = {
@@ -137,7 +138,8 @@ const listIdToField = {
   'filter-genre'     : 'GenLit_Descricao',
   'filter-period'    : 'EpocaHistorica_Autor',
   'filter-probobra'  : 'ProbAtribObra',
-  'filter-probautor' : 'ProbAtribAutor'
+  'filter-probautor' : 'ProbAtribAutor',
+  'filter-geoarea'   : 'OrigemGeografica_Autor'
 };
 
 function setChecked(listId, values){
@@ -191,6 +193,7 @@ function commitChecklistFilters () {
     const probAu  = getChecked('filter-probautor');
 
     const locs = getChecked('filter-location');
+    const geos = getChecked('filter-geoarea');
 
     locs.length
         ? setGlobalFilter(
@@ -203,6 +206,15 @@ function commitChecklistFilters () {
             'filter-location'
             )
         : clearGlobalFilter('byLocation');
+
+    geos.length
+        ? setGlobalFilter(
+            'byGeoArea',
+            r => geos.includes(r.OrigemGeografica_Autor),
+            geos,
+            'filter-geoarea'
+        )
+        : clearGlobalFilter('byGeoArea');
 
     // Genre requires a selected Category
     if (!cats.length && gens.length) {

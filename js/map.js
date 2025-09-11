@@ -565,12 +565,6 @@ function makeMap () {
 
                         const next = isSelected ? cur.filter(v => v !== key) : cur.concat(key);
 
-                        const adding = !isSelected;
-                        if (adding && next.length > 5) {
-                            showLocationLimitToast('You can select up to 5 locations.');
-                            return;
-                        }
-
                         if (next.length) {
                             setGlobalFilter(
                             'byLocation',
@@ -588,9 +582,6 @@ function makeMap () {
                         const nextVals = (activeFilters.byLocation?.values) || [];
                         if (window.setChecked) {
                             window.setChecked('filter-location', nextVals);
-                        }
-                        if (window.enforceLocationMenuLimit) {
-                            window.enforceLocationMenuLimit(nextVals);
                         }
 
                         if (window.applyGlobalFilters && window.globalData) {
@@ -931,8 +922,7 @@ function updateDashboard() {
     }
 
     if (window.rebuildDetailsItems) window.rebuildDetailsItems();
-    if (window.enforceLocationMenuLimit)
-        window.enforceLocationMenuLimit(activeFilters.byLocation?.values || getChecked('filter-location'));
+
     if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
 }
 
@@ -982,30 +972,3 @@ function refreshMapPoints(filteredRows) {
             .style('display', nVisible ? null : 'none');
         });
 }
-
-function showLocationLimitToast(msg) {
-    const host = document.querySelector('#map-area .map-canvas') || document.body;
-
-    // Create/reuse toast anchored inside the map canvas
-    let el = host.querySelector('#map-limit-toast');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'map-limit-toast';
-        el.className = 'map-limit-toast';
-        host.appendChild(el);
-    }
-
-    el.textContent = msg;
-    el.classList.add('open');
-
-    // Blur only the map svg while toast is shown
-    host.classList.add('blurred');
-
-    clearTimeout(el.__t);
-    el.__t = setTimeout(() => {
-        el.classList.remove('open');
-        host.classList.remove('blurred');
-    }, 2000);
-}
-
-window.showLocationLimitToast = showLocationLimitToast;

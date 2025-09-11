@@ -142,99 +142,7 @@ function showNoResultsPopup(prevSel) {
     document.getElementById('modal-shield' ).hidden = false;
 }
 
-function installLocationLimitGuards() {
-    const ul = document.getElementById('filter-location');
-    if (!ul || ul.__limitGuardsInstalled) return;
-    ul.__limitGuardsInstalled = true;
-
-    const overCapAndUnchecked = (input) => {
-        const selected = (activeFilters.byLocation?.values) || getChecked('filter-location');
-        return selected.length >= 5 && input && !input.checked;
-    };
-
-    ul.addEventListener('click', (e) => {
-        const input = e.target.closest('input[type="checkbox"]');
-        if (!input) return;
-        if (overCapAndUnchecked(input)) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (window.showLocationLimitToast) {
-            window.showLocationLimitToast('You can select up to 5 locations.');
-        }
-        }
-    }, true);
-
-    ul.addEventListener('keydown', (e) => {
-        if (e.key !== ' ' && e.key !== 'Enter') return;
-        const input = e.target.closest('input[type="checkbox"]');
-        if (!input) return;
-        if (overCapAndUnchecked(input)) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (window.showLocationLimitToast) {
-            window.showLocationLimitToast('You can select up to 5 locations.');
-        }
-        }
-    }, true);
-
-    // If the list’s contents are ever rebuilt, re-apply the limit immediately
-    const observer = new MutationObserver(() => {
-        const snapshot = (activeFilters.byLocation?.values) || getChecked('filter-location');
-        if (window.enforceLocationMenuLimit) window.enforceLocationMenuLimit(snapshot);
-    });
-    observer.observe(ul, { childList: true, subtree: true });
-    ul.__limitObserver = observer;
-}
-
 let __locCapRAF = null;
-
-function enforceLocationMenuLimit(selectedOverride) {
-    const list = document.getElementById('filter-location');
-    if (!list) return;
-
-    const snapshot = Array.isArray(selectedOverride)
-        ? [...selectedOverride]
-        : ((activeFilters.byLocation?.values) || getChecked('filter-location'));
-
-    const selectedSet = new Set(snapshot);
-    const limitReached = snapshot.length >= 5;
-
-    list.querySelectorAll('input[type="checkbox"]').forEach(input => {
-        const isChecked = selectedSet.has(input.value);
-
-        if (input.checked !== isChecked) input.checked = isChecked;
-
-        const shouldDisable = !isChecked && limitReached;
-        input.disabled = shouldDisable;
-
-        const li = input.closest('li');
-        if (li) li.classList.toggle('disabled-option', shouldDisable);
-    });
-
-    bumpCounter(list);
-
-    if (__locCapRAF) cancelAnimationFrame(__locCapRAF);
-    __locCapRAF = requestAnimationFrame(() => {
-        const list2 = document.getElementById('filter-location');
-        if (!list2) return;
-
-        const set2 = new Set(snapshot);
-        const limit2 = snapshot.length >= 5;
-
-        list2.querySelectorAll('input[type="checkbox"]').forEach(input => {
-        const isChecked = set2.has(input.value);
-        const shouldDisable = !isChecked && limit2;
-        input.disabled = shouldDisable;
-
-        const li = input.closest('li');
-        if (li) li.classList.toggle('disabled-option', shouldDisable);
-        });
-
-        bumpCounter(list2);
-    });
-}
-
-window.enforceLocationMenuLimit = enforceLocationMenuLimit;
 
 function updateModalClearButton() {
     const btn = document.getElementById('clear-modal-filters');
@@ -313,7 +221,8 @@ function prettyFilterName(src) {
         byLibrary  : 'Library',
         treemap    : "Books' classification",
         network    : 'Library',
-        byLocation : 'Location'
+        byLocation : 'Location',
+        byGeoArea  : 'Geographical area'
     };
 
     if (src === 'byLocation') {
@@ -515,6 +424,7 @@ function populateFilterOptions() {
     fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'), false);
     fillChecklist('filter-genre',     u('GenLit_Descricao'),  false);
     fillChecklist('filter-location', buildLocationOptions(globalData));
+    fillChecklist('filter-geoarea',   u('OrigemGeografica_Autor'));
 
     const normPeriodSet = new Set(globalData.map(d => normalizePeriod(d.EpocaHistorica_Autor)));
     const periods = periodOrder.filter(p => normPeriodSet.has(p));
@@ -552,163 +462,181 @@ function rebuildFilterTags () {
 
         switch (key){
 
-        case 'byLocation':
-            getChecked('filter-location').forEach(v => {
-                const input = document.querySelector(`#filter-location input[value="${CSS.escape(v)}"]`);
-                const label = input ? input.nextElementSibling.textContent.trim() : v;
-
-                addTag(`Location: ${label}`, () => {
-
-                    uncheckValue('filter-location', v);
-
-                    const remaining = getChecked('filter-location');
-                    if (remaining.length) {
+            case 'byGeoArea':
+                getChecked('filter-geoarea').forEach(v => {
+                    addTag(`Geographical area: ${v}`, () => {
+                        uncheckValue('filter-geoarea', v);
+                        const remaining = getChecked('filter-geoarea');
+                        if (remaining.length) {
                         setGlobalFilter(
-                        'byLocation',
-                        r => {
-                            const k = locKeyFromRow(r);
-                            return k ? remaining.includes(k) : false;
-                        },
-                        remaining,
-                        'filter-location'
+                            'byGeoArea',
+                            r => remaining.includes(r.OrigemGeografica_Autor),
+                            remaining,
+                            'filter-geoarea'
                         );
-                    } else {
-                        clearGlobalFilter('byLocation');
-                    }
-                    if (window.enforceLocationMenuLimit) window.enforceLocationMenuLimit(getChecked('filter-location'));
+                        } else {
+                        clearGlobalFilter('byGeoArea');
+                        }
+                    });
                 });
-            });
-            break;
+                break;
 
-        case 'byLibrary':
-            if (activeFilters.network) break;
-            getChecked('filter-library').forEach(v => addTag(v, () => {
-                uncheckValue('filter-library', v);
-                clearGlobalFilter('byLibrary');
-            }));
-            break;
+            case 'byLocation':
+                getChecked('filter-location').forEach(v => {
+                    const input = document.querySelector(`#filter-location input[value="${CSS.escape(v)}"]`);
+                    const label = input ? input.nextElementSibling.textContent.trim() : v;
 
-        case 'byAuthor'   : getChecked('filter-author'   )
-                            .forEach(v => addTag(v, () => {
-                                uncheckValue('filter-author', v);
-                                clearGlobalFilter('byAuthor');
-                            }));
-                            break;
+                    addTag(`Location: ${label}`, () => {
 
-        case 'byIdioma'   : getChecked('filter-idioma'   )
-                            .forEach(v => addTag(v, () => {
-                                uncheckValue('filter-idioma', v);
-                                clearGlobalFilter('byIdioma');
-                            }));
-                            break;
+                        uncheckValue('filter-location', v);
 
-        case 'byCategory' : getChecked('filter-category')
-                            .forEach(v => addTag(`Literary Categories › ${v}`, () => {
-                                // Uncheck category
-                                uncheckValue('filter-category', v);
-                                clearGlobalFilter('byCategory');
-                                // Also uncheck/clear any genre
-                                const curGenre = getChecked('filter-genre');
-                                if (curGenre.length) {
-                                    setChecked('filter-genre', []);
-                                    clearGlobalFilter('byGenre');
-                                }
-                            }));
-                            break;
+                        const remaining = getChecked('filter-location');
+                        if (remaining.length) {
+                            setGlobalFilter(
+                            'byLocation',
+                            r => {
+                                const k = locKeyFromRow(r);
+                                return k ? remaining.includes(k) : false;
+                            },
+                            remaining,
+                            'filter-location'
+                            );
+                        } else {
+                            clearGlobalFilter('byLocation');
+                        }
+                    });
+                });
+                break;
 
-        case 'byTradition': getChecked('filter-tradition')
-                            .forEach(v => addTag(`Intellectual Tradition › ${v}`, () => {
-                                uncheckValue('filter-tradition', v);
-                                clearGlobalFilter('byTradition');
-                            }));
-                            break;
+            case 'byLibrary':
+                if (activeFilters.network) break;
+                getChecked('filter-library').forEach(v => addTag(v, () => {
+                    uncheckValue('filter-library', v);
+                    clearGlobalFilter('byLibrary');
+                }));
+                break;
 
-        case 'byGenre'    : getChecked('filter-genre')
-                            .forEach(v => {
-                                const cat = categoryOfGenre(v) || getChecked('filter-category')[0] || '';
-                                const label = cat ? `${cat} › ${v}` : v;
-                                addTag(label, () => {
-                                    uncheckValue('filter-genre', v);
-                                    clearGlobalFilter('byGenre');
+            case 'byAuthor'   : getChecked('filter-author'   )
+                                .forEach(v => addTag(v, () => {
+                                    uncheckValue('filter-author', v);
+                                    clearGlobalFilter('byAuthor');
+                                }));
+                                break;
+
+            case 'byIdioma'   : getChecked('filter-idioma'   )
+                                .forEach(v => addTag(v, () => {
+                                    uncheckValue('filter-idioma', v);
+                                    clearGlobalFilter('byIdioma');
+                                }));
+                                break;
+
+            case 'byCategory' : getChecked('filter-category')
+                                .forEach(v => addTag(`Literary Categories › ${v}`, () => {
+                                    // Uncheck category
+                                    uncheckValue('filter-category', v);
+                                    clearGlobalFilter('byCategory');
+                                    // Also uncheck/clear any genre
+                                    const curGenre = getChecked('filter-genre');
+                                    if (curGenre.length) {
+                                        setChecked('filter-genre', []);
+                                        clearGlobalFilter('byGenre');
+                                    }
+                                }));
+                                break;
+
+            case 'byTradition': getChecked('filter-tradition')
+                                .forEach(v => addTag(`Intellectual Tradition › ${v}`, () => {
+                                    uncheckValue('filter-tradition', v);
+                                    clearGlobalFilter('byTradition');
+                                }));
+                                break;
+
+            case 'byGenre'    : getChecked('filter-genre')
+                                .forEach(v => {
+                                    const cat = categoryOfGenre(v) || getChecked('filter-category')[0] || '';
+                                    const label = cat ? `${cat} › ${v}` : v;
+                                    addTag(label, () => {
+                                        uncheckValue('filter-genre', v);
+                                        clearGlobalFilter('byGenre');
+                                    });
                                 });
-                            });
-                            break;
+                                break;
 
-        case 'byPeriod' :
-        case 'period'  :
+            case 'byPeriod' :
+            case 'period'  :
 
-            if (periodTagAdded) break;
-            periodTagAdded = true;
-            selectedPeriods.forEach(p => addTag(p, () => {
-                selectedPeriods = [];
-                d3.selectAll('#period-filter .period-bar').classed('selected', false);
-                clearGlobalFilter('period');
-                clearGlobalFilter('byPeriod');
-            }));
-            break;
+                if (periodTagAdded) break;
+                periodTagAdded = true;
+                selectedPeriods.forEach(p => addTag(p, () => {
+                    selectedPeriods = [];
+                    d3.selectAll('#period-filter .period-bar').classed('selected', false);
+                    clearGlobalFilter('period');
+                    clearGlobalFilter('byPeriod');
+                }));
+                break;
 
-        case 'treemap' :
-            if (treemapSelection) {
-                let tagLabel = '';
-                if (currentTreemapMode === 'category') {
-                    const {cat, gen} = treemapSelection;
-                    tagLabel = gen ? `${cat} › ${gen}` : `Literary Categories › ${cat}`;
+            case 'treemap' :
+                if (treemapSelection) {
+                    let tagLabel = '';
+                    if (currentTreemapMode === 'category') {
+                        const {cat, gen} = treemapSelection;
+                        tagLabel = gen ? `${cat} › ${gen}` : `Literary Categories › ${cat}`;
+                    } else {
+                        tagLabel = `Intellectual Tradition › ${treemapSelection.trad}`;
+                    }
+                    addTag(tagLabel, () => {
+                        treemapSelection    = null;
+                        treemapFilterOrigin = null;
+                        clearGlobalFilter('treemap');
+                        createTreemap('#treemap-area',
+                                        applyGlobalFilters(globalData),
+                                        currentTreemapMode,
+                                        updateDashboard);
+                        updateTreemapBadge();
+                    });
                 } else {
-                    tagLabel = `Intellectual Tradition › ${treemapSelection.trad}`;
+                    addTag('Treemap', () => { clearGlobalFilter('treemap'); });
                 }
-                addTag(tagLabel, () => {
-                    treemapSelection    = null;
-                    treemapFilterOrigin = null;
-                    clearGlobalFilter('treemap');
-                    createTreemap('#treemap-area',
-                                    applyGlobalFilters(globalData),
-                                    currentTreemapMode,
-                                    updateDashboard);
-                    updateTreemapBadge();
+                break;
+
+            case 'network' :
+                (activeFilters.network?.values || ['Network selection']).forEach(lib => {
+                    addTag(lib, () => {
+                        selectedNodes.clear();
+                        selectedLinks.clear();
+                        clickedLinks.clear();
+                        clearGlobalFilter('network');
+                        svg.selectAll('.link')
+                                    .classed('active', false)
+                                    .style('opacity', null);
+
+                        svg.selectAll('g.node')
+                                    .classed('active', false)
+                                    .classed('selected-by-link', false);
+
+                        updateNetworkStyles(null);
+                    });
                 });
-            } else {
-                addTag('Treemap', () => { clearGlobalFilter('treemap'); });
-            }
-            break;
+                break;
 
-        case 'network' :
-            (activeFilters.network?.values || ['Network selection']).forEach(lib => {
-                addTag(lib, () => {
-                    selectedNodes.clear();
-                    selectedLinks.clear();
-                    clickedLinks.clear();
-                    clearGlobalFilter('network');
-                    svg.selectAll('.link')
-                                .classed('active', false)
-                                .style('opacity', null);
+            case 'byProbObra' :
+                getChecked('filter-probobra').forEach(v=>addTag(`Book Attribution Probability: ${v}`, ()=>{
+                    uncheckValue('filter-probobra', v);
+                    clearGlobalFilter('byProbObra');
+                }));
+                break;
 
-                    svg.selectAll('g.node')
-                                .classed('active', false)
-                                .classed('selected-by-link', false);
+            case 'byProbAutor':
+                getChecked('filter-probautor').forEach(v=>addTag(`Author Attribution Probability: ${v}`, ()=>{
+                    uncheckValue('filter-probautor', v);
+                    clearGlobalFilter('byProbAutor');
+                }));
+                break;
 
-                    updateNetworkStyles(null);
-                });
-            });
-            break;
-
-        case 'byProbObra' :
-            getChecked('filter-probobra').forEach(v=>addTag(`Book Attribution Probability: ${v}`, ()=>{
-                uncheckValue('filter-probobra', v);
-                clearGlobalFilter('byProbObra');
-            }));
-            break;
-
-        case 'byProbAutor':
-            getChecked('filter-probautor').forEach(v=>addTag(`Author Attribution Probability: ${v}`, ()=>{
-                uncheckValue('filter-probautor', v);
-                clearGlobalFilter('byProbAutor');
-            }));
-            break;
-
-        default:
-            addTag(key, () => clearGlobalFilter(key));
+            default:
+                addTag(key, () => clearGlobalFilter(key));
         }
-  }
+    }
 }
 
 window.refreshFilterTags = rebuildFilterTags;
@@ -750,19 +678,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (id === 'filter-location') {
                 const checked = getChecked('filter-location');
 
-                if (checked.length > 5 && evt && evt.target && evt.target.checked) {
-                    evt.target.checked = false;
-
-                    const fixed = getChecked('filter-location');
-
-                    bumpCounter(list);
-                    if (window.showLocationLimitToast) {
-                    window.showLocationLimitToast('You can select up to 5 locations.');
-                    }
-                    enforceLocationMenuLimit(fixed);
-                    return;
-                }
-
                 if (checked.length) {
                     setGlobalFilter(
                     'byLocation',
@@ -777,7 +692,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearGlobalFilter('byLocation');
                 }
 
-                enforceLocationMenuLimit(checked);
                 bumpCounter(list);
                 refreshFilterTags();
                 updateFilterBadge();
@@ -1014,8 +928,6 @@ function startDashboard() {
             updateTreemapBadge();
 
             populateFilterOptions();
-            installLocationLimitGuards();
-            enforceLocationMenuLimit();
 
             wireSearch(
                 document.querySelector('#filter-author').previousElementSibling,
@@ -1032,6 +944,10 @@ function startDashboard() {
             wireSearch(
                 document.querySelector('#filter-genre').previousElementSibling,
                 document.getElementById('filter-genre')
+            );
+            wireSearch(
+                document.querySelector('#filter-geoarea').previousElementSibling,
+                document.getElementById('filter-geoarea')
             );
 
             let currentData = [...globalData];
