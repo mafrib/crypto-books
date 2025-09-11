@@ -286,7 +286,6 @@ function renderBookDetails(row) {
       // Accept either canonical or lowercase names if CSV headers vary
       addItem('Author short bio', row.BioAbreviada_Autor || row.bioabreviada_autor);
       addItem('Synopsis', row.Sinopse_Obra || row['Sinopse obra']);
-      addItem('Document type', row.TipoDoc);
     }
 }
 
