@@ -80,21 +80,20 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         hideTreemapTip();
         skipNextTreemapRedraw = true;
 
-        // Clear all classification filters
-        clearGlobalFilter('byGenre');
-        clearGlobalFilter('byCategory');
-        clearGlobalFilter('byTradition');
-        clearGlobalFilter('treemap');
+        // Clear only the current mode’s classification filters
+        if (currentTreemapMode === 'category') {
+            clearGlobalFilter('byGenre');
+            clearGlobalFilter('byCategory');
+        } else {
+            clearGlobalFilter('byTradition');
+        }
 
-        treemapSelection    = null;
-        treemapFilterOrigin = null;
-        lastClassificationMode = null;
-
+        treemapSelection = null;
         updateTreemapBadge();
 
         createTreemap('#treemap-area', applyGlobalFilters(globalData), currentTreemapMode, updateDashboard);
         setTimeout(() => { skipNextTreemapRedraw = false; }, 0);
-        });
+    });
 
     goToStoredPosition();
 
@@ -215,13 +214,16 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                 if (names.length === 1) return;
 
                 skipNextTreemapRedraw = true;
-                clearGlobalFilter('byGenre');
-                clearGlobalFilter('byCategory');
-                clearGlobalFilter('byTradition');
-                clearGlobalFilter('treemap');
-                treemapSelection    = null;
-                treemapFilterOrigin = null;
-                lastClassificationMode = null;
+
+                // Clear only the current mode’s filters
+                if (currentTreemapMode === 'category') {
+                    clearGlobalFilter('byGenre');
+                    clearGlobalFilter('byCategory');
+                } else {
+                    clearGlobalFilter('byTradition');
+                }
+
+                treemapSelection = null;
                 updateTreemapBadge();
 
                 createTreemap('#treemap-area', applyGlobalFilters(globalData), currentTreemapMode, updateDashboard);
@@ -373,24 +375,24 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                     );
 
                 } else if (currentTreemapMode !== 'category') {
-                const tradName = d.data.name;
-                treemapSelection = { trad: tradName };
+                    const tradName = d.data.name;
+                    treemapSelection = { trad: tradName };
 
-                // Exclusivity with category/genre
-                clearGlobalFilter('byCategory');
-                clearGlobalFilter('byGenre');
-
-                setGlobalFilter('byTradition',
-                    r => normalizeLabel(r.TradicaoIntelectual_Obra) === tradName,
-                    [tradName],
-                    'filter-tradition'
-                );
+                    setGlobalFilter(
+                        'byTradition',
+                        r => normalizeLabel(r.TradicaoIntelectual_Obra) === tradName,
+                        [tradName],
+                        'filter-tradition'
+                    );
                 } else {
-                // Fallback: clear classification filters
-                treemapSelection = null;
-                clearGlobalFilter('byCategory');
-                clearGlobalFilter('byGenre');
-                clearGlobalFilter('byTradition');
+                    // clear only current mode’s filters
+                    treemapSelection = null;
+                    if (currentTreemapMode === 'category') {
+                        clearGlobalFilter('byCategory');
+                        clearGlobalFilter('byGenre');
+                    } else {
+                        clearGlobalFilter('byTradition');
+                    }
                 }
 
                 treemapFilterOrigin = currentTreemapMode;
