@@ -185,6 +185,7 @@ function commitChecklistFilters () {
                           : 'byPeriod';
 
     selectedPeriods = [...pers];
+    window.selectedPeriods = selectedPeriods.slice();
 
     const probOb  = getChecked('filter-probobra');
     const probAu  = getChecked('filter-probautor');
@@ -226,7 +227,7 @@ function commitChecklistFilters () {
     trads.length  ? setGlobalFilter('byTradition', r => trads.includes(r.TradicaoIntelectual_Obra)  , trads): clearGlobalFilter('byTradition');
     gens.length   ? setGlobalFilter('byGenre',     r => gens.includes(r.GenLit_Descricao)           , gens) : clearGlobalFilter('byGenre');
     pers.length ? setGlobalFilter(periodKey,
-          r => pers.includes(r.EpocaHistorica_Autor), pers, 'filter-period')
+          r => pers.includes(normalizePeriod(r.EpocaHistorica_Autor)), pers, 'filter-period')
             : clearGlobalFilter(periodKey);
     probOb.length ? setGlobalFilter('byProbObra',  r => probOb.includes(r.ProbAtribObra)            , probOb): clearGlobalFilter('byProbObra');
     probAu.length ? setGlobalFilter('byProbAutor', r => probAu.includes(r.ProbAtribAutor)           , probAu): clearGlobalFilter('byProbAutor');
@@ -275,6 +276,7 @@ function clearGlobalFilter(source) {
 
 function clearAllFilters() {
     activeFilters        = {};
+    window.selectedPeriods = [];
 
     treemapSelection     = null;
     treemapFilterOrigin  = null;

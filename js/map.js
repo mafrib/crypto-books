@@ -4,6 +4,7 @@ let mapGroup;
 let baseScale, baseWidth, baseHeight;
 let zoom;
 let selectedPeriods = [];
+window.selectedPeriods = selectedPeriods.slice();
 let hoverRecentered = false;
 let hoverResetTimeout = null;
 
@@ -798,6 +799,7 @@ function makeMap () {
                 .data(allPeriods)
                 .enter().append('div')
                     .attr('class', 'period-bar')
+                    .attr('data-period', d => d)
                     .on('click', function (event, period) {
                         const adding = !selectedPeriods.includes(period);
                         if (adding) {
@@ -824,6 +826,8 @@ function makeMap () {
                         }
 
                         selectedPeriods = next;
+                        window.selectedPeriods = selectedPeriods.slice();
+
                         d3.select(this).classed('selected', !already)
                                         .classed('selected', selectedPeriods.includes(period));
 
@@ -840,6 +844,9 @@ function makeMap () {
                         }
 
                         updateDashboard();
+                        if (window.rebuildDetailsItems) {
+                            window.rebuildDetailsItems(period);
+                        }
                     });
 
             periodBars

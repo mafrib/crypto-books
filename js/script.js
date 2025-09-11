@@ -793,6 +793,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             commitChecklistFilters();
+
+            if (id === 'filter-period') {
+                window.selectedPeriods = (selectedPeriods || []).slice();
+
+                if (window.rebuildDetailsItems) {
+                    const latest = window.selectedPeriods[window.selectedPeriods.length - 1];
+                    window.rebuildDetailsItems(latest);
+                }
+            }
+
             bumpCounter(list);
             refreshFilterTags();
             updateFilterBadge();
@@ -815,6 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedNodes.clear();
             pendingUndoNodes.forEach(n=>selectedNodes.add(n));
             selectedPeriods = Array.from(pendingUndoNodes);
+            window.selectedPeriods = selectedPeriods.slice();
             repaintPeriodBars(applyFiltersExcept(['period','byPeriod']));
 
             hideNoResultsPopup();
@@ -1111,6 +1122,7 @@ function startDashboard() {
                 updateTreemapBadge();
 
                 selectedPeriods = [];
+                window.selectedPeriods = [];
                 d3.selectAll('#period-filter .period-bar').classed('selected', false);
 
                 selectedNodes.clear();
