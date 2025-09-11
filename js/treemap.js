@@ -6,7 +6,8 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     const container = d3.select(selector);
     container.selectAll("svg").remove(); // Remove all previous elements
 
-    const color = "#16404D";
+    const rectFillColor  = (mode === 'category') ? '#16404D' : '#A6CDC6';
+    const textFillColor  = (mode === 'category') ? '#FFFFFF' : '#16404D';
 
     // Determine rootData based on mode
     const rootData = (() => {
@@ -192,20 +193,31 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             p = p.originalParent || p.parent;
         }
 
-        const html = names.map((label, i) => {
+        const otherModeFiltered =
+            (mode === 'category')
+                ? !!(activeFilters.byTradition?.values?.length)
+                : !!(activeFilters.byCategory?.values?.length || activeFilters.byGenre?.values?.length);
+
+            // Use a display copy so navigation still uses the clean `names`
+            const labelsForDisplay = names.slice();
+            if (otherModeFiltered && labelsForDisplay.length > 0) {
+            labelsForDisplay[0] = `${labelsForDisplay[0]} (Filtered)`;
+            }
+
+            const html = labelsForDisplay.map((label, i) => {
             const cls =
-                  i === 0              ? 'crumb-root'
-                : i === names.length-1 ? 'crumb-leaf'
+                    i === 0              ? 'crumb-root'
+                : i === labelsForDisplay.length-1 ? 'crumb-leaf'
                 : 'crumb-intermediate';
-            const w   = i === names.length-1 ? 'bold' : 'normal';
-            const cur = i === names.length-1 ? 'default' : 'pointer';
+            const w   = i === labelsForDisplay.length-1 ? 'bold' : 'normal';
+            const cur = i === labelsForDisplay.length-1 ? 'default' : 'pointer';
             return `<span class="${cls}" data-level="${i}"
-                         style="cursor:${cur}; font-weight:${w};">
+                        style="cursor:${cur}; font-weight:${w};">
                         ${label}
                     </span>`;
-        }).join('&nbsp;>&nbsp;');
+            }).join('&nbsp;>&nbsp;');
 
-        path.html(html);
+            path.html(html);
 
         path.select('.crumb-root')
             .on('click', e => {
@@ -403,7 +415,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             });
 
         const rectEnter = cellEnter.append("rect")
-            .attr("fill", color)
+            .attr("fill", rectFillColor)
             .on("mousemove", (event, d) => {
                 const treemapRect = d3.select("#treemap").node().getBoundingClientRect();
                 const x = event.pageX - treemapRect.left - window.scrollX;
@@ -430,6 +442,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
 
         const textEnter = cellEnter.append("text")
             .attr("pointer-events", "none")
+            .attr("fill", textFillColor)
             .attr("fill", "white")
             .attr("font-size", "0.6rem")
             .text(d => d.data.name)
@@ -478,6 +491,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         window.clearTreemapHighlights = clearTreemapHighlights;
 
         cellUpdate.select("rect")
+            .attr("fill", rectFillColor)
             .transition(t)
             .attr("x", d => d.x0)
             .attr("y", d => d.y0)
@@ -485,6 +499,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             .attr("height", d => Math.max(0, d.y1 - d.y0));
 
         cellUpdate.select("text")
+            .attr("fill", textFillColor)
             .text(d => d.data.name)
             .call(wrapText, d => d.x1 - d.x0 - 8)
             .transition(t)

@@ -1654,6 +1654,11 @@ details[open] > summary::after {
   transform: translate(calc(var(--tip-x) + 4px), calc(var(--tip-y) - 4px)) scale(1);
 }
 
+.mode-button[data-mode="tradition"].active {
+  background-color: #A6CDC6;
+  color: #16404D;
+}
+
 #treemap {
   display: flex;
   flex-direction: column;
