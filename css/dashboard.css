@@ -1868,6 +1868,7 @@ details[open] > summary::after {
   --search-icon-gap: 6px;
   --catalog-gutter: 1rem;
   position: relative;
+  z-index: 50;
 }
 
 .search-container {
@@ -1882,6 +1883,55 @@ details[open] > summary::after {
   border-bottom: 0.5px solid;
   background: transparent;
   outline: none;
+}
+
+.header-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #16404D;
+  border-radius: 50%;
+  font-size: 0.55rem;
+  line-height: 1;
+  color: #16404D;
+  background: transparent;
+  padding: 0;
+  z-index: 4000;
+}
+
+.header-info:hover {
+  background: #D6E5DB;
+}
+
+.header-info::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) scale(0.95);
+  transform-origin: bottom center;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .14s ease, transform .14s ease;
+  z-index: 4001;
+}
+
+.header-info:hover::after,
+.header-info:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
 }
 
 :root {

@@ -45,6 +45,8 @@
             'catalog.header.title': 'Title',
             'catalog.header.author': 'Author',
             'catalog.header.library': 'Library',
+            'catalog.header.description.tip': 'Description as in the original document',
+            'catalog.header.title.tip': 'Attributed book based on the Description',
             'catalog.results.found': 'found',
 
             'overlay.onePin': 'Only 1 book can be pinned. Replacing the previous selection.',
@@ -158,6 +160,8 @@
             'catalog.header.title': 'Título da Obra',
             'catalog.header.author': 'Autor',
             'catalog.header.library': 'Livraria',
+            'catalog.header.description.tip': 'Descrição no documento original',
+            'catalog.header.title.tip': 'Obra atribuída com base na Descrição',
             'catalog.results.found': 'encontrado(s)',
 
             'overlay.onePin': 'Apenas 1 livro pode ser fixado. A substituir a seleção anterior.',

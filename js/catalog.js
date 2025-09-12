@@ -184,23 +184,22 @@ function setupSearchBar(rawData) {
 function setupSorting(rawData, defaultColumn = null) {
     const headers = document.querySelectorAll(".sortable");
 
-    // Initialize default sort column and icon
     if (defaultColumn) {
       currentSort.column = defaultColumn;
       currentSort.ascending = true;
       const defaultHeader = document.querySelector(`.sortable[data-column="${defaultColumn}"]`);
       const defaultIcon = defaultHeader && defaultHeader.querySelector(".sort-icon");
-      if (defaultIcon) {
-        defaultIcon.src = "img/icons/sort-up.png";
-      }
+      if (defaultIcon) defaultIcon.src = "img/icons/sort-up.png";
     }
 
     headers.forEach(header => {
       const icon = header.querySelector(".sort-icon");
-      header.addEventListener("click", () => {
+      header.addEventListener("click", (e) => {
+        const t = e.target;
+        if (t && t.closest && t.closest('.header-info')) return; // ignore clicks on the info button
+
         const column = header.getAttribute("data-column");
 
-        // Toggle direction if same column, otherwise reset to ascending
         if (currentSort.column === column) {
           currentSort.ascending = !currentSort.ascending;
         } else {
@@ -209,23 +208,22 @@ function setupSorting(rawData, defaultColumn = null) {
         }
 
         const filtered = applyGlobalFilters(rawData);
-
         const sorted = [...filtered].sort((a, b) => {
           const aVal = a[column].toLowerCase();
           const bVal = b[column].toLowerCase();
-          return currentSort.ascending
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
+          return currentSort.ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
         });
 
-        // Reset all icons, then set this one to up/down
         document.querySelectorAll(".sort-icon")
           .forEach(i => i.src = "img/icons/sort-neutral.png");
-        icon.src = currentSort.ascending
-          ? "img/icons/sort-up.png"
-          : "img/icons/sort-down.png";
+        icon.src = currentSort.ascending ? "img/icons/sort-up.png" : "img/icons/sort-down.png";
 
         createBooksCatalog(sorted);
       });
     });
+
+    document.querySelectorAll('.header-info').forEach(btn => {
+      btn.addEventListener('click', (e) => e.stopPropagation());
+    });
 }
+
