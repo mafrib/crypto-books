@@ -48,6 +48,15 @@ function ensureDetailsExpand() {
     });
 }
 
+function hideBookMeta(panel) {
+    const attrib = panel.querySelector('.details-panel__attrib');
+    const author = panel.querySelector('.details-panel__authorship');
+    const desc   = panel.querySelector('.details-panel__description');
+    [attrib, author, desc].forEach(el => {
+      if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+    });
+}
+
 function openDetailsModal(panel) {
     const modal = document.createElement('div');
     modal.className = 'details-modal';
@@ -111,20 +120,29 @@ function closeDetailsModal(modal, panel) {
     modal.remove();
 }
 
+function getFirst(row, keys) {
+    for (const k of keys) {
+      if (row[k] != null && String(row[k]).trim() !== '') return row[k];
+    }
+    return '';
+}
+
 function normalizeProbString(v) {
   return (v || '').toString().trim();
 }
 
 function probLevelFrom(value) {
-    const t = normalizeProbString(value).toLowerCase();
+    const t = normalizeProbString(value)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
     if (!t) return 0;
 
-    // Textual buckets
-    if (t.includes('indisputad')) return 3;  // indisputada
-    if (t.includes('prov'))       return 2;  // provável
-    if (t.includes('indet'))      return 1;  // indeterminada
+    if (t.includes('indisputad')) return 3;  // 'indisputada'
+    if (t.includes('prov'))       return 2;  // 'provável'/'provavel'
+    if (t.includes('indet'))      return 1;  // 'indeterminada'
 
-    // Numeric fallback (try to detect %)
     const m = t.match(/(\d{1,3})\s*%/);
     if (m) {
       const p = Math.max(0, Math.min(100, +m[1]));
@@ -141,6 +159,32 @@ function buildProbBadge(value, tipText) {
     const lvl = probLevelFrom(v);
     const safeTip = tipText || 'Attribution probability';
     return `<span class="prob-badge level-${lvl || 1}" tabindex="0" data-tip="${safeTip}">${v}</span>`;
+}
+
+function ensureBookNodes(panel) {
+    const info = panel.querySelector('.details-panel__info');
+
+    let attribEl = panel.querySelector('.details-panel__attrib');
+    if (!attribEl) {
+      attribEl = document.createElement('p');
+      attribEl.className = 'details-panel__attrib';
+      info.appendChild(attribEl);
+    }
+
+    let authorshipEl = panel.querySelector('.details-panel__authorship');
+    if (!authorshipEl) {
+      authorshipEl = document.createElement('p');
+      authorshipEl.className = 'details-panel__authorship';
+      info.appendChild(authorshipEl);
+    }
+
+    let descEl = panel.querySelector('.details-panel__description');
+    if (!descEl) {
+      descEl = document.createElement('p');
+      descEl.className = 'details-panel__description';
+      info.appendChild(descEl);
+    }
+    return { attribEl, authorshipEl, descEl };
 }
 
 function showCatalogToast(msg, timeout = 1800) {
@@ -337,49 +381,83 @@ function renderBookDetails(row) {
     const placeholder = panel.querySelector('.details-panel__placeholder');
     const listEl      = panel.querySelector('#details-list');
 
+    function addItem(label, val, extraHTML = '') {
+      const v = normalizeProbString(val);
+      if (!v) return;
+      const div = document.createElement('div');
+      div.className = 'list-item';
+      div.innerHTML = `<strong>${label}:</strong> ${v}${extraHTML}`;
+      listEl.appendChild(div);
+    }
+
+    const { attribEl, authorshipEl, descEl } = ensureBookNodes(panel);
+
     // Base visibility
     placeholder.style.display = 'none';
     wrapper.style.display     = 'none';
     nameEl.style.display      = '';
-    // “Book:” label above the title
     booksEl.style.display     = '';
-    booksEl.textContent = i18n.t('details.book.titleLabel');
     datesEl.style.display     = 'none';
     titleEl.style.display     = 'none';
     reignEl.style.display     = 'none';
+    if (listEl) { listEl.hidden = false; listEl.innerHTML = ''; }
 
-    // Title (emphasized) + standardized book attribution probability badge
-    const probObra = normalizeProbString(row.ProbAtribObra);
-    const title = normalizeProbString(row.Obra) || '—';
+    // We won't use the separate authorship paragraph anymore
+    authorshipEl.style.display = 'none';
+    authorshipEl.setAttribute('aria-hidden', 'true');
+
+    // Label for the title
+    booksEl.textContent = i18n.t('details.book.titleLabel');
+
+    // Title
+    const title = normalizeProbString(getFirst(row, ['Obra']));
+    nameEl.textContent = title || '—';
+    nameEl.setAttribute('aria-label', title || '—');
+
+    // Atribuição (ProbAtribObra) — show only if there is a value
+    const probObra  = getFirst(row, ['ProbAtribObra', 'ProbAtribuicao_Obra', 'Prob Atrib Obra', 'probatribobra']);
     const obraBadge = buildProbBadge(probObra, i18n.t('prob.obra.tip'));
-    nameEl.innerHTML = `${title}${obraBadge ? ' ' + obraBadge : ''}`;
-
-    // Key/value list
-    if (listEl) {
-      listEl.hidden = false;
-      listEl.innerHTML = '';
-
-      const addItem = (label, val, extraHTML = '') => {
-        const v = normalizeProbString(val);
-        if (!v) return;
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.innerHTML = `<strong>${label}:</strong> ${v}${extraHTML}`;
-        listEl.appendChild(div);
-      };
-
-      const probAutor = normalizeProbString(row.ProbAtribAutor);
-      const autorBadge = buildProbBadge(probAutor, i18n.t('prob.autor.tip'));
-
-      addItem('Author', normalizeProbString(row.Nome_Autor) || '—', autorBadge ? ' ' + autorBadge : '');
-
-      addItem('Alternative attribution (Book)', row.AtribuicaoAlternat_Obra);
-      addItem('Alternative attribution (Author)', row.AtribuicaoAlternat_Autor);
-
-      // Accept either canonical or lowercase names if CSV headers vary
-      addItem('Author short bio', row.BioAbreviada_Autor || row.bioabreviada_autor);
-      addItem('Synopsis', row.Sinopse_Obra || row['Sinopse obra']);
+    if (obraBadge) {
+      attribEl.style.display = '';
+      attribEl.innerHTML = `
+        <span class="meta-label">${i18n.t('details.attribution')}</span>
+        ${obraBadge}
+      `;
+    } else {
+      attribEl.style.display = 'none';
+      attribEl.innerHTML = '';
     }
+
+    // Author + Authorship (same box, 2 lines)
+    const authorName = normalizeProbString(getFirst(row, ['Nome_Autor', 'Autor']));
+    const probAutor  = getFirst(row, ['ProbAtribAutor', 'ProbAtribuicao_Autor', 'Prob Atrib Autor', 'probatribautor']);
+    const autorBadge = buildProbBadge(probAutor, i18n.t('prob.autor.tip'));
+
+    const authorBox = document.createElement('div');
+    authorBox.className = 'list-item';
+    authorBox.innerHTML = `
+      <div><strong>${i18n.t('catalog.header.author')}:</strong> ${authorName || '—'}</div>
+      ${autorBadge ? `<div><strong>${i18n.t('details.authorship')}:</strong> ${autorBadge}</div>` : ''}
+    `;
+    listEl.appendChild(authorBox);
+
+    // Description with label; hide if empty
+    const desc = normalizeProbString(getFirst(row, ['Descricao', 'Descrição', 'descricao']));
+    if (desc) {
+      descEl.style.display = '';
+      descEl.innerHTML = `<strong>Description:</strong> ${desc}`;
+    } else {
+      descEl.style.display = 'none';
+      descEl.innerHTML = '';
+    }
+
+    // Other items
+    addItem('Alternative attribution (Book)',   getFirst(row, ['AtribuicaoAlternat_Obra', 'AtribuiçãoAlternat_Obra', 'Atribuicao Alternativa Obra']));
+    addItem('Alternative attribution (Author)', getFirst(row, ['AtribuicaoAlternat_Autor', 'AtribuiçãoAlternat_Autor', 'Atribuicao Alternativa Autor']));
+    addItem('Author short bio',                 getFirst(row, ['BioAbreviada_Autor', 'bioabreviada_autor']));
+    addItem('Synopsis',                         getFirst(row, ['Sinopse_Obra', 'Sinopse obra', 'Sinopse']));
+
+    panel.classList.toggle('is-pinned', !!window.getPinnedBook && !!window.getPinnedBook());
     setDetailsExpandEnabled(true);
 }
 
@@ -475,7 +553,9 @@ window.setDetailsItems = setDetailsItems;
 
 function renderLibraryDetails(libName, allData) {
     const panel       = document.getElementById('hover-details');
+    panel.classList.remove('details-panel--book-mode');
     panel.classList.remove('details-panel--list-mode');
+    hideBookMeta(panel);
 
     const wrapper     = panel.querySelector('.details-panel__img-wrapper');
     const nameEl      = panel.querySelector('.details-panel__name');
@@ -531,6 +611,8 @@ window.updateDetailsPanel = updateDetailsPanel;
 function renderLocationDetails(locKey) {
     const panel       = document.getElementById('hover-details');
     panel.classList.add('details-panel--list-mode');
+    panel.classList.remove('details-panel--book-mode');
+    hideBookMeta(panel);
     const wrapper     = panel.querySelector('.details-panel__img-wrapper');
     const nameEl      = panel.querySelector('.details-panel__name');
     const booksEl     = panel.querySelector('.details-panel__books');
@@ -683,6 +765,7 @@ function clearDetailsPanel() {
     pinnedBook = null;
     const panel = document.getElementById('hover-details');
     panel.classList.remove('details-panel--list-mode', 'details-panel--book-mode');
+    hideBookMeta(panel);
     panel.querySelector('.details-panel__img-wrapper').style.display = 'none';
     panel.querySelector('.details-panel__name').style.display        = 'none';
     panel.querySelector('.details-panel__books').style.display       = 'none';

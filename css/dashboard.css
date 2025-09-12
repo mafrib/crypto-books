@@ -1289,13 +1289,52 @@ details[open] > summary::after {
 }
 
 .details-panel--book-mode .details-panel__name {
-  font-size: 0.85rem;
   font-weight: 700;
+}
+
+#hover-details.details-panel--book-mode:not(.is-expanded) .details-panel__name {
+  font-size: 0.75rem;
 }
 
 .details-panel--book-mode .details-panel__books { order: 0; }
 .details-panel--book-mode .details-panel__name  { order: 1; }
-.details-panel--book-mode #details-list         { order: 2; }
+.details-panel--book-mode .details-panel__attrib       { order: 2; }
+.details-panel--book-mode .details-panel__description  { order: 3; }
+.details-panel--book-mode #details-list                { order: 4; }
+
+.details-panel--book-mode .details-panel__authorship { display: none !important; }
+
+.details-panel--book-mode .details-panel__attrib,
+.details-panel--book-mode .details-panel__authorship {
+  font-style: normal;
+  font-size: 0.65rem;
+  color: #16404D;
+  text-align: left;
+  margin: 0.2rem 0 0;
+  max-width: 100%;
+}
+
+.details-panel--book-mode .meta-label {
+  opacity: 0.8;
+  margin-right: 4px;
+}
+
+.details-panel--book-mode .details-panel__description {
+  font-style: italic;
+  font-size: 0.7rem;
+  color: #16404D;
+  text-align: left;
+  margin: 0.25rem 0 0;
+  max-width: 100%;
+}
+
+.details-panel--book-mode .details-panel__name,
+.details-panel--book-mode .details-panel__attrib,
+.details-panel--book-mode .details-panel__authorship,
+.details-panel--book-mode .details-panel__description {
+  max-width: 100%;
+  text-align: left;
+}
 
 .details-panel--book-mode .details-panel__books {
   display: block !important;
@@ -1431,12 +1470,13 @@ details[open] > summary::after {
   font-weight: 600;
   color: #0E302E;
   cursor: pointer;
+  border: 0.5px solid rgba(22,64,77,.55);
 }
 
 /* 3 tones of green by certainty */
-.prob-badge.level-1 { background: #CFE7D8; } /* lowest certainty */
-.prob-badge.level-2 { background: #A6D8B8; }
-.prob-badge.level-3 { background: #7FC89A; } /* indisputada / highest */
+.prob-badge.level-1 { background: #BEE6CF; } /* lowest certainty */
+.prob-badge.level-2 { background: #8FD7B6; }
+.prob-badge.level-3 { background: #5FBE91; } /* indisputada / highest */
 
 .prob-badge::after {
   content: attr(data-tip);
@@ -1557,6 +1597,10 @@ details[open] > summary::after {
   color: #16404D;
   line-height: 1.25;
   word-break: break-word;
+}
+
+.details-panel__list .list-item > div + div {
+  margin-top: 2px;
 }
 
 .details-panel__list .list-header {

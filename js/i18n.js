@@ -87,6 +87,8 @@
             'label.numAuthors': 'No. of authors',
 
             'details.book.titleLabel': "Book's title:",
+            'details.attribution': 'Attribution:',
+            'details.authorship': 'Authorship:',
             'prob.tip': 'Attribution probability',
             'prob.obra.tip': 'Book attribution',
             'prob.autor.tip': 'Authorship',
@@ -202,6 +204,8 @@
             'label.numAuthors': 'N.º de autores',
 
             'details.book.titleLabel': 'Título da obra:',
+            'details.attribution': 'Atribuição:',
+            'details.authorship': 'Autoria',
             'prob.tip': 'Probabilidade de atribuição',
             'prob.obra.tip': 'Probabilidade de atribuição da obra',
             'prob.autor.tip': 'Probabilidade de atribuição do autor',
