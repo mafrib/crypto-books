@@ -445,7 +445,6 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             .attr("pointer-events", "none")
             .attr("fill", textFillColor)
             .attr("fill", "white")
-            .attr("font-size", "0.6rem")
             .text(d => d.data.name)
             .call(wrapText, d => d.x1 - d.x0 - 8);
 

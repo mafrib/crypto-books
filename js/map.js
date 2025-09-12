@@ -867,10 +867,21 @@ function makeMap () {
 
             repaintPeriodBars(libraries);
 
+            function pinPeriodBar(book) {
+                const bookPeriod = normalizePeriod(book.EpocaHistorica_Autor);
+                d3.selectAll('#period-filter .period-bar')
+                    .classed('pinned-period-bar', d => d === bookPeriod);
+            }
+
+            function unpinPeriodBar() {
+                d3.selectAll('#period-filter .period-bar')
+                    .classed('pinned-period-bar', false);
+            }
+
             function highlightPeriodBar(book) {
                 const bookPeriod = normalizePeriod(book.EpocaHistorica_Autor);
                 d3.selectAll('#period-filter .period-bar')
-                    .classed('hovered-period-bar', period => period === bookPeriod);
+                    .classed('hovered-period-bar', d => d === bookPeriod);
             }
 
             function clearPeriodHighlights() {

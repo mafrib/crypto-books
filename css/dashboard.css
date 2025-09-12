@@ -343,10 +343,21 @@ circle.library-point.location-selected {
 }
 
 .zoom-button-bg {
-    fill: #fff;
-    stroke: #333;
+    fill: #FFFAEC;
+    stroke: #16404D;
     stroke-width: 1px;
 }
+
+.zoom-button:hover .zoom-button-bg { fill: #F0E7CF; }
+
+.zoom-button.disabled { pointer-events: none; cursor: default; }
+
+.zoom-button.disabled .zoom-button-bg {
+  fill: #EAE4D2;
+  stroke: #9a9a9a;
+}
+
+.zoom-button.disabled .zoom-icon { fill: #9a9a9a; }
 
 .europe-outline {
     fill: #16404D;
@@ -359,6 +370,8 @@ circle.library-point.location-selected {
 .zoom-button:hover .zoom-icon {
   font-weight: 900;
 }
+
+.zoom-icon   { fill: #16404D; font-weight: 700; }
 
 .zoom-button.disabled {
     pointer-events: none;
@@ -430,6 +443,16 @@ circle.library-point.location-selected {
   height: 100%;
   position: relative;
 }
+
+#map-visualization.is-expanded .map-color-scale .legend-title { font-size: 0.8rem; }
+#map-visualization.is-expanded .map-color-scale .legend-bar .legend-label { font-size: 0.75rem; }
+
+#map-visualization.is-expanded .filter-title { font-size: 0.85rem; }
+#map-visualization.is-expanded #period-filter .period-bar .label { font-size: 0.75em; }
+#map-visualization.is-expanded #period-filter .period-bar .count { font-size: 0.75em; }
+
+#map-visualization.is-expanded .map-offhint { font-size: 0.8rem; }
+#map-visualization.is-expanded .map-nolocation-overlay { font-size: 1rem; }
 
 #map-visualization .expand-btn {
   z-index: 0;
@@ -522,6 +545,11 @@ g.node.hovered-network-node circle {
   border: 2px solid red;
 }
 
+#period-filter .period-bar.hovered-period-bar .label { display: none; }
+#period-filter .period-bar.hovered-period-bar .count { display: block; color: #16404D; }
+
+#period-filter .period-bar.selected.hovered-period-bar .count { color: #FFFAEC; }
+
 .period-bar .count {
   display: none;
   position: static;
@@ -559,6 +587,18 @@ g.node.hovered-network-node circle {
   display: block;
   color: #16404D;
 }
+
+#period-filter .period-bar.pinned-period-bar {
+  border: 2px solid red;
+}
+#period-filter .period-bar.pinned-period-bar:not(:hover) .label { display: block; }
+#period-filter .period-bar.pinned-period-bar:not(:hover) .count { display: none; }
+
+#period-filter .period-bar.hovered-period-bar {
+  border: 2px solid red;
+}
+#period-filter .period-bar.hovered-period-bar:not(:hover) .label { display: block; }
+#period-filter .period-bar.hovered-period-bar:not(:hover) .count { display: none; }
 
 .period-bar.selected .count,
 .period-bar.hovered-period-bar .count {
@@ -615,6 +655,9 @@ g.node.hovered-network-node circle {
   position: relative;
   overflow: visible;
 }
+
+#network-graph.is-expanded .legend-item span { font-size: 0.8rem; }
+#network-graph.is-expanded .tools-label { font-size: 0.75rem; max-width: none; }
 
 .network-wrapper {
   flex: 1 1 0;
@@ -1847,6 +1890,11 @@ details[open] > summary::after {
   z-index: 20;
 }
 
+#treemap.is-expanded .mode-button { font-size: 0.85rem; padding: 5px 8px; }
+#treemap.is-expanded #treemap-breadcrumbs { font-size: 0.85rem; }
+
+#treemap.is-expanded #treemap-area text { font-size: 0.8rem !important; }
+
 #treemap-controls {
   display: flex;
   align-items: center;
@@ -2010,6 +2058,18 @@ details[open] > summary::after {
   transition: opacity .18s ease;
   pointer-events: none;
 }
+
+#catalog.is-expanded .search-container { gap: 0.5rem; }
+#catalog.is-expanded #search-input { font-size: 0.85rem; }
+#catalog.is-expanded #search-input::placeholder { font-size: 0.85rem; }
+#catalog.is-expanded #search-icon { width: 18px; }
+
+#catalog.is-expanded .catalog-header h5 { font-size: 1.05rem; }
+#catalog.is-expanded .sortable { font-size: 0.85rem; }
+
+#catalog.is-expanded .catalog-entry { font-size: 0.8rem; }
+
+#catalog.is-expanded #book-count { font-size: 0.8rem; }
 
 .catalog-overlay.open {
   opacity: 1;
@@ -2235,6 +2295,10 @@ details[open] > summary::after {
   --pad-v: 0.5rem;
   --pad-h: 0.5rem;
   padding: var(--pad-v) var(--pad-h);
+}
+
+.visualization.is-expanded .viz-title {
+  font-size: 1.15rem;
 }
 
 #treemap,

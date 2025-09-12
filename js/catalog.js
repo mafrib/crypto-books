@@ -57,47 +57,58 @@ function createBooksCatalog(data) {
 
     allEntries
       .on('mouseover', (event, d) => {
-          if (window.getPinnedBook && window.getPinnedBook()) return;
-          d3.select(event.currentTarget).classed('hovered-entry', true);
+        // If a book is pinned, keep its period highlight – do not change it.
+        if (window.getPinnedBook && window.getPinnedBook()) return;
 
-          const missing =
-            isNaN(window.parseDMS(d.Latitude_Autor)) ||
-            isNaN(window.parseDMS(d.Longitude_Autor));
+        d3.select(event.currentTarget).classed('hovered-entry', true);
 
-          window.showNoLocationOverlay(missing);
-          window.highlightMapPoint(d);
-          window.highlightNetworkNode(d.Proprietario_Nome);
-          window.highlightTreemapRect(d);
-          window.highlightPeriodBar(d);
+        const missing =
+          isNaN(window.parseDMS(d.Latitude_Autor)) ||
+          isNaN(window.parseDMS(d.Longitude_Autor));
+
+        window.showNoLocationOverlay(missing);
+        window.highlightMapPoint(d);
+        window.highlightNetworkNode(d.Proprietario_Nome);
+        window.highlightTreemapRect(d);
+        window.highlightPeriodBar(d); // highlight the corresponding period
       })
       .on('mouseout', (event, d) => {
-          d3.select(event.currentTarget).classed('hovered-entry', false);
+        d3.select(event.currentTarget).classed('hovered-entry', false);
 
-          if (window.getPinnedBook && window.getPinnedBook()) return;
+        // If a book is pinned, keep the highlight
+        if (window.getPinnedBook && window.getPinnedBook()) return;
 
-          window.showNoLocationOverlay(false);
-          window.clearMapHighlights && window.clearMapHighlights();
-          window.clearNetworkHighlights && window.clearNetworkHighlights();
-          window.clearTreemapHighlights && window.clearTreemapHighlights();
-          window.clearPeriodHighlights && window.clearPeriodHighlights();
-        })
+        window.showNoLocationOverlay(false);
+        window.clearMapHighlights && window.clearMapHighlights();
+        window.clearNetworkHighlights && window.clearNetworkHighlights();
+        window.clearTreemapHighlights && window.clearTreemapHighlights();
+        window.clearPeriodHighlights && window.clearPeriodHighlights();
+      })
       .on('click', (event, d) => {
-          const cur = window.getPinnedBook ? window.getPinnedBook() : null;
-          if (cur === d) {
-              window.unpinBook && window.unpinBook();
-              d3.select(event.currentTarget).classed('pinned', false);
-              window.showNoLocationOverlay && window.showNoLocationOverlay(false);
-          } else {
-              window.pinBook && window.pinBook(d);
+        const cur = window.getPinnedBook ? window.getPinnedBook() : null;
+        if (cur === d) {
+          // Unpin
+          window.unpinBook && window.unpinBook();
+          d3.select(event.currentTarget).classed('pinned', false);
+          window.showNoLocationOverlay && window.showNoLocationOverlay(false);
 
-              d3.selectAll('#catalog-entries .catalog-entry')
-                .classed('pinned', false)
-                .classed('hovered-entry', false);
+          // Now clear the period highlight
+          window.clearPeriodHighlights && window.clearPeriodHighlights();
+        } else {
+          // Pin
+          window.pinBook && window.pinBook(d);
 
-              d3.select(event.currentTarget).classed('pinned', true);
-          }
-          if (window.updateClearButton) window.updateClearButton();
-        });
+          d3.selectAll('#catalog-entries .catalog-entry')
+            .classed('pinned', false)
+            .classed('hovered-entry', false);
+
+          d3.select(event.currentTarget).classed('pinned', true);
+
+          // Ensure the red stroke is visible for the pinned book's period
+          window.highlightPeriodBar && window.highlightPeriodBar(d);
+        }
+        if (window.updateClearButton) window.updateClearButton();
+      });
 
       allEntries.classed('pinned', d => (window.getPinnedBook && window.getPinnedBook() === d));
 
