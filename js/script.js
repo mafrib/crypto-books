@@ -644,14 +644,14 @@ function rebuildFilterTags () {
                 break;
 
             case 'byProbObra' :
-                getChecked('filter-probobra').forEach(v=>addTag(`Book Attribution Probability: ${v}`, ()=>{
+                getChecked('filter-probobra').forEach(v=>addTag(`Book Attribution: ${v}`, ()=>{
                     uncheckValue('filter-probobra', v);
                     clearGlobalFilter('byProbObra');
                 }));
                 break;
 
             case 'byProbAutor':
-                getChecked('filter-probautor').forEach(v=>addTag(`Author Attribution Probability: ${v}`, ()=>{
+                getChecked('filter-probautor').forEach(v=>addTag(`Authorship: ${v}`, ()=>{
                     uncheckValue('filter-probautor', v);
                     clearGlobalFilter('byProbAutor');
                 }));
