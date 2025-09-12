@@ -86,6 +86,13 @@
             'label.numBooks': 'No. of books',
             'label.numAuthors': 'No. of authors',
 
+            'conflict.prefix.library': 'The library',
+            'conflict.prefix.period': 'The historical period',
+            'conflict.prefix.item': 'The item',
+            'conflict.suffix': 'has no books that match:',
+            'conflict.keep': 'Keep filters',
+            'conflict.clear': 'Clear filters',
+
             'details.book.titleLabel': "Book's title:",
             'details.attribution': 'Attribution:',
             'details.authorship': 'Authorship:',
@@ -202,6 +209,13 @@
             'label.location': 'Localização',
             'label.numBooks': 'N.º de livros',
             'label.numAuthors': 'N.º de autores',
+
+            'conflict.prefix.library': 'A livraria',
+            'conflict.prefix.period': 'O período histórico',
+            'conflict.prefix.item': 'O item',
+            'conflict.suffix': 'não tem livros que correspondam a:',
+            'conflict.keep': 'Manter os filtros',
+            'conflict.clear': 'Limpar filtros',
 
             'details.book.titleLabel': 'Título da obra:',
             'details.attribution': 'Atribuição:',

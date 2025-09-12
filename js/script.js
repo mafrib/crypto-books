@@ -4,6 +4,7 @@ let treemapFilterOrigin = null;   // 'category' or 'tradition'
 let lastClassificationMode = null;
 let __searchFocusRows = null;
 let skipNextTreemapRedraw = false;
+let __lastConflictArgs = null;
 const periodOrder = [
     'Por determinar',
     'Época Arcaica (VIII-V aC)',
@@ -30,6 +31,14 @@ window.addEventListener('i18n:changed', () => {
     try {
         const t = d3.select('#map .zoom-reset title');
         if (!t.empty()) t.text(i18n.t('map.reset'));
+    } catch (e) {}
+
+    try {
+        const open = !document.getElementById('conflict-popup').hidden;
+        if (open && __lastConflictArgs) {
+            const { subjectLabel, filters, kind } = __lastConflictArgs;
+            renderConflictMessage(subjectLabel, filters, kind);
+        }
     } catch (e) {}
 
     try { window.refreshFilterTags && window.refreshFilterTags(); } catch (e) {}
@@ -213,19 +222,11 @@ function getConflictingFiltersForPeriod(periodName) {
 }
 
 function showConflictPopup(subjectLabel, filters, kind = 'library') {
-    const prefix = {
-        library : 'The library',
-        period  : 'The historical period'
-    }[kind] || 'The item';
-
-    const msg = document.getElementById('conflict-msg');
-    msg.innerHTML =
-        `${prefix} “<strong>${subjectLabel}</strong>” has no books that match:` +
-        '<br>' +
-        filters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
+    __lastConflictArgs = { subjectLabel, filters: filters.slice(), kind };
+    renderConflictMessage(subjectLabel, filters, kind);
 
     document.getElementById('conflict-popup').hidden = false;
-    document.getElementById('modal-shield' ).hidden = false;
+    document.getElementById('modal-shield').hidden = false;
 }
 
 function hideConflictPopup() {
@@ -871,6 +872,19 @@ function wireFilterAccordionAndScroll() {
         d.scrollIntoView({ block: 'start', behavior: 'smooth' });
         });
     });
+}
+
+function renderConflictMessage(subjectLabel, filters, kind = 'library') {
+    const prefixKey = kind === 'library'
+        ? 'conflict.prefix.library'
+        : (kind === 'period' ? 'conflict.prefix.period' : 'conflict.prefix.item');
+
+    const prefix = i18n.t(prefixKey);
+    const suffix = i18n.t('conflict.suffix');
+
+    const msg = document.getElementById('conflict-msg');
+    msg.innerHTML = `${prefix} “<strong>${subjectLabel}</strong>” ${suffix}<br>` +
+                    filters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
 }
 
 function openVizModal(viz) {
