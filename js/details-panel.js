@@ -19,6 +19,98 @@ window.getPinnedBook = () => pinnedBook;
 
 let __catalogToastTimer = null;
 
+function setDetailsExpandEnabled(on) {
+    const btn = document.getElementById('details-expand-btn');
+    if (!btn) return;
+    btn.disabled = !on;
+    btn.classList.toggle('disabled', !on);
+    btn.setAttribute('aria-disabled', on ? 'false' : 'true');
+}
+
+function ensureDetailsExpand() {
+    const panel = document.getElementById('hover-details');
+    if (!panel || panel.__expandWired) return;
+    panel.__expandWired = true;
+
+    const btn = document.createElement('button');
+    btn.id = 'details-expand-btn';
+    btn.className = 'details-expand-btn';
+    btn.setAttribute('aria-label', 'Maximize details');
+    btn.innerHTML = '<img src="../img/icons/maximize.png" alt="" aria-hidden="true">';
+    panel.appendChild(btn);
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (btn.disabled) return;
+      panel.classList.contains('is-expanded')
+        ? closeDetailsModal(panel.__modal, panel)
+        : openDetailsModal(panel);
+    });
+}
+
+function openDetailsModal(panel) {
+    const modal = document.createElement('div');
+    modal.className = 'details-modal';
+    modal.innerHTML = '<div class="details-modal-panel"></div>';
+    const wrap = modal.firstElementChild;
+
+    // placeholder to keep the grid cell
+    const ph = document.createElement('div');
+    ph.className = 'details-placeholder';
+    panel.__placeholder = ph;
+    panel.parentNode.insertBefore(ph, panel);
+
+    panel.__origParent = panel.parentNode;
+    panel.__origNext = panel.nextSibling;
+    panel.__modal = modal;
+
+    panel.classList.add('is-expanded');
+    wrap.appendChild(panel);
+
+    // Toggle button appearance
+    const btn = document.getElementById('details-expand-btn');
+    if (btn) {
+      btn.setAttribute('aria-label', 'Restore details');
+      btn.innerHTML = '<img src="../img/icons/minimize.png" alt="" aria-hidden="true">';
+    }
+
+    // Click outside closes
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeDetailsModal(modal, panel);
+    });
+
+    function escListener(e) {
+      if (e.key === 'Escape') closeDetailsModal(modal, panel);
+    }
+    document.addEventListener('keydown', escListener);
+    modal.__escListener = escListener;
+
+    document.body.appendChild(modal);
+}
+
+function closeDetailsModal(modal, panel) {
+    const { __origParent: p, __origNext: n } = panel;
+    n ? p.insertBefore(panel, n) : p.appendChild(panel);
+    panel.classList.remove('is-expanded');
+
+    // Toggle button appearance back
+    const btn = document.getElementById('details-expand-btn');
+    if (btn) {
+      btn.setAttribute('aria-label', 'Maximize details');
+      btn.innerHTML = '<img src="../img/icons/maximize.png" alt="" aria-hidden="true">';
+    }
+
+    if (panel.__placeholder) {
+      panel.__placeholder.remove();
+      delete panel.__placeholder;
+    }
+    if (modal.__escListener) {
+      document.removeEventListener('keydown', modal.__escListener);
+      delete modal.__escListener;
+    }
+    modal.remove();
+}
+
 function normalizeProbString(v) {
   return (v || '').toString().trim();
 }
@@ -150,70 +242,71 @@ window.showDetailsHover = showHoverItem;
 window.clearDetailsHover = clearHoverItem;
 
 function renderPeriodDetails(periodName) {
-  const panel       = document.getElementById('hover-details');
-  panel.classList.add('details-panel--list-mode');
-  const wrapper     = panel.querySelector('.details-panel__img-wrapper');
-  const nameEl      = panel.querySelector('.details-panel__name');
-  const booksEl     = panel.querySelector('.details-panel__books');
-  const datesEl     = panel.querySelector('.details-panel__dates');
-  const titleEl     = panel.querySelector('.details-panel__title');
-  const reignEl     = panel.querySelector('.details-panel__reign');
-  const placeholder = panel.querySelector('.details-panel__placeholder');
-  const listEl      = panel.querySelector('#details-list');
+    const panel       = document.getElementById('hover-details');
+    panel.classList.add('details-panel--list-mode');
+    const wrapper     = panel.querySelector('.details-panel__img-wrapper');
+    const nameEl      = panel.querySelector('.details-panel__name');
+    const booksEl     = panel.querySelector('.details-panel__books');
+    const datesEl     = panel.querySelector('.details-panel__dates');
+    const titleEl     = panel.querySelector('.details-panel__title');
+    const reignEl     = panel.querySelector('.details-panel__reign');
+    const placeholder = panel.querySelector('.details-panel__placeholder');
+    const listEl      = panel.querySelector('#details-list');
 
-  // Use the current filtered set (period filter already applied by the bar click)
-  const base = (typeof applyGlobalFilters === 'function' && window.globalData)
-    ? applyGlobalFilters(globalData)
-    : (window.globalData || []);
-  const normalizeP = (v) =>
-    (typeof window.normalizePeriod === 'function')
-      ? window.normalizePeriod(v)
-      : ((v ?? '').toString().trim() || 'Por determinar');
+    // Use the current filtered set (period filter already applied by the bar click)
+    const base = (typeof applyGlobalFilters === 'function' && window.globalData)
+      ? applyGlobalFilters(globalData)
+      : (window.globalData || []);
+    const normalizeP = (v) =>
+      (typeof window.normalizePeriod === 'function')
+        ? window.normalizePeriod(v)
+        : ((v ?? '').toString().trim() || 'Por determinar');
 
-  const rows = base.filter(r => normalizeP(r.EpocaHistorica_Autor) === periodName);
+    const rows = base.filter(r => normalizeP(r.EpocaHistorica_Autor) === periodName);
 
-  // Per-author counts
-  const counts = rows.reduce((m, r) => {
-    const a = (r.Nome_Autor || '').trim();
-    if (!a) return m;
-    m.set(a, (m.get(a) || 0) + 1);
-    return m;
-  }, new Map());
+    // Per-author counts
+    const counts = rows.reduce((m, r) => {
+      const a = (r.Nome_Autor || '').trim();
+      if (!a) return m;
+      m.set(a, (m.get(a) || 0) + 1);
+      return m;
+    }, new Map());
 
-  // Show only the needed fields for list mode
-  placeholder.style.display = 'none';
-  wrapper.style.display     = 'none';
-  nameEl.style.display      = '';
-  booksEl.style.display     = '';
-  datesEl.style.display     = 'none';
-  titleEl.style.display     = 'none';
-  reignEl.style.display     = 'none';
+    // Show only the needed fields for list mode
+    placeholder.style.display = 'none';
+    wrapper.style.display     = 'none';
+    nameEl.style.display      = '';
+    booksEl.style.display     = '';
+    datesEl.style.display     = 'none';
+    titleEl.style.display     = 'none';
+    reignEl.style.display     = 'none';
 
-  nameEl.innerHTML = formatPeriodLabelHTML(periodName);
-  nameEl.setAttribute('aria-label', (periodName ?? '').toString().trim());
+    nameEl.innerHTML = formatPeriodLabelHTML(periodName);
+    nameEl.setAttribute('aria-label', (periodName ?? '').toString().trim());
 
-  booksEl.textContent = `${rows.length} book${rows.length === 1 ? '' : 's'}`;
+    booksEl.textContent = `${rows.length} book${rows.length === 1 ? '' : 's'}`;
 
-  if (listEl) {
-    listEl.hidden = false;
-    listEl.innerHTML = '';
+    if (listEl) {
+      listEl.hidden = false;
+      listEl.innerHTML = '';
 
-    const header = document.createElement('div');
-    header.className = 'list-header';
-    header.textContent = `Authors (${counts.size})`;
-    listEl.appendChild(header);
+      const header = document.createElement('div');
+      header.className = 'list-header';
+      header.textContent = `Authors (${counts.size})`;
+      listEl.appendChild(header);
 
-    const authors = Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      const authors = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
-    authors.forEach(([author, n]) => {
-      const div = document.createElement('div');
-      div.className = 'list-item';
-      div.textContent = `${author} — ${n} book${n === 1 ? '' : 's'}`;
-      listEl.appendChild(div);
-    });
+      authors.forEach(([author, n]) => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.textContent = `${author} — ${n} book${n === 1 ? '' : 's'}`;
+        listEl.appendChild(div);
+      });
+    }
+    setDetailsExpandEnabled(true);
   }
-}
 
 window.renderPeriodDetails = renderPeriodDetails;
 
@@ -287,6 +380,7 @@ function renderBookDetails(row) {
       addItem('Author short bio', row.BioAbreviada_Autor || row.bioabreviada_autor);
       addItem('Synopsis', row.Sinopse_Obra || row['Sinopse obra']);
     }
+    setDetailsExpandEnabled(true);
 }
 
 function renderHover() {
@@ -422,6 +516,8 @@ function renderLibraryDetails(libName, allData) {
     datesEl.innerHTML = `<strong>Lifespan:</strong> ${info.Proprietario_DatasExtremas || '—'}`;
     titleEl.innerHTML = `<strong>Royal title:</strong> ${info.Proprietario_Titulo || '—'}`;
     reignEl.innerHTML = `<strong>Tenure period:</strong> ${info.Proprietario_Titulo_DatasExtremas || '—'}`;
+
+    setDetailsExpandEnabled(true);
 }
 
 function updateDetailsPanel(libName, allData) {
@@ -488,6 +584,7 @@ function renderLocationDetails(locKey) {
         listEl.appendChild(div);
       });
     }
+    setDetailsExpandEnabled(true);
 }
 
 function renderCurrentItem() {
@@ -597,6 +694,7 @@ function clearDetailsPanel() {
     const placeholder = panel.querySelector('.details-panel__placeholder');
     placeholder.style.display = '';
     placeholder.textContent   = 'Click or hover on elements to see more details here.';
+    setDetailsExpandEnabled(false);
 }
 
 window.clearDetailsPanel = clearDetailsPanel;
@@ -659,3 +757,5 @@ document.addEventListener('focusin', (e) => {
       hideProbTip();
     }
 });
+
+document.addEventListener('DOMContentLoaded', ensureDetailsExpand);

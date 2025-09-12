@@ -1208,12 +1208,20 @@ details[open] > summary::after {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0.5rem;
+  position: relative;
+  --pad-v: 0.5rem;
+  --pad-h: 0.5rem;
+  --btn-size: 22px;
+  --btn-gap: 6px;
   border-radius: 24px;
   background: #D6E5DB;
   box-sizing: border-box;
   min-height: 0;
   overflow: visible;
+  padding: calc(var(--pad-v) + var(--btn-size) + var(--btn-gap))
+           var(--pad-h)
+           var(--pad-v)
+           var(--pad-h);
 }
 
 .details-panel__info {
@@ -1251,13 +1259,15 @@ details[open] > summary::after {
 
 .details-panel--list-mode .details-panel__info {
   overflow-y: hidden;
-  align-items: stretch;
+  align-items: center;
   justify-content: flex-start;
 }
 
 .details-panel--list-mode #details-list {
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  max-width: 100%;
   overflow-y: auto;
 }
 
@@ -1283,6 +1293,120 @@ details[open] > summary::after {
   font-weight: 500;
   opacity: 0.85;
   margin: 0.25rem 0;
+}
+
+.details-expand-btn {
+  position: absolute;
+  top: var(--pad-v);
+  right: var(--pad-h);
+  padding: 5px;
+  width: 22px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.details-expand-btn:hover { background: #cddad2; }
+.details-expand-btn.disabled,
+.details-expand-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.details-expand-btn img { width: 14px; height: 14px; }
+
+.details-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.60);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+.details-modal-panel {
+  background: #D6E5DB;
+  border-radius: 24px;
+  width: min(820px, 90vw);
+  height: min(80vh, 680px);
+  padding: 1rem;
+  overflow: hidden;
+  display: flex;
+}
+
+.details-placeholder { visibility: hidden; }
+
+#hover-details.is-expanded {
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+  border-radius: 18px;
+}
+
+#hover-details.is-expanded .details-panel__img-wrapper {
+  width: 9rem;
+}
+
+#hover-details.is-expanded .details-panel__info {
+  padding-right: 10px;
+}
+
+#hover-details.is-expanded .details-panel__placeholder {
+  max-width: 100%;
+  font-size: 0.9rem;
+}
+
+#hover-details.is-expanded .details-panel__name {
+  font-size: 1.15rem;
+  line-height: 1.25;
+  max-width: 100%;
+  white-space: normal;
+  text-overflow: clip;
+  text-align: center;
+}
+
+#hover-details.is-expanded.details-panel--book-mode .details-panel__name {
+  font-size: 1.2rem;
+}
+
+#hover-details.is-expanded .details-panel__books {
+  font-size: 0.95rem;
+}
+
+#hover-details.is-expanded .details-panel__dates,
+#hover-details.is-expanded .details-panel__title,
+#hover-details.is-expanded .details-panel__reign {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+#hover-details.is-expanded .details-panel__list .list-item {
+  font-size: 0.85rem;
+  padding: 6px 8px;
+}
+
+#hover-details.is-expanded .details-panel__list .list-header {
+  font-size: 0.95rem;
+  margin-top: 0.6rem;
+}
+
+#hover-details.is-expanded .prob-badge {
+  font-size: 0.85em;
+}
+
+#hover-details.is-expanded .details-panel__carousel-container {
+  margin-top: 1rem;
+}
+
+#hover-details.is-expanded .details-panel__carousel .dot {
+  width: 0.7rem;
+  height: 0.7rem;
 }
 
 .prob-badge {
