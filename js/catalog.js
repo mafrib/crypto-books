@@ -133,7 +133,7 @@ function itemMatchesAllTerms(item, terms) {
         return field
           .split(/\s+/)
           .some(word => {
-            const cleanedWord = word.replace(/^[^\p{L}\p{N}]+/gu, ""); // remove leading non-letters/numbers
+            const cleanedWord = word.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
             return cleanedWord.startsWith(term);
           });
       });
@@ -163,6 +163,7 @@ function setupSearchBar(rawData) {
           .replace(/\p{Diacritic}/gu, "")
           .toLowerCase()
           .split(/\s+/)
+          .map(t => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""))
           .filter(t => t);
 
         // Filter on top of current filters
