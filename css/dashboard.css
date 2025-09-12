@@ -32,10 +32,28 @@ html, body {
   justify-content: space-between;
 }
 
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+}
+
+#lang-btn img {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
 .title {
   color: #FAF7F4;
   font-weight: 600;
   font-size: x-large;
+  margin: 0;
 }
 
 .navbar > ul {
@@ -765,15 +783,7 @@ svg:not(.node-active-mode) .node:hover text {
   background-color: #B65B8C;
 }
 
-.legend-item.author::after {
-  content: "Authors in common";
-}
-
-.legend-item.book::after {
-  content: "Books in common";
-}
-
-.legend-item::after {
+.legend-item span {
   color: #16404D;
   font-family: Inter, Helvetica, sans-serif;
   font-size: 0.6rem;

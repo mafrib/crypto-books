@@ -205,7 +205,7 @@ function pinBook(row) {
     window.highlightPeriodBar && window.highlightPeriodBar(row);
 
     if (replacing) {
-      showCatalogOverlay('Only 1 book can be pinned. Replacing the previous selection.');
+      showCatalogOverlay(i18n.t('overlay.onePin'));
     }
 
     const hint = document.getElementById('catalog-hint');
@@ -284,7 +284,7 @@ function renderPeriodDetails(periodName) {
     nameEl.innerHTML = formatPeriodLabelHTML(periodName);
     nameEl.setAttribute('aria-label', (periodName ?? '').toString().trim());
 
-    booksEl.textContent = `${rows.length} book${rows.length === 1 ? '' : 's'}`;
+    booksEl.textContent = `${rows.length} ${i18n.plural(rows.length, i18n.t('unit.book.one'), i18n.t('unit.book.many'))}`;
 
     if (listEl) {
       listEl.hidden = false;
@@ -292,7 +292,7 @@ function renderPeriodDetails(periodName) {
 
       const header = document.createElement('div');
       header.className = 'list-header';
-      header.textContent = `Authors (${counts.size})`;
+      header.textContent = `${i18n.t('unit.author.many')} (${counts.size})`;
       listEl.appendChild(header);
 
       const authors = Array.from(counts.entries())
@@ -343,7 +343,7 @@ function renderBookDetails(row) {
     nameEl.style.display      = '';
     // “Book:” label above the title
     booksEl.style.display     = '';
-    booksEl.textContent       = "Book's title:";
+    booksEl.textContent = i18n.t('details.book.titleLabel');
     datesEl.style.display     = 'none';
     titleEl.style.display     = 'none';
     reignEl.style.display     = 'none';
@@ -351,7 +351,7 @@ function renderBookDetails(row) {
     // Title (emphasized) + standardized book attribution probability badge
     const probObra = normalizeProbString(row.ProbAtribObra);
     const title = normalizeProbString(row.Obra) || '—';
-    const obraBadge = buildProbBadge(probObra, 'Book attribution probability');
+    const obraBadge = buildProbBadge(probObra, i18n.t('prob.obra.tip'));
     nameEl.innerHTML = `${title}${obraBadge ? ' ' + obraBadge : ''}`;
 
     // Key/value list
@@ -369,7 +369,7 @@ function renderBookDetails(row) {
       };
 
       const probAutor = normalizeProbString(row.ProbAtribAutor);
-      const autorBadge = buildProbBadge(probAutor, 'Author attribution probability');
+      const autorBadge = buildProbBadge(probAutor, i18n.t('prob.autor.tip'));
 
       addItem('Author', normalizeProbString(row.Nome_Autor) || '—', autorBadge ? ' ' + autorBadge : '');
 
@@ -476,6 +476,7 @@ window.setDetailsItems = setDetailsItems;
 function renderLibraryDetails(libName, allData) {
     const panel       = document.getElementById('hover-details');
     panel.classList.remove('details-panel--list-mode');
+
     const wrapper     = panel.querySelector('.details-panel__img-wrapper');
     const nameEl      = panel.querySelector('.details-panel__name');
     const booksEl     = panel.querySelector('.details-panel__books');
@@ -510,12 +511,13 @@ function renderLibraryDetails(libName, allData) {
     nameEl.setAttribute('aria-label', libName);
 
     const count = allData.filter(r => r.Proprietario_Nome === libName).length;
-    booksEl.textContent = `${count} book${count===1?'':'s'}`;
+    const bookWord = i18n.plural(count, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
+    booksEl.textContent = `${count} ${bookWord}`;
 
     const info = allData.find(r => r.Proprietario_Nome === libName) || {};
-    datesEl.innerHTML = `<strong>Lifespan:</strong> ${info.Proprietario_DatasExtremas || '—'}`;
-    titleEl.innerHTML = `<strong>Royal title:</strong> ${info.Proprietario_Titulo || '—'}`;
-    reignEl.innerHTML = `<strong>Tenure period:</strong> ${info.Proprietario_Titulo_DatasExtremas || '—'}`;
+    datesEl.innerHTML = `<strong>${i18n.t('details.lifespan')}</strong> ${info.Proprietario_DatasExtremas || '—'}`;
+    titleEl.innerHTML = `<strong>${i18n.t('details.royalTitle')}</strong> ${info.Proprietario_Titulo || '—'}`;
+    reignEl.innerHTML = `<strong>${i18n.t('details.tenure')}</strong> ${info.Proprietario_Titulo_DatasExtremas || '—'}`;
 
     setDetailsExpandEnabled(true);
 }
@@ -561,7 +563,7 @@ function renderLocationDetails(locKey) {
     reignEl.style.display     = 'none';
 
     nameEl.textContent  = p.label || 'Unknown location';
-    booksEl.textContent = `${rows.length} book${rows.length===1?'':'s'}`;
+    booksEl.textContent = `${rows.length} ${i18n.plural(rows.length, i18n.t('unit.book.one'), i18n.t('unit.book.many'))}`;
 
     if (listEl) {
       listEl.hidden = false;
@@ -570,7 +572,7 @@ function renderLocationDetails(locKey) {
       // proper header (not boxed)
       const header = document.createElement('div');
       header.className = 'list-header';
-      header.textContent = `Authors (${counts.size})`;
+      header.textContent = `${i18n.t('unit.author.many')} (${counts.size})`;
       listEl.appendChild(header);
 
       // authors sorted by count desc, then name
@@ -693,7 +695,7 @@ function clearDetailsPanel() {
 
     const placeholder = panel.querySelector('.details-panel__placeholder');
     placeholder.style.display = '';
-    placeholder.textContent   = 'Click or hover on elements to see more details here.';
+    placeholder.textContent = i18n.t('details.placeholder');
     setDetailsExpandEnabled(false);
 }
 

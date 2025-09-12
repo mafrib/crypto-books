@@ -12,6 +12,7 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
     <!-- JavaScript files for the dashboard -->
+    <script src="js/i18n.js"></script>
     <script src="js/map.js"></script>
     <script src="js/network.js"></script>
     <script src="js/treemap.js"></script>
@@ -24,27 +25,37 @@
 
   <body onload="startDashboard()">
     <nav class="navbar">
-      <h1 class="title">Crypto-Books</h1>
+      <h1 class="title" data-i18n="navbar.title">Crypto-Books</h1>
       <ul>
-        <li><a target="_blank" rel="noopener noreferrer" href="https://cryptobooksim.wixsite.com/cryptobooks">About</a></li>
+        <li class="dropdown">
+          <button id="lang-btn" class="nav-btn" aria-haspopup="true" aria-expanded="false"
+                  data-i18n-attr="aria-label:navbar.language" aria-label="Language">
+            <img src="../img/icons/globe.png" alt="" style="width:1.2rem;height:1.2rem;vertical-align:middle;">
+          </button>
+          <ul id="lang-menu" class="dropdown-menu">
+            <li><a data-lang="en" data-i18n="lang.en">English</a></li>
+            <li><a data-lang="pt" data-i18n="lang.pt">Português</a></li>
+          </ul>
+        </li>
+        <li><a target="_blank" rel="noopener noreferrer" href="https://cryptobooksim.wixsite.com/cryptobooks" data-i18n="navbar.about">About</a></li>
         <li class="dropdown">
           <button id="export-btn" aria-haspopup="true" aria-expanded="false">
-            <span>Export</span>
+            <span data-i18n="navbar.export">Export</span>
             <img src="../img/icons/download.png" id="download-icon" alt="download">
           </button>
           <ul id="export-menu" class="dropdown-menu">
-            <li><a id="export-csv">Dataset (.csv)</a></li>
-            <li><a id="export-pdf">PDF report</a></li>
+            <li><a id="export-csv" data-i18n="navbar.export.csv">Dataset (.csv)</a></li>
+            <li><a id="export-pdf" data-i18n="navbar.export.pdf">PDF report</a></li>
           </ul>
         </li>
       </ul>
     </nav>
     <div id="modal-shield" hidden></div>
     <div id="no-results-popup" class="empty-state" hidden>
-      <p>No books match the current filters.</p>
+      <p data-i18n="noresults.text">No books match the current filters.</p>
       <div class="button-row">
-        <button id="undo-last-btn"  class="solid-btn outline">Undo last action</button>
-        <button id="clear-filters-btn" class="solid-btn">Clear</button>
+        <button id="undo-last-btn"  class="solid-btn outline" data-i18n="noresults.undo">Undo last action</button>
+        <button id="clear-filters-btn" class="solid-btn" data-i18n="noresults.clear">Clear</button>
       </div>
     </div>
     <div id="conflict-popup" class="empty-state" hidden>
@@ -62,30 +73,31 @@
       <div class="dashboard">
         <div class="visualization" id="map-visualization">
           <div class="viz-header">
-            <h6 class="viz-title">Authors</h6>
+            <h6 class="viz-title" data-i18n="map.title">Authors</h6>
             <div class="viz-actions"></div>
           </div>
           <div id="map-area">
             <div class="map-canvas">
               <svg id="map"></svg>
-              <div id="map-nolocation-overlay" class="map-nolocation-overlay" hidden>
+              <div id="map-nolocation-overlay" class="map-nolocation-overlay" hidden
+                data-i18n="map.overlay.nolocation">
                 No location associated with the author of this book
               </div>
             </div>
             <div class="map-color-scale">
-              <div class="legend-title">No. of Books</div>
+              <div class="legend-title" data-i18n="map.legend.books">No. of Books</div>
               <div class="bar-wrapper"></div>
             </div>
           </div>
           <p id="map-offmsg" class="map-offhint" hidden></p>
           <div class="period-filter-wrapper">
-            <div class="filter-title">Historical period</div>
+            <div class="filter-title" data-i18n="period.title">Historical period</div>
             <div id="period-filter"></div>
           </div>
         </div>
         <div class="visualization" id="network-graph">
           <div class="viz-header">
-            <h6 class="viz-title">Libraries, per library owner</h6>
+            <h6 class="viz-title" data-i18n="network.title">Libraries, per library owner</h6>
             <div class="viz-actions">
               <button id="network-info-btn"
                       class="info-btn"
@@ -110,7 +122,7 @@
                           stroke="#16404D" stroke-width="0.8"
                           marker-end="url(#arrow-end)"/>
                   </svg>
-                  <span class="legend-label">Number&nbsp;of&nbsp;books</span>
+                  <span class="legend-label" data-i18n="label.numBooks">No. of books</span>
                 </div>
                 <div class="link-legend">
                   <svg class="legend-svg" viewBox="0 0 95 46" aria-hidden="true">
@@ -121,18 +133,20 @@
                           stroke="#16404D" stroke-width="0.8"
                           marker-end="url(#arrow-end)"/>
                   </svg>
-                  <span class="legend-label">Shared&nbsp;items<br>(books/authors)</span>
-
+                  <div class="legend-block">
+                    <span class="legend-label" data-i18n="network.legend.shared.top">Shared items</span>
+                    <span class="legend-label" data-i18n="network.legend.shared.sub">(books/authors)</span>
+                  </div>
                 </div>
               </div>
               </div>
               <div class="viz-tools gender-tools">
-                <div class="tools-label">Filter by owner’s gender:</div>
+                <div class="tools-label" data-i18n="network.gender.label">Filter by owner’s gender:</div>
                 <div class="network-gender-controls" aria-label="Quick gender filters">
-                  <button id="gender-btn-male" class="gender-btn male" aria-pressed="false" title="Male libraries">
+                  <button id="gender-btn-male" class="gender-btn male" aria-pressed="false" data-i18n-attr="title:gender.male" title="Male libraries">
                     <img src="../img/icons/male.png" alt="Male">
                   </button>
-                  <button id="gender-btn-female" class="gender-btn female" aria-pressed="false" title="Female libraries">
+                  <button id="gender-btn-female" class="gender-btn female" aria-pressed="false" data-i18n-attr="title:gender.female" title="Female libraries">
                     <img src="../img/icons/female.png" alt="Female">
                   </button>
                 </div>
@@ -141,19 +155,19 @@
           </div>
           <div class="network-wrapper"></div>
           <div class="legend">
-            <div class="legend-item author"></div>
-            <div class="legend-item book"></div>
+            <div class="legend-item author"><span data-i18n="network.legend.authors">Authors in common</span></div>
+            <div class="legend-item book"><span data-i18n="network.legend.books">Books in common</span></div>
           </div>
         </div>
          <div id="side-menu">
           <div class="button-group">
             <button id="filter-btn">
-              <span>Filter</span>
+              <span data-i18n="side.filter">Filter</span>
               <span id="filter-badge" class="filter-badge"></span>
               <img src="../img/icons/slider-filter.png" id="filter-icon"></img>
             </button>
             <button id="clear-btn">
-              <span>Clear</span>
+              <span data-i18n="side.clear">Clear</span>
               <img src="../img/icons/clear-filter-inactive.png" id="clear-icon-inactive"></img>
             </button>
           </div>
@@ -162,7 +176,7 @@
               <div class="details-panel__img-wrapper">
                 <img src="" class="details-panel__img">
               </div>
-              <p class="details-panel__placeholder">
+              <p class="details-panel__placeholder" data-i18n="details.placeholder">
                 Click or hover on elements to see more details here.
               </p>
               <p class="details-panel__name"></p>
@@ -173,18 +187,18 @@
               <div class="details-panel__list" id="details-list" hidden></div>
             </div>
             <div class="details-panel__carousel-container">
-              <button class="carousel-arrow left" aria-label="Previous">‹</button>
+              <button class="carousel-arrow left" data-i18n-attr="aria-label:carousel.prev" aria-label="Previous">‹</button>
               <div class="details-panel__carousel"></div>
-              <button class="carousel-arrow right" aria-label="Next">›</button>
+              <button class="carousel-arrow right" data-i18n-attr="aria-label:carousel.next" aria-label="Next">›</button>
             </div>
           </div>
         </div>
         <div class="visualization" id="treemap">
           <div class="treemap-header">
-            <h6 class="viz-title">Books' classification system</h6>
+            <h6 class="viz-title" data-i18n="treemap.title">Books' classification system</h6>
             <div id="treemap-controls">
-              <button class="mode-button active" data-mode="category">Literary Categories</button>
-              <button class="mode-button" data-mode="tradition">Intellectual Tradition</button>
+              <button class="mode-button active" data-mode="category" data-i18n="treemap.mode.category">Literary Categories</button>
+              <button class="mode-button" data-mode="tradition" data-i18n="treemap.mode.tradition">Intellectual Tradition</button>
             </div>
           </div>
           <div id="treemap-breadcrumbs"></div>
@@ -194,23 +208,25 @@
         <div class="visualization" id="catalog">
           <div class="search-container">
             <img src="../img/icons/search.svg" id="search-icon"></img>
-            <input type="text" id="search-input" placeholder="Search for a book, author or library...">
+            <input type="text" id="search-input"
+            data-i18n-attr="placeholder:catalog.search.placeholder"
+            placeholder="Search for a book, author or library...">
           </div>
           <div class="catalog-header">
             <h5 class="sortable" data-column="Descricao">
-              Description
+              <span data-i18n="catalog.header.description">Description</span>
               <img class="sort-icon" src="../img/icons/sort-neutral.png"/>
             </h5>
             <h5 class="sortable" data-column="Obra">
-              Title
+              <span data-i18n="catalog.header.title">Title</span>
               <img class="sort-icon" src="../img/icons/sort-neutral.png"/>
             </h5>
             <h5 class="sortable" data-column="Nome_Autor">
-              Author
+              <span data-i18n="catalog.header.author">Author</span>
               <img class="sort-icon" src="../img/icons/sort-neutral.png"/>
             </h5>
             <h5 class="sortable" data-column="Proprietario_Nome">
-              Library
+             <span data-i18n="catalog.header.library">Library</span>
               <img class="sort-icon" src="../img/icons/sort-up.png"/>
             </h5>
         </div>
@@ -231,10 +247,10 @@
       <div class="modal-panel">
 
         <header class="modal-header">
-          <h2>Advanced filters</h2>
+          <h2 data-i18n="modal.title">Advanced filters</h2>
           <div class="modal-actions">
-            <button id="clear-modal-filters" class="solid-btn outline">Clear all</button>
-            <button id="close-modal" class="icon-btn" aria-label="Close">&times;</button>
+            <button id="clear-modal-filters" class="solid-btn outline" data-i18n="modal.clearAll">Clear all</button>
+            <button id="close-modal" class="icon-btn" data-i18n-attr="aria-label:modal.close" aria-label="Close">&times;</button>
           </div>
         </header>
 
@@ -243,71 +259,76 @@
         <div class="modal-body">
           <details>
             <summary>
-              Library <span class="count" data-for="filter-library"></span>
+              <span data-i18n="filter.library">Library</span>
+              <span class="count" data-for="filter-library"></span>
             </summary>
             <ul id="filter-library" class="checklist" data-multi></ul>
           </details>
 
           <details>
             <summary>
-              Author <span class="count" data-for="filter-author"></span>
+              <span data-i18n="filter.author">Author</span>
+              <span class="count" data-for="filter-author"></span>
             </summary>
-            <input type="text" class="quick-search" placeholder="Search authors…">
+            <input type="text" class="quick-search" data-i18n-attr="placeholder:quick.author" placeholder="Search authors…">
             <ul id="filter-author" class="checklist" data-multi></ul>
           </details>
 
           <details>
             <summary>
-              Geographical area <span class="count" data-for="filter-geoarea"></span>
+              <span data-i18n="filter.geoarea">Geographical area</span>
+              <span class="count" data-for="filter-geoarea"></span>
             </summary>
-            <input type="text" class="quick-search" placeholder="Search geographical area…">
+            <input type="text" class="quick-search" data-i18n-attr="placeholder:quick.geoarea" placeholder="Search geographical area…">
             <ul id="filter-geoarea" class="checklist" data-multi></ul>
           </details>
 
           <details>
             <summary>
-              Location <span class="count" data-for="filter-location"></span>
+              <span data-i18n="filter.location">Location</span>
+              <span class="count" data-for="filter-location"></span>
             </summary>
-            <input type="text" class="quick-search" placeholder="Search locations…">
-            <div id="location-limit-msg" class="guard-msg">You can select up to 5 locations.</div>
+            <input type="text" class="quick-search" data-i18n-attr="placeholder:quick.location" placeholder="Search locations…">
             <ul id="filter-location" class="checklist" data-multi></ul>
           </details>
 
           <details>
-            <summary>Historical period <span class="count" data-for="filter-period"></span></summary>
+            <summary>
+              <span data-i18n="filter.period">Historical period</span>
+              <span class="count" data-for="filter-period"></span></summary>
             <ul id="filter-period" class="checklist" data-multi></ul>
           </details>
 
           <details>
-            <summary>Book Attribution Probability</summary>
+            <summary data-i18n="filter.probobra">Authorship</summary>
             <ul id="filter-probobra" class="checklist"></ul>
           </details>
 
           <details>
-            <summary>Author Attribution Probability</summary>
+            <summary data-i18n="filter.probautor">Author Attribution Probability</summary>
             <ul id="filter-probautor" class="checklist"></ul>
           </details>
 
           <details>
-            <summary>Literary Category <span class="count" data-for="filter-category"></span></summary>
+            <summary data-i18n="filter.category">Literary Category <span class="count" data-for="filter-category"></span></summary>
             <ul id="filter-category" class="checklist" data-multi></ul>
           </details>
 
           <details>
-            <summary>Literary Genre <span class="count" data-for="filter-genre"></span></summary>
-            <input type="text" class="quick-search" placeholder="Search literary genres…">
-            <div id="genre-guard-msg" class="guard-msg" hidden>Select a Literary Category first</div>
+            <summary data-i18n="filter.genre">Literary Genre <span class="count" data-for="filter-genre"></span></summary>
+            <input type="text" class="quick-search" data-i18n-attr="placeholder:quick.genre" placeholder="Search literary genres…">
+            <div id="genre-guard-msg" class="guard-msg" data-i18n="filter.genre.guard" hidden>Select a Literary Category first</div>
             <ul id="filter-genre" class="checklist" data-multi></ul>
           </details>
 
           <details>
-            <summary>Intellectual Tradition <span class="count" data-for="filter-tradition"></span></summary>
-            <input type="text" class="quick-search" placeholder="Search intellectual traditions…">
+            <summary data-i18n="filter.tradition">Intellectual Tradition <span class="count" data-for="filter-tradition"></span></summary>
+            <input type="text" class="quick-search" data-i18n-attr="placeholder:quick.tradition" placeholder="Search intellectual traditions…">
             <ul id="filter-tradition" class="checklist" data-multi></ul>
           </details>
 
           <details>
-            <summary>Language <span class="count" data-for="filter-idioma"></span></summary>
+            <summary data-i18n="filter.idioma">Language <span class="count" data-for="filter-idioma"></span></summary>
             <ul id="filter-idioma" class="checklist" data-multi></ul>
           </details>
         </div>

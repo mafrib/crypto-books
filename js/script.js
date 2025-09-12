@@ -16,6 +16,30 @@ const periodOrder = [
 window.highlightPeriodBar    = () => {};
 window.clearPeriodHighlights = () => {};
 
+window.addEventListener('i18n:changed', () => {
+    if (!window.globalData) return;
+
+    try { updateUnlocatedBadge(applyGlobalFilters(globalData)); } catch (e) {}
+
+    try { repaintPeriodBars(applyFiltersExcept(['period','byPeriod'])); } catch (e) {}
+
+    try { window.updateBookCountLabel && window.updateBookCountLabel(); } catch (e) {}
+
+    try { window.renderCurrentItem && window.renderCurrentItem(); } catch (e) {}
+
+    try {
+        const t = d3.select('#map .zoom-reset title');
+        if (!t.empty()) t.text(i18n.t('map.reset'));
+    } catch (e) {}
+
+    try { window.refreshFilterTags && window.refreshFilterTags(); } catch (e) {}
+
+    const male = document.getElementById('gender-btn-male');
+    const female = document.getElementById('gender-btn-female');
+    if (male)   male.title   = i18n.t('gender.male');
+    if (female) female.title = i18n.t('gender.female');
+});
+
 function normalizeLabelForSearch(v) {
     const t = (v ?? '').toString().trim();
     return t ? t : 'Por classificar';
@@ -215,14 +239,14 @@ window.hideConflictPopup = hideConflictPopup;
 function prettyFilterName(src) {
     // helper that turns the internal filter-key into a label
     const map = {
-        byCategory : 'Literary category',
-        byAuthor   : 'Author',
-        byIdioma   : 'Language',
-        byLibrary  : 'Library',
-        treemap    : "Books' classification",
-        network    : 'Library',
-        byLocation : 'Location',
-        byGeoArea  : 'Geographical area'
+        byCategory : i18n.t('filter.category'),
+        byAuthor   : i18n.t('filter.author'),
+        byIdioma   : i18n.t('filter.idioma'),
+        byLibrary  : i18n.t('filter.library'),
+        treemap    : i18n.t('treemap.title'),
+        network    : i18n.t('filter.library'),
+        byLocation : i18n.t('filter.location'),
+        byGeoArea  : i18n.t('filter.geoarea')
     };
 
     if (src === 'byLocation') {
@@ -232,13 +256,13 @@ function prettyFilterName(src) {
             return input ? input.nextElementSibling.textContent.trim() : v;
         });
         const list = labels.length ? `: ${labels.join(', ')}` : '';
-        return `Location${list}`;
+        return `${i18n.t('filter.location')}${list}`;
     }
 
     if (src === 'byLibrary' || src === 'network') {
         const libs = activeFilters[src]?.values || [];
         const list = libs.length ? `: ${libs.join(', ')}` : '';
-        return `Library${list}`;
+        return `${i18n.t('filter.library')}${list}`;
    }
 
     /* add the concrete period(s) that are selected */
@@ -248,18 +272,18 @@ function prettyFilterName(src) {
         ).map(el => el.textContent.replace(/\s+/g, ' ').trim());
 
         const list = labels.length ? `: ${labels.join(', ')}` : '';
-        return `Historical period${list}`;
+        return `${i18n.t('filter.period')}${list}`;
     }
 
     if (src === 'treemap') {
         if (treemapSelection) {
             if (currentTreemapMode === 'category') {
                 const {cat, gen} = treemapSelection;
-                return `Books' classification: ${cat}${gen ? ' › ' + gen : ''}`;
+                return `${i18n.t('treemap.title')}: ${cat}${gen ? ' › ' + gen : ''}`;
             }
-            return `Books' classification: ${treemapSelection.trad}`;
+            return `${i18n.t('treemap.title')}: ${treemapSelection.trad}`;
         }
-        return "Books' classification";
+        return i18n.t('treemap.title');
     }
 
     return map[src] || src;

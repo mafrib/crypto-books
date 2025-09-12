@@ -12,8 +12,10 @@ window.linkKey = linkKey;
 
 function linkLabel(key) {
     const [a, b, type] = key.split('|');
-    const kind = type === 'book' ? 'Books' : 'Authors';
-    return `${kind} in common: ${a} ↔ ${b}`;
+    const kind = (type === 'book')
+        ? i18n.t('network.legend.books')
+        : i18n.t('network.legend.authors');
+    return `${kind}: ${a} ↔ ${b}`;
 }
 
 function rebuildNetworkFilterFromState(allData) {
@@ -346,14 +348,15 @@ function syncGenderButtonsWithSelection() {
 function attachLinkTooltip(selection) {
     selection
         .on('mouseover.tooltip', function(event, d) {
-        tooltip
-            .style('visibility', 'visible')
-            .style('opacity', 1)
-            .html(
-                d.type === 'book'
-                    ? `${d.weight} book${d.weight>1?'s':''} in common`
-                    : `${d.weight} author${d.weight>1?'s':''} in common`
-            );
+            const isBook = d.type === 'book';
+            const unit   = i18n.plural(d.weight,
+                            i18n.t(isBook ? 'unit.book.one' : 'unit.author.one'),
+                            i18n.t(isBook ? 'unit.book.many' : 'unit.author.many'));
+            const suffix = i18n.t('export.common.inCommon');
+            tooltip
+                .style('visibility', 'visible')
+                .style('opacity', 1)
+                .html(`${d.weight} ${unit} ${suffix}`);
             d3.select(this).style('opacity', 1);
         })
         .on('mousemove.tooltip', event => {

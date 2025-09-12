@@ -1,7 +1,20 @@
+window.i18n = window.i18n || {
+  t: k => k,
+  plural: (n, one, many) => (n === 1 ? one : many),
+  apply: () => {}
+};
+
 let currentSort = {
     column: null,
     ascending: true
 };
+
+function updateBookCountLabel() {
+    const n = document.querySelectorAll('#catalog-entries .catalog-entry').length;
+    const word = i18n.plural(n, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
+    d3.select('#book-count').text(`${n} ${word} ${i18n.t('catalog.results.found')}`);
+}
+window.updateBookCountLabel = updateBookCountLabel;
 
 function createBooksCatalog(data) {
 
@@ -93,8 +106,11 @@ function createBooksCatalog(data) {
       entries.select(".autor").text(d => d.Nome_Autor);
       entries.select(".livraria").text(d => d.Proprietario_Nome);
 
-      const countDisplay = d3.select("#book-count")
-          .text(`${data.length} book${data.length !== 1 ? 's' : ''} found`);
+      updateBookCountLabel();
+
+      const n = data.length;
+      const bookWord = i18n.plural(n, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
+      d3.select("#book-count").text(`${n} ${bookWord} ${i18n.t('catalog.results.found')}`);
 }
 
 function normalizeText(text) {

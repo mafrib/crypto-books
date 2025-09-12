@@ -13,7 +13,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
     const rootData = (() => {
         if (mode === 'category') {
             return {
-            name: "Literary Categories",
+            name: i18n.t('treemap.mode.category'),
             children: Array.from(
                 d3.group(
                 data,
@@ -31,7 +31,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             };
         } else {
             return {
-            name: "Intellectual Tradition",
+            name: i18n.t('treemap.mode.tradition'),
             children: Array.from(
                 d3.group(data, d => normalizeLabel(d.TradicaoIntelectual_Obra)),
                 ([tradition, records]) => ({
@@ -420,9 +420,10 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                 const treemapRect = d3.select("#treemap").node().getBoundingClientRect();
                 const x = event.pageX - treemapRect.left - window.scrollX;
                 const y = event.pageY - treemapRect.top - window.scrollY;
+                const unit = i18n.plural(d.value, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
 
                 tooltip
-                    .html(`<strong>${d.data.name}</strong><br>${d.value} books`)
+                    .html(`<strong>${d.data.name}</strong><br>${d.value} ${unit}`)
                     .style("left", `${x + 20}px`)
                     .style("top", `${y - 30}px`)
                     .style("visibility", "visible")

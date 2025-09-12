@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const t = (k) => (window.i18n ? i18n.t(k) : k);
 
     const rowsNow = () => applyGlobalFilters(globalData);
 
@@ -43,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const ensure = h => { if (y+h > pageH) newPage(); };
         const section = titleTxt => {
             ensure(20);
-            pdf.setFont('helvetica','bold').setFontSize(14).setTextColor(...teal);
+            pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(80)
+                .text(t('export.cover.note'), mar, y, {maxWidth: pageW});
             pdf.text(titleTxt, mar, y);
             y += 6;
         };
@@ -93,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         pdf.setFont('helvetica','bold').setFontSize(12).setTextColor(...teal)
-            .text('Active filters:', mar, y);
+            .text(t('export.filters.title'), mar, y);
         y += 5;
 
         const toString = v => {
@@ -104,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!Object.keys(activeFilters).length) {
             pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(0,0,0)
-                .text('— none —', mar + 2, y);
+            .text(t('export.filters.none'), mar + 2, y);
             y += 5;
         } else {
             pdf.setFontSize(9);
@@ -132,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const GAP = 16;
 
         /* ===== Authors & books per location ============================= */
-        section('Authors and books per location');
+        section(t('export.section.loc'));
 
         const locAgg = d3.rollups(
             rows,
@@ -150,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ]);
 
         pdf.autoTable({
-            head:[['Location','Author','No. of books']],
+            head:[[ t('export.loc.header.location'), t('export.loc.header.author'), t('export.loc.header.numBooks') ]],
             body:locBody,
             startY:y,
             margin:{left:mar,right:mar},
@@ -170,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         y = pdf.lastAutoTable.finalY + GAP;
 
         /* ===== Library owners =========================================== */
-        section('Library owners');
+        section(t('export.section.owners'));
 
         const libAgg = d3.rollups(
             rows, v=>v.length, d=>d.Proprietario_Nome||'Unknown'
@@ -187,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         pdf.autoTable({
-            head:[['Owner','Books','Lifespan','Royal title','Reign']],
+            head:[[ t('export.owners.header.owner'), t('export.owners.header.books'), t('export.owners.header.lifespan'), t('export.owners.header.royalTitle'), t('export.owners.header.reign') ]],
             body:libBody,
             startY:y,
             margin:{ left:mar, right:mar },
@@ -197,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         y = pdf.lastAutoTable.finalY + GAP;
 
         /* ===== Books’ classification system ============================ */
-        section('Books’ classification system');
+        section(t('export.section.treemap'));
 
         const treemapBody = d3.rollups(
             rows, v=>v.length,
@@ -209,8 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 g2.map(([trad,n]) => [cat,gen,trad,n])) );
 
         pdf.autoTable({
-            head:[['Literary category','Literary genre',
-                    'Intellectual tradition','No. of books']],
+            head:[[ t('export.treemap.header.category'),
+                t('export.treemap.header.genre'),
+                t('export.treemap.header.tradition'),
+                t('export.treemap.header.numBooks') ]],
             body:treemapBody,
             startY:y,
             margin:{left:mar,right:mar},
@@ -235,14 +239,14 @@ document.addEventListener('DOMContentLoaded', () => {
         newPage();
 
         /* ===== Catalog list ============================================= */
-        section('Catalog – current view');
+        section(t('export.section.catalog'));
 
         const catCols = [
-            {key:'Descricao',        label:'Description'},
-            {key:'Obra',             label:'Work'},
-            {key:'Nome_Autor',       label:'Author'},
-            {key:'Proprietario_Nome',label:'Library'}
-            ];
+            {key:'Descricao',         label: t('catalog.header.description')},
+            {key:'Obra',              label: t('catalog.header.title')},
+            {key:'Nome_Autor',        label: t('catalog.header.author')},
+            {key:'Proprietario_Nome', label: t('catalog.header.library')}
+        ];
 
         const catOrder = Array.from(
             document.querySelectorAll('#catalog-entries .catalog-entry')

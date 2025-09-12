@@ -197,12 +197,12 @@ function updateUnlocatedBadge(rowSet) {
         matched = searchRows.filter(noLoc).length;
     }
 
+    const unit = i18n.plural(total, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
     if (matched !== null) {
-        el.innerHTML = `<strong>${matched}</strong>/${total} book${total !== 1 ? 's' : ''} with no location`;
+        el.innerHTML = `<strong>${matched}</strong>/${total} ${unit} ${i18n.t('map.offmsg.tail')}`;
     } else {
-        el.textContent = `${total} book${total !== 1 ? 's' : ''} with no location`;
+        el.textContent = `${total} ${unit} ${i18n.t('map.offmsg.tail')}`;
     }
-
     el.hidden = false;
 }
 
@@ -422,7 +422,7 @@ function makeMap () {
             .attr("text-anchor", "middle")
             .attr("dy", "0.3em")
             .text("⌂");
-            button.append("title").text("Reset view");
+            button.append("title").text(i18n.t('map.reset'));
         });
 
     mapProjection = d3.geoMercator()
@@ -658,12 +658,16 @@ function makeMap () {
 
                     highlightPoint(d3.select(this), d);
 
+                    const authorsLabel = i18n.t('label.numAuthors');
+                    const booksLabel   = i18n.t('label.numBooks');
+                    const locLabel     = i18n.t('label.location');
+
                     tooltip
                         .style("opacity", 1)
                         .html(
-                        `<strong>Location:</strong> ${location}<br/>` +
-                        `<strong>No. of authors:</strong> ${numAuthors}<br/>` +
-                        `<strong>No. of books:</strong> ${numBooks}`
+                            `<strong>${locLabel}</strong>: ${location}<br/>` +
+                            `<strong>${authorsLabel}</strong>: ${numAuthors}<br/>` +
+                            `<strong>${booksLabel}</strong>: ${numBooks}`
                         )
                         .style("left", (event.pageX + 8) + "px")
                         .style("top",  (event.pageY - 28) + "px");
@@ -857,7 +861,8 @@ function makeMap () {
                     .attr('class', 'count')
                     .text(d => {
                         const n = periodCounts.get(d) || 0;
-                        return `${n} book${n === 1 ? '' : 's'}`;
+                        const unit = i18n.plural(n, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
+                        return `${n} ${unit}`;
                     });
 
             repaintPeriodBars(libraries);
@@ -936,16 +941,16 @@ function repaintPeriodBars(rowSetWithoutPeriod) {
     d3.selectAll('#period-filter .period-bar').each(function (period) {
         const sel = selectedPeriods.includes(period);
         const n   = counts.get(period) || 0;
+        const unit = i18n.plural(n, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
 
         d3.select(this)
         .classed('selected', sel)
         .classed('inactive', n === 0)
         .classed('dimmed',  !sel && selectedPeriods.length > 0)
         .select('.count')
-        .text(`${n} book${n === 1 ? '' : 's'}`);
+        .text(`${n} ${unit}`);
     });
 }
-
 
 window.repaintPeriodBars = repaintPeriodBars;
 
