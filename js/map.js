@@ -7,6 +7,7 @@ let selectedPeriods = [];
 window.selectedPeriods = selectedPeriods.slice();
 let hoverRecentered = false;
 let hoverResetTimeout = null;
+let homeTransform = null;
 
 let mapPoints = [];
 let defaultTransform = d3.zoomIdentity;
@@ -43,12 +44,23 @@ function updateZoomButtons(k) {
 
 function resetToDefaultView(duration = 400) {
     if (!mapSvg || !zoom) return;
+
+    const target = homeTransform || defaultTransform;
+    if (!target) return;
+
+    const w = +mapSvg.attr('width');
+    const h = +mapSvg.attr('height');
+    const bounds = computePointsBounds(mapPoints || []);
+    const kMin = Math.min(minZoomK, target.k);
+    applyZoomConstraints(bounds, kMin, panSlackPx);
+    minZoomK = kMin;
+
     mapSvg.interrupt();
     mapSvg
         .transition()
         .duration(duration)
         .ease(d3.easeCubicOut)
-        .call(zoom.transform, defaultTransform)
+        .call(zoom.transform, target)
         .on('end', updateResetButtonState);
 }
 
@@ -250,8 +262,9 @@ function transformsEqual(a, b, eps = 1e-3) {
 function updateResetButtonState() {
     if (!mapSvg) return;
     const t = d3.zoomTransform(mapSvg.node());
-    const atDefault = transformsEqual(t, defaultTransform);
-    d3.select('.zoom-reset').classed('disabled', atDefault);
+    const target = homeTransform || defaultTransform;
+    const atHome = transformsEqual(t, target);
+    d3.select('.zoom-reset').classed('disabled', atHome);
 }
 
 function makeMap () {
@@ -304,6 +317,14 @@ function makeMap () {
 
             defaultTransform = fitTransformToBounds(bounds, w, h, fitPaddingPx);
             minZoomK = defaultTransform.k;
+
+            if (!homeTransform) homeTransform = defaultTransform;
+
+            applyZoomConstraints(bounds, minZoomK, panSlackPx);
+
+            mapSvg.call(zoom.transform, defaultTransform);
+            updateZoomButtons(minZoomK);
+            updateResetButtonState();
 
             applyZoomConstraints(bounds, minZoomK, panSlackPx);
 
@@ -866,17 +887,6 @@ function makeMap () {
                     });
 
             repaintPeriodBars(libraries);
-
-            function pinPeriodBar(book) {
-                const bookPeriod = normalizePeriod(book.EpocaHistorica_Autor);
-                d3.selectAll('#period-filter .period-bar')
-                    .classed('pinned-period-bar', d => d === bookPeriod);
-            }
-
-            function unpinPeriodBar() {
-                d3.selectAll('#period-filter .period-bar')
-                    .classed('pinned-period-bar', false);
-            }
 
             function highlightPeriodBar(book) {
                 const bookPeriod = normalizePeriod(book.EpocaHistorica_Autor);
