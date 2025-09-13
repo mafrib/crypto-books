@@ -1277,6 +1277,33 @@ details[open] > summary::after {
            var(--pad-h);
 }
 
+.details-pin {
+  position: absolute;
+  top: var(--pad-v);
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 6px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.details-pin.visible { display: inline-flex; }
+
+.details-pin img {
+  width: 18px;
+  height: 18px;
+}
+
+.details-pin .label {
+  font-size: 0.65rem;
+  color: #16404D;
+  display: none;
+}
+
+#hover-details.is-expanded .details-pin .label { display: inline; }
+
 .details-panel__info {
   flex: 1 1 auto;
   display: flex;

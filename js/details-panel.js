@@ -8,6 +8,13 @@ const ownerPhotoMap = {
     'D. Pedro': 'img/libraries/pedro.jpg'
 };
 
+const PIN_ICONS = {
+  book:       '../img/icons/book.png',
+  person:     '../img/icons/person.png',
+  location:   '../img/icons/location.png',
+  historical: '../img/icons/historical.png'
+};
+
 let currentCarouselItems = [];
 let currentIndex = 0;
 
@@ -18,6 +25,58 @@ let pinnedBook = null;
 window.getPinnedBook = () => pinnedBook;
 
 let __catalogToastTimer = null;
+
+function pinLabel(kind) {
+    // Use i18n if available, otherwise a safe English fallback
+    const T = (k, def) => (window.i18n && typeof i18n.t === 'function') ? i18n.t(k) : def;
+    switch (kind) {
+      case 'book':       return T('pin.book',       'Book pinned');
+      case 'person':     return T('pin.library',    'Library pinned');
+      case 'location':   return T('pin.location',   'Location pinned');
+      case 'historical': return T('pin.period',     'Historical period pinned');
+      default:           return '';
+    }
+}
+
+function ensurePinIndicator() {
+    const panel = document.getElementById('hover-details');
+    if (!panel) return null;
+    let el = panel.querySelector('#details-pin');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'details-pin';
+      el.className = 'details-pin';
+      el.innerHTML = '<img alt="" aria-hidden="true"><span class="label"></span>';
+      panel.appendChild(el);
+    }
+    return el;
+}
+
+function setPinIndicator(kind) {
+    const el = ensurePinIndicator();
+    if (!el) return;
+
+    if (!kind) {
+      el.classList.remove('visible');
+      el.setAttribute('aria-hidden', 'true');
+      el.removeAttribute('title');
+      return;
+    }
+
+    const img = el.querySelector('img');
+    const lab = el.querySelector('.label');
+
+    img.src = PIN_ICONS[kind] || '';
+    img.alt = '';
+    img.setAttribute('aria-hidden', 'true');
+
+    const text = pinLabel(kind);
+    lab.textContent = text;
+    el.title = text;
+
+    el.classList.add('visible');
+    el.setAttribute('aria-hidden', 'false');
+}
 
 function setDetailsExpandEnabled(on) {
     const btn = document.getElementById('details-expand-btn');
@@ -297,6 +356,9 @@ function renderPeriodDetails(periodName) {
     const placeholder = panel.querySelector('.details-panel__placeholder');
     const listEl      = panel.querySelector('#details-list');
 
+    const isPinned = Array.isArray(window.selectedPeriods) && window.selectedPeriods.includes(periodName);
+    setPinIndicator(isPinned ? 'historical' : null);
+
     // Use the current filtered set (period filter already applied by the bar click)
     const base = (typeof applyGlobalFilters === 'function' && window.globalData)
       ? applyGlobalFilters(globalData)
@@ -371,6 +433,8 @@ function __getSelectedPeriods() {
 function renderBookDetails(row) {
     const panel       = document.getElementById('hover-details');
     panel.classList.add('details-panel--list-mode', 'details-panel--book-mode');
+
+    setPinIndicator(window.getPinnedBook && window.getPinnedBook() ? 'book' : null);
 
     const wrapper     = panel.querySelector('.details-panel__img-wrapper');
     const nameEl      = panel.querySelector('.details-panel__name');
@@ -557,6 +621,9 @@ function renderLibraryDetails(libName, allData) {
     panel.classList.remove('details-panel--list-mode');
     hideBookMeta(panel);
 
+    const isPinned = !!(window.selectedNodes && window.selectedNodes.has(libName));
+    setPinIndicator(isPinned ? 'person' : null);
+
     const wrapper     = panel.querySelector('.details-panel__img-wrapper');
     const nameEl      = panel.querySelector('.details-panel__name');
     const booksEl     = panel.querySelector('.details-panel__books');
@@ -621,6 +688,9 @@ function renderLocationDetails(locKey) {
     const reignEl     = panel.querySelector('.details-panel__reign');
     const placeholder = panel.querySelector('.details-panel__placeholder');
     const listEl      = panel.querySelector('#details-list');
+
+    const isPinned = !!(window.selectedLocations && window.selectedLocations.has(locKey));
+    setPinIndicator(isPinned ? 'location' : null);
 
     const p = (window.mapPoints || []).find(pt => pt.key === locKey);
     if (!p) return;
@@ -763,6 +833,7 @@ function computeDotModel(n, cur, maxDots) {
 
 function clearDetailsPanel() {
     pinnedBook = null;
+    setPinIndicator(null);
     const panel = document.getElementById('hover-details');
     panel.classList.remove('details-panel--list-mode', 'details-panel--book-mode');
     hideBookMeta(panel);
