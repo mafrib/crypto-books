@@ -913,10 +913,6 @@ function makeMap () {
 function updateDashboard() {
     const filtered = applyGlobalFilters(globalData);
 
-    const curLocs = new Set(activeFilters.byLocation?.values || []);
-    window.selectedLocations.clear();
-    curLocs.forEach(v => window.selectedLocations.add(v));
-
     // For map visibility and per-point entries, ignore the location filter
     const filteredForMap = applyFiltersExcept(['byLocation']);
     refreshMapPoints(filteredForMap);
@@ -946,8 +942,6 @@ function updateDashboard() {
     if (!skipTreemap) {
         createTreemap('#treemap-area', filtered, currentTreemapMode, null);
     }
-
-    if (window.rebuildDetailsItems) window.rebuildDetailsItems();
 
     if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
 }

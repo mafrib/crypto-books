@@ -733,15 +733,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             commitChecklistFilters();
 
-            if (id === 'filter-period') {
-                window.selectedPeriods = (selectedPeriods || []).slice();
-
-                if (window.rebuildDetailsItems) {
-                    const latest = window.selectedPeriods[window.selectedPeriods.length - 1];
-                    window.rebuildDetailsItems(latest);
-                }
-            }
-
             bumpCounter(list);
             refreshFilterTags();
             updateFilterBadge();

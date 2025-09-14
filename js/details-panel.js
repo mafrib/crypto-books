@@ -554,13 +554,6 @@ function rebuildDetailsItems(focusId) {
       }
     }
 
-    const libsFromFilter = af.byLibrary?.values || [];
-    libsFromFilter.forEach(id => {
-      if (!items.some(it => it.type==='library' && it.id===id)) {
-        items.push({ type: 'library', id, label: id });
-      }
-    });
-
     if (window.selectedLocations && window.selectedLocations.size) {
       for (const key of window.selectedLocations) {
         const p = (window.mapPoints || []).find(pt => pt.key === key);
@@ -571,14 +564,6 @@ function rebuildDetailsItems(focusId) {
     __getSelectedPeriods().forEach(p => {
       if (!items.some(it => it.type === 'period' && it.id === p)) {
         items.push({ type: 'period', id: p, label: p });
-      }
-    });
-
-    const locsFromFilter = af.byLocation?.values || [];
-    locsFromFilter.forEach(key => {
-      if (!items.some(it => it.type==='location' && it.id===key)) {
-        const p = (window.mapPoints || []).find(pt => pt.key === key);
-        items.push({ type: 'location', id: key, label: p?.label || key });
       }
     });
 
