@@ -489,7 +489,7 @@ function rebuildFilterTags () {
 
             case 'byGeoArea':
                 getChecked('filter-geoarea').forEach(v => {
-                    addTag(`Geographical area: ${v}`, () => {
+                    addTag(`${i18n.t('filter.geoarea')}: ${v}`, () => {
                         uncheckValue('filter-geoarea', v);
                         const remaining = getChecked('filter-geoarea');
                         if (remaining.length) {
@@ -511,7 +511,7 @@ function rebuildFilterTags () {
                     const input = document.querySelector(`#filter-location input[value="${CSS.escape(v)}"]`);
                     const label = input ? input.nextElementSibling.textContent.trim() : v;
 
-                    addTag(`Location: ${label}`, () => {
+                    addTag(`${i18n.t('filter.location')}: ${label}`, () => {
 
                         uncheckValue('filter-location', v);
 
@@ -556,7 +556,7 @@ function rebuildFilterTags () {
                                 break;
 
             case 'byCategory' : getChecked('filter-category')
-                                .forEach(v => addTag(`Literary Categories › ${v}`, () => {
+                                .forEach(v => addTag(`${i18n.t('treemap.mode.category')} › ${v}`, () => {
                                     // Uncheck category
                                     uncheckValue('filter-category', v);
                                     clearGlobalFilter('byCategory');
@@ -570,7 +570,7 @@ function rebuildFilterTags () {
                                 break;
 
             case 'byTradition': getChecked('filter-tradition')
-                                .forEach(v => addTag(`Intellectual Tradition › ${v}`, () => {
+                                .forEach(v => addTag(`${i18n.t('treemap.mode.tradition')} › ${v}`, () => {
                                     uncheckValue('filter-tradition', v);
                                     clearGlobalFilter('byTradition');
                                 }));
@@ -604,10 +604,12 @@ function rebuildFilterTags () {
                 if (treemapSelection) {
                     let tagLabel = '';
                     if (currentTreemapMode === 'category') {
-                        const {cat, gen} = treemapSelection;
-                        tagLabel = gen ? `${cat} › ${gen}` : `Literary Categories › ${cat}`;
+                        const { cat, gen } = treemapSelection;
+                        tagLabel = gen
+                        ? `${i18n.t('treemap.mode.category')} › ${cat} › ${gen}`
+                        : `${i18n.t('treemap.mode.category')} › ${cat}`;
                     } else {
-                        tagLabel = `Intellectual Tradition › ${treemapSelection.trad}`;
+                        tagLabel = `${i18n.t('treemap.mode.tradition')} › ${treemapSelection.trad}`;
                     }
                     addTag(tagLabel, () => {
                         treemapSelection    = null;
@@ -620,12 +622,12 @@ function rebuildFilterTags () {
                         updateTreemapBadge();
                     });
                 } else {
-                    addTag('Treemap', () => { clearGlobalFilter('treemap'); });
+                    addTag(i18n.t('treemap.title'), () => { clearGlobalFilter('treemap'); });
                 }
                 break;
 
             case 'network' :
-                (activeFilters.network?.values || ['Network selection']).forEach(lib => {
+                (activeFilters.network?.values || [i18n.t('filter.library')]).forEach(lib => {
                     addTag(lib, () => {
                         selectedNodes.clear();
                         selectedLinks.clear();
@@ -645,14 +647,14 @@ function rebuildFilterTags () {
                 break;
 
             case 'byProbObra' :
-                getChecked('filter-probobra').forEach(v=>addTag(`Book Attribution: ${v}`, ()=>{
+                getChecked('filter-probobra').forEach(v=>addTag(`${i18n.t('filter.probobra')}: ${v}`, ()=>{
                     uncheckValue('filter-probobra', v);
                     clearGlobalFilter('byProbObra');
                 }));
                 break;
 
             case 'byProbAutor':
-                getChecked('filter-probautor').forEach(v=>addTag(`Authorship: ${v}`, ()=>{
+                getChecked('filter-probautor').forEach(v=>addTag(`${i18n.t('filter.probautor')}: ${v}`, ()=>{
                     uncheckValue('filter-probautor', v);
                     clearGlobalFilter('byProbAutor');
                 }));
