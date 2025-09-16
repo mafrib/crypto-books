@@ -58,7 +58,7 @@ function normalizePeriod(v) {
     const t = (v ?? '').toString().trim();
     if (!t) return 'Por determinar';
     const lc = t.toLowerCase();
-    if (lc === 'indeterminada' || lc === 'por determinar') return 'Por determinar';
+    if (lc === 'indeterminada' || lc === 'por determinar' || lc === 'em classificação') return 'Por determinar';
     return t;
 }
 
@@ -950,7 +950,7 @@ function startDashboard() {
                 const trimmed = (d.Obra ?? '').toString().trim();
                 return {
                     ...d,
-                    Obra: trimmed ? trimmed : 'Por classificar'
+                    Obra: trimmed ? trimmed : 'Em classificação'
                 };
             });
             window.globalData = globalData;

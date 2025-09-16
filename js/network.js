@@ -43,7 +43,7 @@ function rebuildNetworkFilterFromState(allData) {
             (libMap.get(a) || [])
             .filter(r => {
                 const t = r.Obra?.trim().toLowerCase();
-                return t && t !== 'por classificar';
+                return t && t !== 'em classificação';
             })
             .map(r => r.Obra)
         )
@@ -58,7 +58,7 @@ function rebuildNetworkFilterFromState(allData) {
             (libMap.get(b) || [])
             .filter(r => {
                 const t = r.Obra?.trim().toLowerCase();
-                return t && t !== 'por classificar';
+                return t && t !== 'em classificação';
             })
             .map(r => r.Obra)
         )
@@ -405,7 +405,7 @@ function isAnonymous(name) {
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')
         .trim();
-    return norm === 'por classificar' || norm.includes('anonimo');
+    return norm === 'não aplicável' || norm.includes('anonimo');
 }
 
 function processNodes(data) {
@@ -423,13 +423,16 @@ function processEdges(data) {
             rows
                 .filter(r => {
                     const t = r.Obra?.trim().toLowerCase();
-                    return t && t !== 'por classificar';
+                    return t && t !== 'em classificação';
                 })
                 .map(r => r.Obra)
         );
         const authors = new Set(
             rows
-                .filter(r => !isAnonymous(r.Nome_Autor))
+                .filter(r => {
+                    const authorName = r.Nome_Autor?.trim().toLowerCase()
+                    return !isAnonymous(authorName) && authorName!== 'não aplicável'
+                })
                 .map(r => r.Nome_Autor)
         );
         libMap.set(lib, { books, authors });
