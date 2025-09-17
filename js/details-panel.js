@@ -15,6 +15,26 @@ const PIN_ICONS = {
   historical: '../img/icons/historical.png'
 };
 
+function normText(s) {
+    return (s || '').toString().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function isPendingClassification(v) {
+    const t = normText(v);
+    if (!t) return false;
+    return t === 'em classificacao' || t === 'classificacao' || /\b(in|em)\s+classific/.test(t);
+}
+
+function meaningful(v) {
+    const t = (v || '').toString().trim();
+    return t && !isPendingClassification(t);
+}
+
+function withColon(label) {
+    const txt = (label || '').toString();
+    return /[:：]$/.test(txt) ? txt : `${txt}:`;
+}
+
 let currentCarouselItems = [];
 let currentIndex = 0;
 
@@ -434,8 +454,6 @@ function renderBookDetails(row) {
     const panel       = document.getElementById('hover-details');
     panel.classList.add('details-panel--list-mode', 'details-panel--book-mode');
 
-    setPinIndicator(window.getPinnedBook && window.getPinnedBook() ? 'book' : null);
-
     const wrapper     = panel.querySelector('.details-panel__img-wrapper');
     const nameEl      = panel.querySelector('.details-panel__name');
     const booksEl     = panel.querySelector('.details-panel__books');
@@ -445,16 +463,14 @@ function renderBookDetails(row) {
     const placeholder = panel.querySelector('.details-panel__placeholder');
     const listEl      = panel.querySelector('#details-list');
 
-    function addItem(label, val, extraHTML = '') {
-      const v = normalizeProbString(val);
-      if (!v) return;
-      const div = document.createElement('div');
-      div.className = 'list-item';
-      div.innerHTML = `<strong>${label}:</strong> ${v}${extraHTML}`;
-      listEl.appendChild(div);
-    }
-
     const { attribEl, authorshipEl, descEl } = ensureBookNodes(panel);
+
+    function onlyYear(v) {
+        const t = (v || '').toString().trim();
+        if (!t) return '';
+        const m = t.match(/(\d{4})/);
+        return m ? m[1] : t;
+    }
 
     // Base visibility
     placeholder.style.display = 'none';
@@ -466,62 +482,159 @@ function renderBookDetails(row) {
     reignEl.style.display     = 'none';
     if (listEl) { listEl.hidden = false; listEl.innerHTML = ''; }
 
-    // We won't use the separate authorship paragraph anymore
+    // Authorship paragraph (old) stays hidden
     authorshipEl.style.display = 'none';
     authorshipEl.setAttribute('aria-hidden', 'true');
 
-    // Label for the title
+    // Header label (already translated in i18n)
     booksEl.textContent = i18n.t('details.book.titleLabel');
 
     // Title
-    const title = normalizeProbString(getFirst(row, ['Obra']));
+    const title = (row.Obra || '').toString().trim();
     nameEl.textContent = title || '—';
     nameEl.setAttribute('aria-label', title || '—');
 
-    // Atribuição (ProbAtribObra) — show only if there is a value
-    const probObra  = getFirst(row, ['ProbAtribObra', 'ProbAtribuicao_Obra', 'Prob Atrib Obra', 'probatribobra']);
-    const obraBadge = buildProbBadge(probObra, i18n.t('prob.obra.tip'));
-    if (obraBadge) {
-      attribEl.style.display = '';
-      attribEl.innerHTML = `
-        <span class="meta-label">${i18n.t('details.attribution')}</span>
-        ${obraBadge}
-      `;
+    // Attribution badge + “see more” for alternative attribution (both hidden if pending)
+    const probObraRaw = getFirst(row, ['ProbAtribObra', 'ProbAtribuicao_Obra', 'Prob Atrib Obra', 'probatribobra']);
+    const probObra    = meaningful(probObraRaw) ? probObraRaw : '';
+    const obraBadge   = probObra ? buildProbBadge(probObra, i18n.t('prob.obra.tip')) : '';
+
+    const altAtribRaw = getFirst(row, [
+      'AtribuicaoAlternatObra', 'AtribuicaoAlternat_Obra', 'AtribuiçãoAlternat_Obra', 'Atribuicao Alternativa Obra'
+    ]);
+    const altAtribObra = meaningful(altAtribRaw) ? altAtribRaw.toString().trim() : '';
+
+    if (obraBadge || altAtribObra) {
+        attribEl.style.display = '';
+        const altId = `alt-atr-obra-${Math.random().toString(36).slice(2,8)}`;
+
+        attribEl.innerHTML = `
+          <span class="meta-label">${i18n.t('details.attribution')}</span>
+          ${obraBadge || ''}
+          ${altAtribObra ? `
+            <button type="button" class="meta-toggle" aria-expanded="false" aria-controls="${altId}">
+              ${i18n.t('details.seeMore')}
+            </button>
+            <span id="${altId}" class="meta-more" hidden>
+              <strong>${withColon(i18n.t('details.altBook'))}</strong> ${altAtribObra}
+            </span>
+          ` : ''}
+        `;
+
+        if (altAtribObra) {
+            const btn  = attribEl.querySelector('.meta-toggle');
+            const more = attribEl.querySelector('.meta-more');
+            btn.addEventListener('click', () => {
+              const expanded = btn.getAttribute('aria-expanded') === 'true';
+              btn.setAttribute('aria-expanded', String(!expanded));
+              more.hidden = expanded;
+              btn.textContent = expanded ? i18n.t('details.seeMore') : i18n.t('details.seeLess');
+            });
+        }
     } else {
-      attribEl.style.display = 'none';
-      attribEl.innerHTML = '';
+          attribEl.style.display = 'none';
+          attribEl.innerHTML = '';
+      }
+
+    // Description (hidden if pending)
+    const descRaw = getFirst(row, ['Descricao', 'Descrição', 'descricao']);
+    const desc    = meaningful(descRaw) ? descRaw.toString().trim() : '';
+    if (desc) {
+        descEl.style.display = '';
+        descEl.innerHTML = `<strong>${withColon(i18n.t('details.description'))}</strong> ${desc}`;
+    } else {
+        descEl.style.display = 'none';
+        descEl.innerHTML = '';
     }
 
-    // Author + Authorship (same box, 2 lines)
-    const authorName = normalizeProbString(getFirst(row, ['Nome_Autor', 'Autor']));
-    const probAutor  = getFirst(row, ['ProbAtribAutor', 'ProbAtribuicao_Autor', 'Prob Atrib Autor', 'probatribautor']);
-    const autorBadge = buildProbBadge(probAutor, i18n.t('prob.autor.tip'));
+    // Author box
+    const authorName = (getFirst(row, ['Nome_Autor', 'Autor']) || '').toString().trim();
+
+    const bornYear  = onlyYear(getFirst(row, ['DataNasc_Autor']));
+    const bornPlace = (getFirst(row, ['LocalNasc_Autor']) || '').toString().trim();
+    const diedYear  = onlyYear(getFirst(row, ['DataMorte_Autor']));
+    const diedPlace = (getFirst(row, ['LocalMorte_Autor']) || '').toString().trim();
+
+    // Compact lines for subpoints (Year, Place)
+    const bornLine = (bornYear || bornPlace) ? `${bornYear || '—'}${bornPlace ? ', ' + bornPlace : ''}` : '';
+    const diedLine = (diedYear || diedPlace) ? `${diedYear || '—'}${diedPlace ? ', ' + diedPlace : ''}` : '';
+
+    const probAutorRaw = getFirst(row, ['ProbAtribAutor', 'ProbAtribuicao_Autor', 'Prob Atrib Autor', 'probatribautor']);
+    const probAutor    = meaningful(probAutorRaw) ? probAutorRaw : '';
+    const autorBadge   = probAutor ? buildProbBadge(probAutor, i18n.t('prob.autor.tip')) : '';
+
+    const autorStatusRaw = getFirst(row, ['EstatutoAutor']);
+    const autorStatus    = meaningful(autorStatusRaw) ? autorStatusRaw.toString().trim() : '';
 
     const authorBox = document.createElement('div');
     authorBox.className = 'list-item';
     authorBox.innerHTML = `
-      <div><strong>${i18n.t('catalog.header.author')}:</strong> ${authorName || '—'}</div>
-      ${autorBadge ? `<div><strong>${i18n.t('details.authorship')}:</strong> ${autorBadge}</div>` : ''}
+      <div><strong>${withColon(i18n.t('catalog.header.author'))}</strong> ${authorName || '—'}</div>
+      ${(bornLine || diedLine) ? `
+        <ul class="subpoints author-subpoints" role="group" aria-label="${(i18n.t && i18n.t('details.authorSubpoints')) || 'Author details'}">
+          ${bornLine ? `<li><strong>${withColon(i18n.t('details.birth'))}</strong> ${bornLine}</li>` : ''}
+          ${diedLine ? `<li><strong>${withColon(i18n.t('details.death'))}</strong> ${diedLine}</li>` : ''}
+        </ul>
+      ` : ''}
+      ${autorBadge ? `<div><strong>${withColon(i18n.t('details.authorship'))}</strong> ${autorBadge}</div>` : ''}
+      ${autorStatus ? `<div><strong>${withColon(i18n.t('details.authorStatus'))}</strong> ${autorStatus}</div>` : ''}
     `;
     listEl.appendChild(authorBox);
 
-    // Description with label; hide if empty
-    const desc = normalizeProbString(getFirst(row, ['Descricao', 'Descrição', 'descricao']));
-    if (desc) {
-      descEl.style.display = '';
-      descEl.innerHTML = `<strong>Description:</strong> ${desc}`;
-    } else {
-      descEl.style.display = 'none';
-      descEl.innerHTML = '';
+    // Language / Form / Support (each hidden if pending)
+    const idioma  = meaningful(getFirst(row, ['Idioma'])) ? getFirst(row, ['Idioma']).toString().trim() : '';
+    const forma   = meaningful(getFirst(row, ['Forma'])) ? getFirst(row, ['Forma']).toString().trim() : '';
+    const suporte = meaningful(getFirst(row, ['Suporte'])) ? getFirst(row, ['Suporte']).toString().trim() : '';
+    if (idioma || forma || suporte) {
+        const box = document.createElement('div');
+        box.className = 'list-item';
+        box.innerHTML = `
+          ${idioma  ? `<div><strong>${withColon(i18n.t('details.language'))}</strong> ${idioma}</div>` : ''}
+          ${forma   ? `<div><strong>${withColon(i18n.t('details.form'))}</strong> ${forma}</div>` : ''}
+          ${suporte ? `<div><strong>${withColon(i18n.t('details.support'))}</strong> ${suporte}</div>` : ''}
+        `;
+        listEl.appendChild(box);
     }
 
-    // Other items
-    addItem('Alternative attribution (Book)',   getFirst(row, ['AtribuicaoAlternat_Obra', 'AtribuiçãoAlternat_Obra', 'Atribuicao Alternativa Obra']));
-    addItem('Alternative attribution (Author)', getFirst(row, ['AtribuicaoAlternat_Autor', 'AtribuiçãoAlternat_Autor', 'Atribuicao Alternativa Autor']));
-    addItem('Author short bio',                 getFirst(row, ['BioAbreviada_Autor', 'bioabreviada_autor']));
-    addItem('Synopsis',                         getFirst(row, ['Sinopse_Obra', 'Sinopse obra', 'Sinopse']));
+    // Original production (date + place), both filtered
+    const prodDateRaw  = getFirst(row, ['DataProdOriginal_Obra']);
+    const prodPlaceRaw = getFirst(row, ['LugarProdOriginal_Obra']);
+    const prodDate  = meaningful(prodDateRaw)  ? prodDateRaw.toString().trim()  : '';
+    const prodPlace = meaningful(prodPlaceRaw) ? prodPlaceRaw.toString().trim() : '';
+    if (prodDate || prodPlace) {
+        const pp = document.createElement('div');
+        pp.className = 'list-item';
+        const combined = [prodDate, prodPlace].filter(Boolean).join(', ');
+        pp.innerHTML = `<div><strong>${withColon(i18n.t('details.production'))}</strong> ${combined}</div>`;
+        listEl.appendChild(pp);
+    }
 
-    panel.classList.toggle('is-pinned', !!window.getPinnedBook && !!window.getPinnedBook());
+    // Synopsis (hidden if pending)
+    const synopsisRaw = getFirst(row, ['Sinopse_Obra', 'Sinopse obra', 'Sinopse']);
+    const synopsis    = meaningful(synopsisRaw) ? synopsisRaw.toString().trim() : '';
+    if (synopsis) {
+        const syn = document.createElement('div');
+        syn.className = 'list-item';
+        syn.innerHTML = `<div><strong>${withColon(i18n.t('details.synopsis'))}</strong> ${synopsis}</div>`;
+        listEl.appendChild(syn);
+    }
+
+    // Archival copies / Textual editions (hidden if pending)
+    const copiasRaw  = getFirst(row, ['CopiasArquivisticas_Obra']);
+    const edicoesRaw = getFirst(row, ['EdicoesTextuais_Obra']);
+    const copias  = meaningful(copiasRaw)  ? copiasRaw.toString().trim()  : '';
+    const edicoes = meaningful(edicoesRaw) ? edicoesRaw.toString().trim() : '';
+    if (copias || edicoes) {
+        const we = document.createElement('div');
+        we.className = 'list-item';
+        we.innerHTML = `
+          ${copias  ? `<div><strong>${withColon(i18n.t('details.archivalCopies'))}</strong> ${copias}</div>` : ''}
+          ${edicoes ? `<div><strong>${withColon(i18n.t('details.textualEditions'))}</strong> ${edicoes}</div>` : ''}
+        `;
+        listEl.appendChild(we);
+      }
+
+    panel.classList.toggle('is-pinned', !!(window.getPinnedBook && window.getPinnedBook()));
     setDetailsExpandEnabled(true);
 }
 

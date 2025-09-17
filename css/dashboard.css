@@ -1414,6 +1414,57 @@ details[open] > summary::after {
   margin: 0.25rem 0;
 }
 
+.details-panel__list .list-item > div + div {
+  margin-top: 2px;
+}
+
+.details-panel--book-mode .details-panel__attrib .meta-toggle {
+  margin-left: 6px;
+  background: transparent;
+  border: none;
+  color: #16404D;
+  opacity: 0.85;
+  font-size: 0.65rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.details-panel--book-mode .details-panel__attrib .meta-more {
+  display: inline;
+  margin-left: 6px;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.details-panel--book-mode .details-panel__attrib .meta-more[hidden] {
+  display: none;
+}
+
+.details-panel--book-mode .details-panel__attrib {
+  margin-bottom: 10px;
+}
+
+.details-panel--book-mode .value--pending {
+  color: #667085;
+  opacity: 0.9;
+  font-style: italic;
+}
+
+.details-panel__list .author-life { margin-top: 2px; opacity: 0.95; }
+.details-panel__list .author-life > div + div { margin-top: 2px; }
+
+.details-panel__list .list-item .subpoints {
+  margin: 2px 0 0 0;
+  padding-left: 1.2em;
+  list-style: disc;
+  opacity: 0.95;
+}
+
+.details-panel__list .list-item .subpoints li {
+  margin: 2px 0;
+}
+
 .details-expand-btn {
   position: absolute;
   top: var(--pad-v);
