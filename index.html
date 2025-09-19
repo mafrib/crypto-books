@@ -209,8 +209,16 @@
           <div class="search-container">
             <img src="../img/icons/search.svg" id="search-icon"></img>
             <input type="text" id="search-input"
-            data-i18n-attr="placeholder:catalog.search.placeholder"
-            placeholder="Search for a book, author or library...">
+              data-i18n-attr="placeholder:catalog.search.placeholder"
+              placeholder="Search for a book, author or library...">
+            <button id="search-clear-btn" type="button"
+                    data-i18n-attr="aria-label:catalog.search.clear|title:catalog.search.clear"
+                    aria-label="Clear search" title="Clear search">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4.5 4.5 L11.5 11.5 M11.5 4.5 L4.5 11.5"
+                      stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </button>
           </div>
           <div class="catalog-header">
             <h5 class="sortable" data-column="Descricao">

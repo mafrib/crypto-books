@@ -2037,6 +2037,8 @@ details[open] > summary::after {
   --search-icon-size: 15px;
   --search-icon-gap: 6px;
   --catalog-gutter: 1rem;
+  --expand-size: 22px;
+  --expand-gap: 6px;
   position: relative;
   z-index: 50;
 }
@@ -2044,6 +2046,12 @@ details[open] > summary::after {
 .search-container {
   display: flex;
   margin-bottom: 0.5rem;
+  position: relative;
+}
+
+#catalog .search-container {
+  position: relative;
+  padding-right: calc(var(--expand-size) + var(--expand-gap) + 1.6rem);
 }
 
 #search-input {
@@ -2053,6 +2061,42 @@ details[open] > summary::after {
   border-bottom: 0.5px solid;
   background: transparent;
   outline: none;
+}
+
+#search-clear-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: calc(var(--expand-size) + var(--expand-gap));
+  z-index: 3;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #16404D;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease, background-color .12s ease;
+}
+
+
+#search-clear-btn.visible {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+
+#search-clear-btn:hover {
+  opacity: 0.9;
+  background: rgba(22,64,77,0.08);
+}
+
+#search-clear-btn svg {
+  width: 12px;
+  height: 12px;
 }
 
 .header-info {

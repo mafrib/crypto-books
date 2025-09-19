@@ -152,42 +152,52 @@ function itemMatchesAllTerms(item, terms) {
 }
 
 function setupSearchBar(rawData) {
-    const input = document.getElementById("search-input");
-    const clearX  = document.getElementById("search-clear-btn");
+    const input  = document.getElementById("search-input");
+    const clearX = document.getElementById("search-clear-btn");
 
     input.addEventListener("input", () => {
-        const query = input.value.trim();
-        if (!query) {
-          // Respect current filters
-          const base = applyGlobalFilters(rawData);
-          createBooksCatalog(base);
-          window.clearSearchFocus && window.clearSearchFocus();
-          window.updateUnlocatedBadge && window.updateUnlocatedBadge(base);
-
-          if (clearX) clearX.classList.remove('visible');
-          updateClearButton();
-          return;
-        }
-
-        const terms = query
-          .normalize("NFD")
-          .replace(/\p{Diacritic}/gu, "")
-          .toLowerCase()
-          .split(/\s+/)
-          .map(t => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""))
-          .filter(t => t);
-
-        // Filter on top of current filters
-        const base     = applyGlobalFilters(rawData);
-        const results  = base.filter(item => itemMatchesAllTerms(item, terms));
-
-        createBooksCatalog(results);
-        window.applySearchFocus && window.applySearchFocus(results);
+      const query = input.value.trim();
+      if (!query) {
+        const base = applyGlobalFilters(rawData);
+        createBooksCatalog(base);
+        window.clearSearchFocus && window.clearSearchFocus();
         window.updateUnlocatedBadge && window.updateUnlocatedBadge(base);
 
-        if (clearX) clearX.classList.add('visible');
+        if (clearX) clearX.classList.remove('visible');
         updateClearButton();
+        return;
+      }
+
+      const terms = query
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, "")
+        .toLowerCase()
+        .split(/\s+/)
+        .map(t => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""))
+        .filter(t => t);
+
+      const base    = applyGlobalFilters(rawData);
+      const results = base.filter(item => itemMatchesAllTerms(item, terms));
+
+      createBooksCatalog(results);
+      window.applySearchFocus && window.applySearchFocus(results);
+      window.updateUnlocatedBadge && window.updateUnlocatedBadge(base);
+
+      if (clearX) clearX.classList.add('visible');
+      updateClearButton();
     });
+
+    if (clearX) {
+      clearX.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!input.value) return;
+        input.value = '';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.focus();
+      });
+    }
+
     if (clearX) clearX.classList.toggle('visible', !!input.value.trim());
     updateClearButton();
 }

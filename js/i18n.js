@@ -41,6 +41,7 @@
             'treemap.breadcrumb.filtered': '(Filtered)',
 
             'catalog.search.placeholder': 'Search for a book, author or library...',
+            'catalog.search.clear': 'Clear search',
             'catalog.header.description': 'Description',
             'catalog.header.title': 'Title',
             'catalog.header.author': 'Author',
@@ -180,6 +181,7 @@
             'treemap.breadcrumb.filtered': '(Filtrado)',
 
             'catalog.search.placeholder': 'Procure por livro, autor ou livraria...',
+            'catalog.search.clear': 'Limpar pesquisa',
             'catalog.header.description': 'Descrição',
             'catalog.header.title': 'Título da Obra',
             'catalog.header.author': 'Autor',
