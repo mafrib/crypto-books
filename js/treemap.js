@@ -201,7 +201,7 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
             // Use a display copy so navigation still uses the clean `names`
             const labelsForDisplay = names.slice();
             if (otherModeFiltered && labelsForDisplay.length > 0) {
-            labelsForDisplay[0] = `${labelsForDisplay[0]} (Filtered)`;
+                labelsForDisplay[0] = `${labelsForDisplay[0]} ${i18n.t('treemap.breadcrumb.filtered')}`;
             }
 
             const html = labelsForDisplay.map((label, i) => {

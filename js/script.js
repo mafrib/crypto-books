@@ -43,6 +43,12 @@ window.addEventListener('i18n:changed', () => {
 
     try { window.refreshFilterTags && window.refreshFilterTags(); } catch (e) {}
 
+    try {
+        const filtered = applyGlobalFilters(globalData);
+        createTreemap('#treemap-area', filtered, currentTreemapMode, updateDashboard);
+        updateTreemapBadge();
+    } catch (e) {}
+
     const male = document.getElementById('gender-btn-male');
     const female = document.getElementById('gender-btn-female');
     if (male)   male.title   = i18n.t('gender.male');
