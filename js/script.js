@@ -14,6 +14,84 @@ const periodOrder = [
     'Idade Média Central (XI-XIII)',
     'Baixa Idade Média (XIV-XV)'
 ];
+
+// Canonical keys for special values
+const SPECIAL = {
+    UNKNOWN:       '__UNKNOWN__',
+    CLASSIFYING:   '__CLASSIFYING__',
+    NA:            '__NA__',
+    QUESTION:      '__QUESTION__',
+    UNDETERMINED:  '__UNDETERMINED__',
+    UNLOCATED:     '__UNLOCATED__'
+};
+
+function _norm(s) {
+    return (s ?? '').toString().trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+}
+
+// Map raw value to a special key (or null if not special)
+function specialKeyOf(raw) {
+    const t = _norm(raw);
+    if (!t)                                        return SPECIAL.UNKNOWN;
+    if (t === '?' || t === '??')                   return SPECIAL.QUESTION;
+    if (t.includes('nao aplic') || t.includes('n/a') || t === 'na') return SPECIAL.NA;
+    if (t.includes('em classific') || t.includes('por classif'))    return SPECIAL.CLASSIFYING;
+    if (t.includes('por determin') || t.includes('indeterminad'))   return SPECIAL.UNDETERMINED;
+    if (t.includes('desconhecid') || t.includes('unknown'))         return SPECIAL.UNKNOWN;
+    return null;
+}
+
+// Localized label for a special key
+function labelForSpecial(key) {
+    switch (key) {
+        case SPECIAL.UNKNOWN:      return i18n.t('filter.value.unknown');
+        case SPECIAL.CLASSIFYING:  return i18n.t('filter.value.classifying');
+        case SPECIAL.NA:           return i18n.t('filter.value.na');
+        case SPECIAL.QUESTION:     return i18n.t('filter.value.question');
+        case SPECIAL.UNDETERMINED: return i18n.t('filter.value.undetermined');
+        case SPECIAL.UNLOCATED:    return i18n.t('filter.location.unlocated');
+        default:                   return '';
+    }
+}
+
+// Build a checklist option array for a string field with “specials on top”
+function buildOptionsWithSpecials(data, field) {
+    const specials = new Map();
+    const normal   = new Map();
+
+    data.forEach(r => {
+        const raw = r[field];
+        const sk  = specialKeyOf(raw);
+        if (sk) {
+        specials.set(sk, labelForSpecial(sk));
+        } else {
+        const label = (raw ?? '').toString().trim();
+        if (label) normal.set(label, true);
+        }
+    });
+
+    const specialList = Array.from(specials.entries())
+        .map(([value, label]) => ({ value, label }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+    const normalList = Array.from(normal.keys())
+        .map(label => ({ value: label, label }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+    return specialList.concat(normalList);
+}
+
+function rowMatchesSelection(row, field, selectedSet) {
+    const raw = row[field];
+    const sk = specialKeyOf(raw);
+    if (sk) return selectedSet.has(sk);
+
+    const label = (raw ?? '').toString().trim();
+    return selectedSet.has(label);
+}
+
 window.highlightPeriodBar    = () => {};
 window.clearPeriodHighlights = () => {};
 
@@ -381,17 +459,30 @@ function ensureTreemapIndicator(btn) {
 
 function buildLocationOptions(data) {
     const map = new Map();
+
     data.forEach(r => {
         const key = locKeyFromRow(r);
         if (!key) return;
-        const name = (r.LocalNasc_Autor || 'Unknown location').trim();
+        const name = (r.LocalNasc_Autor || i18n.t('filter.location.unlocated')).trim();
         const cur = map.get(key) || { value: key, label: name, count: 0 };
         cur.count++;
-        if (!cur.label || cur.label === 'Unknown location') cur.label = name;
+        if (!cur.label || cur.label === i18n.t('filter.location.unlocated')) cur.label = name;
         map.set(key, cur);
     });
-    return Array.from(map.values())
+
+    const unlocatedCount = data.reduce((acc, r) => acc + (locKeyFromRow(r) ? 0 : 1), 0);
+    const list = Array.from(map.values())
         .sort((a, b) => a.label.localeCompare(b.label));
+
+    // Add explicit “No location” option if any
+    if (unlocatedCount > 0) {
+        list.unshift({
+        value: SPECIAL.UNLOCATED,
+        label: i18n.t('filter.location.unlocated'),
+        count: unlocatedCount
+        });
+    }
+    return list;
 }
 
 function fillChecklist(listId, values, multi = true) {
@@ -399,11 +490,13 @@ function fillChecklist(listId, values, multi = true) {
     if (!ul) { console.warn(`[fillChecklist] Missing list #${listId}`); return; }
 
     ul.innerHTML = '';
-    values.forEach(v => {
+    values.forEach((v, idx) => {
         const value = (typeof v === 'object' && v !== null) ? v.value : v;
         const label = (typeof v === 'object' && v !== null) ? (v.label ?? v.value) : v;
         const id = `${listId}-${CSS.escape(value)}`;
         const li = document.createElement('li');
+        li.dataset.idx = String(idx);  // preserve original order within group
+
         const type = multi ? 'checkbox' : 'radio';
         const nameAttr = type === 'radio' ? `name="${listId}"` : '';
         li.innerHTML =
@@ -446,23 +539,32 @@ function isFemaleLibrary(rawName) {
 }
 
 function populateFilterOptions() {
-    const u = key => Array.from(new Set(globalData.map(d=>d[key]).filter(Boolean))).sort();
+    // Libraries and authors
+    fillChecklist('filter-library',  buildOptionsWithSpecials(globalData, 'Proprietario_Nome'));
+    fillChecklist('filter-author',   buildOptionsWithSpecials(globalData, 'Nome_Autor'));
 
-    fillChecklist('filter-library',   u('Proprietario_Nome'));
-    fillChecklist('filter-author',    u('Nome_Autor'));
-    fillChecklist('filter-idioma',    u('Idioma'));
-    fillChecklist('filter-category',  u('CatLit_Descricao'),  false);
-    fillChecklist('filter-tradition', u('TradicaoIntelectual_Obra'), false);
-    fillChecklist('filter-genre',     u('GenLit_Descricao'),  false);
+    // Language
+    fillChecklist('filter-idioma',   buildOptionsWithSpecials(globalData, 'Idioma'));
+
+    // Category / Tradition / Genre
+    fillChecklist('filter-category',  buildOptionsWithSpecials(globalData, 'CatLit_Descricao'),  false);
+    fillChecklist('filter-tradition', buildOptionsWithSpecials(globalData, 'TradicaoIntelectual_Obra'), false);
+    fillChecklist('filter-genre',     buildOptionsWithSpecials(globalData, 'GenLit_Descricao'),  false);
+
+    // Location (now includes “No location” on top if any)
     fillChecklist('filter-location', buildLocationOptions(globalData));
-    fillChecklist('filter-geoarea',   u('OrigemGeografica_Autor'));
 
+    // Geo area
+    fillChecklist('filter-geoarea',  buildOptionsWithSpecials(globalData, 'OrigemGeografica_Autor'));
+
+    // Periods: keep your canonical order (already starts with Por determinar)
     const normPeriodSet = new Set(globalData.map(d => normalizePeriod(d.EpocaHistorica_Autor)));
     const periods = periodOrder.filter(p => normPeriodSet.has(p));
     fillChecklist('filter-period', periods);
 
-    fillChecklist('filter-probobra',  u('ProbAtribObra'));
-    fillChecklist('filter-probautor', u('ProbAtribAutor'));
+    // Probabilities (keep raw, but still allow special tokens to bubble up if present)
+    fillChecklist('filter-probobra',  buildOptionsWithSpecials(globalData, 'ProbAtribObra'));
+    fillChecklist('filter-probautor', buildOptionsWithSpecials(globalData, 'ProbAtribAutor'));
 }
 
 function rebuildFilterTags () {
@@ -524,13 +626,13 @@ function rebuildFilterTags () {
                         const remaining = getChecked('filter-location');
                         if (remaining.length) {
                             setGlobalFilter(
-                            'byLocation',
-                            r => {
-                                const k = locKeyFromRow(r);
-                                return k ? remaining.includes(k) : false;
-                            },
-                            remaining,
-                            'filter-location'
+                                'byLocation',
+                                r => {
+                                    const k = locKeyFromRow(r) || SPECIAL.UNLOCATED;
+                                    return remaining.includes(k);
+                                },
+                                remaining,
+                                'filter-location'
                             );
                         } else {
                             clearGlobalFilter('byLocation');
@@ -713,13 +815,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (checked.length) {
                     setGlobalFilter(
-                    'byLocation',
-                    row => {
-                        const k = locKeyFromRow(row);
-                        return k ? checked.includes(k) : false;
-                    },
-                    checked,
-                    'filter-location'
+                        'byLocation',
+                        row => {
+                            const k = locKeyFromRow(row) || SPECIAL.UNLOCATED;
+                            return checked.includes(k);
+                        },
+                        checked,
+                        'filter-location'
                     );
                 } else {
                     clearGlobalFilter('byLocation');

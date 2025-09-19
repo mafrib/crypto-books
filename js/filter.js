@@ -175,46 +175,49 @@ function syncModalLists () {
 }
 
 function commitChecklistFilters () {
-    const libs    = getChecked('filter-library');
-    const auths   = getChecked('filter-author');
-    const idioma  = getChecked('filter-idioma');
-    let   cats    = getChecked('filter-category');
-    let   trads   = getChecked('filter-tradition');
-    let   gens    = getChecked('filter-genre');
-    const pers    = getChecked('filter-period');
-    const periodKey = activeFilters.hasOwnProperty('period')
-                          ? 'period'
-                          : 'byPeriod';
+    const libs   = getChecked('filter-library');
+    const auths  = getChecked('filter-author');
+    const idioma = getChecked('filter-idioma');
+    let   cats   = getChecked('filter-category');
+    let   trads  = getChecked('filter-tradition');
+    let   gens   = getChecked('filter-genre');
+    const pers   = getChecked('filter-period');
 
+    const periodKey = activeFilters.hasOwnProperty('period') ? 'period' : 'byPeriod';
     selectedPeriods = [...pers];
     window.selectedPeriods = selectedPeriods.slice();
 
-    const probOb  = getChecked('filter-probobra');
-    const probAu  = getChecked('filter-probautor');
+    const probOb = getChecked('filter-probobra');
+    const probAu = getChecked('filter-probautor');
 
     const locs = getChecked('filter-location');
     const geos = getChecked('filter-geoarea');
 
+    // Location: include explicit "No location" option
     locs.length
         ? setGlobalFilter(
             'byLocation',
             r => {
-                const k = locKeyFromRow(r);
-                return k ? locs.includes(k) : false;
+            const k = locKeyFromRow(r) || SPECIAL.UNLOCATED;
+            return locs.includes(k);
             },
             locs,
             'filter-location'
-            )
+        )
         : clearGlobalFilter('byLocation');
 
-    geos.length
-        ? setGlobalFilter(
-            'byGeoArea',
-            r => geos.includes(r.OrigemGeografica_Autor),
-            geos,
-            'filter-geoarea'
-        )
-        : clearGlobalFilter('byGeoArea');
+    // Geo area (with specials support if you enabled it in options)
+    if (geos.length) {
+        const sel = new Set(geos);
+        setGlobalFilter(
+        'byGeoArea',
+        r => rowMatchesSelection(r, 'OrigemGeografica_Autor', sel),
+        geos,
+        'filter-geoarea'
+        );
+    } else {
+        clearGlobalFilter('byGeoArea');
+    }
 
     // Genre requires a selected Category
     if (!cats.length && gens.length) {
@@ -226,23 +229,62 @@ function commitChecklistFilters () {
     if (cats.length && gens.length) {
         const g = gens[0];
         if (categoryOfGenre(g) !== cats[0]) {
-            setChecked('filter-genre', []);
-            gens = [];
+        setChecked('filter-genre', []);
+        gens = [];
         }
     }
 
-    // Apply filters
-    libs.length   ? setGlobalFilter('byLibrary',   r => libs.includes(r.Proprietario_Nome)          , libs) : clearGlobalFilter('byLibrary');
-    auths.length  ? setGlobalFilter('byAuthor',    r => auths.includes(r.Nome_Autor)                , auths): clearGlobalFilter('byAuthor');
-    idioma.length ? setGlobalFilter('byIdioma',    r => idioma.includes(r.Idioma)                   , idioma): clearGlobalFilter('byIdioma');
-    cats.length   ? setGlobalFilter('byCategory',  r => cats.includes(r.CatLit_Descricao)           , cats) : clearGlobalFilter('byCategory');
-    trads.length  ? setGlobalFilter('byTradition', r => trads.includes(r.TradicaoIntelectual_Obra)  , trads): clearGlobalFilter('byTradition');
-    gens.length   ? setGlobalFilter('byGenre',     r => gens.includes(r.GenLit_Descricao)           , gens) : clearGlobalFilter('byGenre');
-    pers.length ? setGlobalFilter(periodKey,
-          r => pers.includes(normalizePeriod(r.EpocaHistorica_Autor)), pers, 'filter-period')
-            : clearGlobalFilter(periodKey);
-    probOb.length ? setGlobalFilter('byProbObra',  r => probOb.includes(r.ProbAtribObra)            , probOb): clearGlobalFilter('byProbObra');
-    probAu.length ? setGlobalFilter('byProbAutor', r => probAu.includes(r.ProbAtribAutor)           , probAu): clearGlobalFilter('byProbAutor');
+    // Apply filters (use specials-aware predicate)
+    if (libs.length) {
+        const sel = new Set(libs);
+        setGlobalFilter('byLibrary',   r => rowMatchesSelection(r, 'Proprietario_Nome',        sel), libs);
+    } else clearGlobalFilter('byLibrary');
+
+    if (auths.length) {
+        const sel = new Set(auths);
+        setGlobalFilter('byAuthor',    r => rowMatchesSelection(r, 'Nome_Autor',               sel), auths);
+    } else clearGlobalFilter('byAuthor');
+
+    if (idioma.length) {
+        const sel = new Set(idioma);
+        setGlobalFilter('byIdioma',    r => rowMatchesSelection(r, 'Idioma',                   sel), idioma);
+    } else clearGlobalFilter('byIdioma');
+
+    if (cats.length) {
+        const sel = new Set(cats);
+        setGlobalFilter('byCategory',  r => rowMatchesSelection(r, 'CatLit_Descricao',         sel), cats);
+    } else clearGlobalFilter('byCategory');
+
+    if (trads.length) {
+        const sel = new Set(trads);
+        setGlobalFilter('byTradition', r => rowMatchesSelection(r, 'TradicaoIntelectual_Obra', sel), trads);
+    } else clearGlobalFilter('byTradition');
+
+    if (gens.length) {
+        const sel = new Set(gens);
+        setGlobalFilter('byGenre',     r => rowMatchesSelection(r, 'GenLit_Descricao',         sel), gens);
+    } else clearGlobalFilter('byGenre');
+
+    if (pers.length) {
+        setGlobalFilter(
+        periodKey,
+        r => pers.includes(normalizePeriod(r.EpocaHistorica_Autor)),
+        pers,
+        'filter-period'
+        );
+    } else {
+        clearGlobalFilter(periodKey);
+    }
+
+    if (probOb.length) {
+        const sel = new Set(probOb);
+        setGlobalFilter('byProbObra',  r => rowMatchesSelection(r, 'ProbAtribObra',  sel), probOb);
+    } else clearGlobalFilter('byProbObra');
+
+    if (probAu.length) {
+        const sel = new Set(probAu);
+        setGlobalFilter('byProbAutor', r => rowMatchesSelection(r, 'ProbAtribAutor', sel), probAu);
+    } else clearGlobalFilter('byProbAutor');
 }
 
 function notifyFilterChange () {
@@ -353,10 +395,13 @@ function updateChecklistAvailability () {
             });
             // keep disabled items sorted to the bottom behavior
             const lis = Array.from(ul.children);
-            lis.sort((a,b)=>
-                a.classList.contains('disabled-option') -
-                b.classList.contains('disabled-option')
-            );
+            lis.sort((a, b) => {
+                const da = a.classList.contains('disabled-option') ? 1 : 0;
+                const db = b.classList.contains('disabled-option') ? 1 : 0;
+                if (da !== db) return da - db;
+                return Number(a.dataset.idx) - Number(b.dataset.idx);  // keep original order
+            });
+
             lis.forEach(li => ul.appendChild(li));
             return;
         }
@@ -369,7 +414,18 @@ function updateChecklistAvailability () {
             ? applyFiltersExcept(ownFilterKeys)
             : fullyFilteredRows;
 
-        const allowed = new Set(rows.map(r => (r[field] ?? '').toString()));
+        const allowed = new Set();
+
+        rows.forEach(r => {
+        if (listId === 'filter-period') {
+            allowed.add(normalizePeriod(r[field]));
+        } else {
+            const raw = r[field];
+            const sk  = specialKeyOf(raw);
+            if (sk) allowed.add(sk);
+            else    allowed.add((raw ?? '').toString().trim());
+        }
+        });
 
         ul.querySelectorAll('input').forEach(cb => {
             const selectable = allowed.has(cb.value) || cb.checked;
@@ -397,7 +453,12 @@ function updateChecklistAvailability () {
             .map(([src]) => src);
 
         const rows = ownKeys.length ? applyFiltersExcept(ownKeys) : fullyFilteredRows;
-        const allowed = new Set(rows.map(r => locKeyFromRow(r)).filter(Boolean));
+        const allowed = new Set();
+            rows.forEach(r => {
+                const k = locKeyFromRow(r);
+                if (k) allowed.add(k);
+                else   allowed.add(SPECIAL.UNLOCATED);
+            });
 
         ulLoc.querySelectorAll('input').forEach(cb => {
             const selectable = allowed.has(cb.value) || cb.checked;
@@ -408,10 +469,13 @@ function updateChecklistAvailability () {
         });
 
         const lis = Array.from(ulLoc.children);
-        lis.sort((a,b)=>
-            a.classList.contains('disabled-option') -
-            b.classList.contains('disabled-option')
-        );
+        lis.sort((a, b) => {
+            const da = a.classList.contains('disabled-option') ? 1 : 0;
+            const db = b.classList.contains('disabled-option') ? 1 : 0;
+            if (da !== db) return da - db;
+            return Number(a.dataset.idx) - Number(b.dataset.idx);  // keep original order
+        });
+
         lis.forEach(li => ulLoc.appendChild(li));
     }
 }
