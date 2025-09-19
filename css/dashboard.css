@@ -793,6 +793,18 @@ svg:not(.node-active-mode) .node:hover text {
   opacity: 0.6;
 }
 
+.node.hovered-network-node circle {
+  stroke: red;
+  stroke-width: 2px;
+  stroke-opacity: 1;
+}
+
+.node-active-mode .node.hovered-network-node circle {
+  stroke: red;
+  stroke-width: 2px;
+  stroke-opacity: 1;
+}
+
 .legend {
   position: absolute;
   display: flex;
