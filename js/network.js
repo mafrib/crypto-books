@@ -90,8 +90,6 @@ function rebuildNetworkFilterFromState(allData) {
     } else {
         clearGlobalFilter('network');
     }
-
-    updateDashboard();
 }
 
 function handleLinkClick(d, allData) {
@@ -196,8 +194,6 @@ function applyNetworkFilter(allowedSet, data) {
     } else {
         clearGlobalFilter('network');
     }
-
-    updateDashboard();
 }
 
 function buildAllowedFromSelection(nodesSet, linksSet) {
