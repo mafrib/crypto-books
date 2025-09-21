@@ -296,13 +296,35 @@ function getConflictingFilters(rows, skip = []) {
 }
 
 function getConflictingFiltersForPeriod(periodName) {
-    const rowsOfPeriod = globalData.filter(r =>
-        normalizePeriod(r.EpocaHistorica_Autor) === periodName
-    );
+    // Test what would happen if we added this period to the existing filters
+    const rowsWithAllFiltersIncludingPeriod = globalData.filter(row => {
+        // check if the row matches the period
+        if (normalizePeriod(row.EpocaHistorica_Autor) !== periodName) {
+            return false;
+        }
 
-    return Object.keys(activeFilters)
-        .filter(src => src !== 'period' && src !== 'byPeriod')
-        .filter(src => rowsOfPeriod.every(row => !activeFilters[src].fn(row)));
+        // Then check if it passes ALL existing active filters
+        for (const [filterKey, filterObj] of Object.entries(activeFilters)) {
+            // Skip period filters since we're testing period addition
+            if (filterKey === 'period' || filterKey === 'byPeriod') continue;
+
+            if (filterObj.fn && !filterObj.fn(row)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // If no rows would remain with the combination of ALL filters + this period,
+    // then all the active filters are conflicting with this period
+    if (rowsWithAllFiltersIncludingPeriod.length === 0) {
+        const conflicts = Object.keys(activeFilters)
+            .filter(src => src !== 'period' && src !== 'byPeriod');
+
+        console.log(`No books match ALL filters + period "${periodName}" - all filters conflict:`, conflicts);
+        return conflicts;
+    }
 }
 
 function showConflictPopup(subjectLabel, filters, kind = 'library') {

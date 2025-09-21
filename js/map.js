@@ -817,42 +817,51 @@ function makeMap () {
                     .attr('class', 'period-bar')
                     .attr('data-period', d => d)
                     .on('click', function (event, period) {
-                        const adding = !selectedPeriods.includes(period);
-                        if (adding) {
-                            const blockers = getConflictingFilters(
-                            globalData.filter(r => normalizePeriod(r.EpocaHistorica_Autor) === period),
-                            ['period','byPeriod']
-                            );
-                            if (blockers.length) {
-                            showConflictPopup(period, blockers, 'period');
-                            return;
+                        const isCurrentlySelected = selectedPeriods.includes(period);
+
+                        if (!isCurrentlySelected) {
+                            // Check for conflicts before adding this period
+                            const conflictingFilters = getConflictingFiltersForPeriod(period);
+                            if (conflictingFilters.length > 0) {
+                                showConflictPopup(period, conflictingFilters, 'period');
+                                return;
                             }
                         }
 
+                        // Toggle the period selection
                         const next = [...selectedPeriods];
-                        const already = next.indexOf(period) > -1;
-                        already ? next.splice(next.indexOf(period), 1) : next.push(period);
+                        const periodIndex = next.indexOf(period);
 
-                        const pretendFn = row => next.includes(normalizePeriod(row.EpocaHistorica_Autor));
-                        const pretendSet = applyFiltersExcept(['period','byPeriod']).filter(pretendFn);
-
-                        if (next.length > 0 && pretendSet.length === 0) {
-                            showConflictPopup(period, getConflictingFiltersForPeriod(period), 'period');
-                            return;
+                        if (periodIndex > -1) {
+                            next.splice(periodIndex, 1); // Remove if already selected
+                        } else {
+                            next.push(period); // Add if not selected
                         }
 
+                        // Check if the resulting selection would have any books
+                        if (next.length > 0) {
+                            const pretendFn = row => next.includes(normalizePeriod(row.EpocaHistorica_Autor));
+                            const pretendSet = applyFiltersExcept(['period', 'byPeriod']).filter(pretendFn);
+
+                            if (pretendSet.length === 0) {
+                                const conflictingFilters = getConflictingFiltersForPeriod(period);
+                                showConflictPopup(period, conflictingFilters, 'period');
+                                return;
+                            }
+                        }
+
+                        // Apply the selection
                         selectedPeriods = next;
                         window.selectedPeriods = selectedPeriods.slice();
 
-                        d3.select(this).classed('selected', !already)
-                                        .classed('selected', selectedPeriods.includes(period));
+                        d3.select(this).classed('selected', selectedPeriods.includes(period));
 
                         if (selectedPeriods.length) {
                             clearGlobalFilter('byPeriod');
                             setGlobalFilter(
-                            'period',
-                            d => selectedPeriods.includes(normalizePeriod(d.EpocaHistorica_Autor)),
-                            selectedPeriods
+                                'period',
+                                d => selectedPeriods.includes(normalizePeriod(d.EpocaHistorica_Autor)),
+                                selectedPeriods
                             );
                         } else {
                             clearGlobalFilter('period');

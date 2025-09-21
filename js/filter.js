@@ -365,11 +365,17 @@ function updateClearButton() {
     }
 }
 
-function applyFiltersExcept(keysToSkip = []) {
-    const skip = new Set(keysToSkip);
-    return Object.entries(activeFilters)
-                .filter(([k]) => !skip.has(k))
-                .reduce((data, [,obj]) => data.filter(obj.fn), globalData);
+function applyFiltersExcept(excludeFilters = []) {
+    const excludeSet = new Set(excludeFilters);
+    let result = [...globalData];
+
+    Object.entries(activeFilters).forEach(([key, filter]) => {
+        if (!excludeSet.has(key) && filter.fn) {
+            result = result.filter(filter.fn);
+        }
+    });
+
+    return result;
 }
 
 function updateChecklistAvailability () {

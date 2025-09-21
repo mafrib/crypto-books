@@ -635,12 +635,12 @@ function createNetworkGraph(containerSelector, data) {
 
             if (!allowedSet.has(d.id)) {
                 const blockers = getConflictingFilters(
-                globalData.filter(r => r.Proprietario_Nome.trim() === d.id),
-                ['network','byLibrary']
+                    globalData.filter(r => r.Proprietario_Nome.trim() === d.id),
+                    ['network','byLibrary']
                 );
                 if (blockers.length) {
-                showConflictPopup(d.id, blockers, 'library');
-                return;
+                    showConflictPopup(d.id, blockers, 'library');
+                    return;
                 }
             }
 
