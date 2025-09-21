@@ -886,22 +886,58 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('undo-last-btn')
         .addEventListener('click', ()=> {
             if (!pendingUndoNodes) return;
-            // restore previous node selection
-            selectedNodes.clear();
-            pendingUndoNodes.forEach(n=>selectedNodes.add(n));
 
-            repaintPeriodBars(applyFiltersExcept(['period','byPeriod']));
+            if (pendingUndoNodes.type === 'link') {
+                clickedLinks.clear();
+                selectedLinks.clear();
 
-            hideNoResultsPopup();
+                if (pendingUndoNodes.clickedLinks) {
+                    pendingUndoNodes.clickedLinks.forEach(k => clickedLinks.add(k));
+                }
+                if (pendingUndoNodes.selectedNodes) {
+                    selectedNodes.clear();
+                    pendingUndoNodes.selectedNodes.forEach(n => selectedNodes.add(n));
+                }
 
-            svg.classed('node-active-mode', true);
-            nodeGroup.selectAll('g.node')
+                const auto = new Set();
+                edges.forEach(e => {
+                    const key = linkKey(e);
+                    const a = e.source.id || e.source, b = e.target.id || e.target;
+                    if (selectedNodes.has(a) && selectedNodes.has(b)) auto.add(key);
+                });
+
+                clickedLinks.forEach(k => selectedLinks.add(k));
+                auto.forEach(k => selectedLinks.add(k));
+
+                svg.selectAll('.link').classed('active', l => selectedLinks.has(linkKey(l)));
+                svg.selectAll('g.node')
+                    .classed('active', d => selectedNodes.has(d.id))
+                    .classed('selected-by-link', n =>
+                        Array.from(selectedLinks).some(key =>
+                            key.startsWith(n.id + '|') || key.includes('|' + n.id + '|')
+                        )
+                    );
+
+                rebuildNetworkFilterFromState(globalData);
+            } else {
+                selectedNodes.clear();
+                if (pendingUndoNodes.forEach) {
+                    pendingUndoNodes.forEach(n => selectedNodes.add(n));
+                }
+
+                repaintPeriodBars(applyFiltersExcept(['period','byPeriod']));
+
+                svg.classed('node-active-mode', true);
+                nodeGroup.selectAll('g.node')
                     .classed('active', d => selectedNodes.has(d.id));
 
-            applyNetworkFilter(
-                buildAllowedFromSelection(selectedNodes, selectedLinks),
-                globalData
-            );
+                applyNetworkFilter(
+                    buildAllowedFromSelection(selectedNodes, selectedLinks),
+                    globalData
+                );
+            }
+
+            hideNoResultsPopup();
         });
 
     document.getElementById('clear-filters-btn')

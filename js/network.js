@@ -120,6 +120,25 @@ function handleLinkClick(d, allData) {
         );
 
     rebuildNetworkFilterFromState(allData);
+
+    // Check if the combination of all filters results in zero books
+    const externalFiltersActive = Object.keys(activeFilters).some(k => k !== 'network');
+    if (externalFiltersActive && clickedLinks.size > 0) {
+        // Test if the current combination of filters produces any results
+        const testResults = applyGlobalFilters(allData);
+
+        if (testResults.length === 0) {
+            // Store the previous state for undo
+            const prevClickedLinks = new Set(clickedLinks);
+            prevClickedLinks.delete(lk);
+
+            window.showNoResultsPopup({
+                type: 'link',
+                clickedLinks: prevClickedLinks,
+                selectedNodes: new Set(selectedNodes)
+            });
+        }
+    }
 }
 
 function distPointToSegment(px, py, x1, y1, x2, y2) {
