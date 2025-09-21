@@ -21,6 +21,7 @@
     <script defer src="js/script.js"></script>
     <script src="js/details-panel.js"></script>
     <script defer src="js/export.js"></script>
+    <script src="js/responsive.js"></script>
   </head>
 
   <body onload="startDashboard()">
@@ -67,6 +68,19 @@
         <button id="conflict-clear-btn" class="solid-btn" data-i18n="conflict.clear">
           Clear filters
         </button>
+      </div>
+    </div>
+    <div id="viewport-warning" class="viewport-warning" hidden>
+      <div class="viewport-warning__panel">
+        <h3 data-i18n="viewport.warning.title">Screen too small</h3>
+        <p data-i18n="viewport.warning.message">
+          This dashboard requires a minimum screen size of 1200px width for optimal viewing.
+          Please use a larger screen or zoom out your browser.
+        </p>
+        <div class="viewport-info">
+          <span data-i18n="viewport.current">Current:</span>
+          <span id="current-viewport-size">—</span>
+        </div>
       </div>
     </div>
     <div class="dashboard-wrap">

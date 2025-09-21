@@ -1335,6 +1335,11 @@ function startDashboard() {
 
             enableVizExpand();
             wireFilterAccordionAndScroll();
+            if (window.responsiveDashboard) {
+                window.responsiveDashboard.forceRedraw();
+            } else {
+                initResponsiveDashboard();
+            }
         })
         .catch((error) => {
             console.error("Error loading the CSV file:", error);

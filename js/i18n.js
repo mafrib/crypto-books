@@ -125,6 +125,10 @@
             'details.seeMore': 'See more',
             'details.seeLess': 'See less',
 
+            'viewport.warning.title': 'Screen too small',
+            'viewport.warning.message': 'This dashboard requires a minimum screen size of 1200×700px for optimal viewing. Please use a larger screen or zoom out your browser.',
+            'viewport.current': 'Current',
+
             'export.cover.note': 'This report reflects the dashboard’s current view at export time, considering all active filters.',
             'export.filters.title': 'Active filters:',
             'export.filters.none': '— none —',
@@ -270,6 +274,10 @@
             'details.death': 'Morte',
             'details.seeMore': 'Ver mais',
             'details.seeLess': 'Ver menos',
+
+            'viewport.warning.title': 'Ecrã demasiado pequeno',
+            'viewport.warning.message': 'Este painel requer um tamanho mínimo de ecrã de 1200×700px para uma visualização ideal. Use um ecrã maior ou reduza o zoom do navegador.',
+            'viewport.current': 'Atual',
 
             'export.cover.note': 'Este relatório reflete a vista atual do painel no momento da exportação, considerando todos os filtros ativos.',
             'export.filters.title': 'Filtros ativos:',
