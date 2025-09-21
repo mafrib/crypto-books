@@ -1630,10 +1630,29 @@ details[open] > summary::after {
   border: 0.5px solid rgba(22,64,77,.55);
 }
 
-/* 3 tones of green by certainty */
-.prob-badge.level-1 { background: #BEE6CF; } /* lowest certainty */
-.prob-badge.level-2 { background: #8FD7B6; }
-.prob-badge.level-3 { background: #5FBE91; } /* indisputada / highest */
+.prob-badge.level-1 {
+  background: #FFB3B3; /* red - indeterminada */
+  color: #880404;
+  border-color: rgba(139,0,0,.55);
+}
+
+.prob-badge.level-2 {
+  background: #FFD4B3; /* orange - possível */
+  color: #CC6600;
+  border-color: rgba(204,102,0,.55);
+}
+
+.prob-badge.level-3 {
+  background: #ffe699; /* yellow - provável */
+  color: #B8860B;
+  border-color: rgba(184,134,11,.55);
+}
+
+.prob-badge.level-4 {
+  background: #9ad59a; /* green - segura/indisputada */
+  color: #006400;
+  border-color: rgba(0,100,0,.55);
+}
 
 .prob-badge::after {
   content: attr(data-tip);

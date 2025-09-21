@@ -9,10 +9,10 @@ const ownerPhotoMap = {
 };
 
 const PIN_ICONS = {
-  book:       '../img/icons/book.png',
-  person:     '../img/icons/person.png',
-  location:   '../img/icons/location.png',
-  historical: '../img/icons/historical.png'
+    book:       '../img/icons/book.png',
+    person:     '../img/icons/person.png',
+    location:   '../img/icons/location.png',
+    historical: '../img/icons/historical.png'
 };
 
 function normText(s) {
@@ -216,19 +216,30 @@ function probLevelFrom(value) {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
 
-    if (!t) return 0;
+    if (!t) return 1; // default to lowest level
 
-    if (t.includes('indisputad')) return 3;  // 'indisputada'
-    if (t.includes('prov'))       return 2;  // 'provável'/'provavel'
-    if (t.includes('indet'))      return 1;  // 'indeterminada'
+    // Highest certainty - green
+    if (t.includes('indisputad') || t.includes('segura')) return 4;
 
+    // High certainty - yellow
+    if (t.includes('prov')) return 3; // 'provável'/'provavel'
+
+    // Medium certainty - orange
+    if (t.includes('possiv') || t.includes('possível')) return 2;
+
+    // Lowest certainty - red
+    if (t.includes('indet')) return 1; // 'indeterminada'
+
+    // Handle percentage values
     const m = t.match(/(\d{1,3})\s*%/);
     if (m) {
       const p = Math.max(0, Math.min(100, +m[1]));
-      if (p >= 85) return 3;
-      if (p >= 60) return 2;
-      return 1;
+      if (p >= 85) return 4; // green
+      if (p >= 70) return 3; // yellow
+      if (p >= 50) return 2; // orange
+      return 1; // red
     }
+
     return 1;
 }
 
@@ -350,15 +361,15 @@ window.pinBook = pinBook;
 window.unpinBook = unpinBook;
 
 function showHoverItem(item) {
-  if (pinnedBook) return; // don't override a pinned book
-  hoverItem = item;
-  renderHover();
+    if (pinnedBook) return; // don't override a pinned book
+    hoverItem = item;
+    renderHover();
 }
 
 function clearHoverItem() {
-  if (pinnedBook) return; // keep showing the pinned book
-  hoverItem = null;
-  renderCurrentItem();
+    if (pinnedBook) return; // keep showing the pinned book
+    hoverItem = null;
+    renderCurrentItem();
 }
 
 window.showDetailsHover = showHoverItem;
@@ -993,20 +1004,21 @@ document.addEventListener('mouseenter', (e) => {
     const el = e.target.closest('.prob-badge');
     if (!el) return;
     showProbTip(el, el.getAttribute('data-tip'));
-  }, true);
+}, true);
 
 document.addEventListener('mouseleave', (e) => {
     if (e.target.matches('.prob-badge') || e.target.closest('.prob-badge')) {
       hideProbTip();
     }
-  }, true);
+}, true);
 
 document.addEventListener('focusin', (e) => {
     const el = e.target.closest('.prob-badge');
     if (!el) return;
     showProbTip(el, el.getAttribute('data-tip'));
-  });
-  document.addEventListener('focusout', (e) => {
+});
+
+document.addEventListener('focusout', (e) => {
     if (e.target.matches('.prob-badge') || e.target.closest('.prob-badge')) {
       hideProbTip();
     }
