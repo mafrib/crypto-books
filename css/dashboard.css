@@ -237,8 +237,13 @@ a {
 }
 
 #map-area svg#map {
-  width: auto;
+  width: 100%;
   background-color: white;
+}
+
+.map-offhint--hidden {
+    visibility: hidden;
+    pointer-events: none;
 }
 
 .map-nolocation-overlay {

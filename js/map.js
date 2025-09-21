@@ -33,7 +33,7 @@ function positionOffMsg(legendEl) {
 
     const legendW = legendEl.getBoundingClientRect().width;
 
-    el.style.paddingRight = (legendW) + 'px';
+    el.style.paddingRight = (legendW + 6) + 'px';
 }
 
 function updateZoomButtons(k) {
@@ -176,7 +176,7 @@ function updateUnlocatedBadge(rowSet) {
     if (!el) return;
 
     if (!total) {
-        el.hidden = true;
+        el.classList.add('map-offhint--hidden');
         return;
     }
 
@@ -215,7 +215,7 @@ function updateUnlocatedBadge(rowSet) {
     } else {
         el.textContent = `${total} ${unit} ${i18n.t('map.offmsg.tail')}`;
     }
-    el.hidden = false;
+    el.classList.remove('map-offhint--hidden');
 }
 
 function highlightPoint(el, d) {
