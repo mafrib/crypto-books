@@ -644,8 +644,7 @@ function makeMap () {
                             if (window.nodeGroup && window.svg && window.linkKey) {
                                 nodeGroup.selectAll('g.node').classed('active', d => window.selectedNodes.has(d.id));
                                 svg.selectAll('.link')
-                                .classed('active', l => window.selectedLinks.has(linkKey(l)))
-                                .style('opacity', l => window.selectedLinks.has(linkKey(l)) ? 1 : 0.6);
+                                .classed('active', l => window.selectedLinks.has(linkKey(l)));
                             }
 
                             if (window.rebuildNetworkFilterFromState) {
@@ -822,7 +821,7 @@ function makeMap () {
                         if (!isCurrentlySelected) {
                             // Check for conflicts before adding this period
                             const conflictingFilters = getConflictingFiltersForPeriod(period);
-                            if (conflictingFilters.length > 0) {
+                            if (conflictingFilters && conflictingFilters.length > 0) {
                                 showConflictPopup(period, conflictingFilters, 'period');
                                 return;
                             }
@@ -845,8 +844,11 @@ function makeMap () {
 
                             if (pretendSet.length === 0) {
                                 const conflictingFilters = getConflictingFiltersForPeriod(period);
-                                showConflictPopup(period, conflictingFilters, 'period');
-                                return;
+
+                                if (conflictingFilters && conflictingFilters.length > 0) {
+                                    showConflictPopup(period, conflictingFilters, 'period');
+                                    return;
+                                }
                             }
                         }
 

@@ -325,6 +325,8 @@ function getConflictingFiltersForPeriod(periodName) {
         console.log(`No books match ALL filters + period "${periodName}" - all filters conflict:`, conflicts);
         return conflicts;
     }
+
+    return [];
 }
 
 function showConflictPopup(subjectLabel, filters, kind = 'library') {
@@ -908,6 +910,27 @@ document.addEventListener('DOMContentLoaded', () => {
             hideNoResultsPopup();
         });
 
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            const conflictPopup = document.getElementById('conflict-popup');
+            const noResultsPopup = document.getElementById('no-results-popup');
+
+            // If conflict popup is open, default to "keep filters" (undo last action)
+            if (!conflictPopup.hidden) {
+                event.preventDefault();
+                hideConflictPopup();
+                return;
+            }
+
+            // If no results popup is open, default to "undo last action"
+            if (!noResultsPopup.hidden) {
+                event.preventDefault();
+                document.getElementById('undo-last-btn').click();
+                return;
+            }
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('#treemap-controls .mode-button')
             .forEach(ensureTreemapIndicator);
@@ -1210,8 +1233,7 @@ function startDashboard() {
                     .classed('active', false)
                     .classed('selected-by-link', false);
                 linkGroup.selectAll('.link')
-                    .classed('active', false)
-                    .style('opacity', null);
+                    .classed('active', false);
 
                 const cleanData = applyGlobalFilters(globalData);
                 createNetworkGraph('#network-graph .network-wrapper', globalData);

@@ -353,19 +353,16 @@ function attachLinkTooltip(selection) {
                 .style('visibility', 'visible')
                 .style('opacity', 1)
                 .html(`${d.weight} ${unit} ${suffix}`);
-            d3.select(this).style('opacity', 1);
         })
         .on('mousemove.tooltip', event => {
-        tooltip
-            .style('left', (event.pageX+10)+'px')
-            .style('top',  (event.pageY-10)+'px');
+            tooltip
+                .style('left', (event.pageX+10)+'px')
+                .style('top',  (event.pageY-10)+'px');
         })
         .on('mouseout.tooltip', function(event, d) {
-        tooltip
-            .style('opacity', 0)
-            .style('visibility', 'hidden');
-        d3.select(this)
-            .style('opacity', selectedLinks.has(linkKey(d)) ? 1 : 0.6);
+            tooltip
+                .style('opacity', 0)
+                .style('visibility', 'hidden');
         });
 }
 
@@ -689,8 +686,7 @@ function createNetworkGraph(containerSelector, data) {
 
             // Update CSS classes
             svg.selectAll('.link')
-                .classed('active', l => selectedLinks.has(linkKey(l)))
-                .style('opacity', l => selectedLinks.has(linkKey(l)) ? 1 : 0.6);
+                .classed('active', l => selectedLinks.has(linkKey(l)));
 
             svg.selectAll('g.node')
                 .classed('selected-by-link', n =>
@@ -710,7 +706,7 @@ function createNetworkGraph(containerSelector, data) {
                 setGlobalFilter('network', () => false);
                 updateDashboard();
                 nodeGroup.selectAll('g.node').classed('active', false);
-                linkGroup.selectAll('.link').style('opacity', 0.6);
+                linkGroup.selectAll('.link').style('opacity', null);
                 window.showNoResultsPopup(prevSelection);
             } else {
                 window.hideNoResultsPopup();
@@ -767,32 +763,28 @@ function updateNetworkStyles(allowedSet) {
         selectedNodes.size > 0 || selectedLinks.size > 0;
 
     if (!externalFiltersActive) {
-
         svg.classed('node-active-mode', networkSelectionActive);
 
         if (networkSelectionActive) {
-
             nodesSel.classed('active', d => selectedNodes.has(d.id));
-
-            linksSel.classed('active',
-                l => selectedLinks.has(linkKey(l))
-            );
+            linksSel.classed('active', l => selectedLinks.has(linkKey(l)));
         } else {
             nodesSel.classed('active', false);
             linksSel.classed('active', false);
         }
+
+        linksSel.style('opacity', null);
         return;
     }
 
     svg.classed('node-active-mode', true);
 
-    nodesSel.classed('active',
-        d => allowedSet.has(d.id));
-
-    linksSel.classed('active',
-        d => allowedSet.has(d.source.id) &&
-             allowedSet.has(d.target.id)
+    nodesSel.classed('active', d => allowedSet.has(d.id));
+    linksSel.classed('active', d =>
+        allowedSet.has(d.source.id) && allowedSet.has(d.target.id)
     );
+
+    linksSel.style('opacity', null);
 }
 
 window.rebuildNetworkFilterFromState = rebuildNetworkFilterFromState;

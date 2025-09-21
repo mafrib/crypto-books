@@ -766,6 +766,21 @@ svg:not(.node-active-mode) .node:hover text {
   cursor: pointer;
 }
 
+.link:hover:not(.active),
+.node-active-mode .link:hover:not(.active) {
+  opacity: 0.9;
+}
+
+.link.active,
+.node-active-mode .link.active {
+  opacity: 1;
+}
+
+.link.active:hover,
+.node-active-mode .link.active:hover {
+  opacity: 1;
+}
+
 .link.book {
   stroke: #B65B8C;
 }
@@ -774,15 +789,12 @@ svg:not(.node-active-mode) .node:hover text {
   stroke: #578E7E;
 }
 
-.link.active.book,
-.link.hovered {
+.link.active.book {
   stroke: #8F3E6A;
-  opacity: 1;
 }
 
 .link.active.author {
   stroke: #467265;
-  opacity: 1;
 }
 
 .node-active-mode .node:not(.active) circle {
@@ -797,10 +809,6 @@ svg:not(.node-active-mode) .node:hover text {
 .node-active-mode .node:not(.active) .gender-label {
   opacity: 0.37;
   fill:#16404D;
-}
-
-.node-active-mode .link {
-  opacity: 0.6;
 }
 
 .node.hovered-network-node circle {
@@ -896,10 +904,16 @@ svg:not(.node-active-mode) .node:hover text {
   opacity: 0.12 !important;
 }
 
-
-#network-graph .links .link.search-dim.hovered,
 #network-graph .links .link.search-dim.active {
-  opacity: 0.12 !important;
+  opacity: 0.24 !important;
+}
+
+#network-graph .links .link.search-dim:hover:not(.active) {
+  opacity: 0.18 !important;
+}
+
+#network-graph .links .link.search-dim.active:hover {
+  opacity: 0.24 !important;
 }
 
 .gender-btn {
