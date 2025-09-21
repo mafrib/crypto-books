@@ -402,6 +402,10 @@ circle.library-point.location-selected {
   cursor: pointer;
 }
 
+#undo-last-btn {
+  border: none;
+}
+
 .library-point.books-15plus   { fill: #7F5F24; }
 .library-point.books-6to14   { fill: #B89B3C; }
 .library-point.books-1to5     { fill: #F0E3C0; }

@@ -887,8 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // restore previous node selection
             selectedNodes.clear();
             pendingUndoNodes.forEach(n=>selectedNodes.add(n));
-            selectedPeriods = Array.from(pendingUndoNodes);
-            window.selectedPeriods = selectedPeriods.slice();
+
             repaintPeriodBars(applyFiltersExcept(['period','byPeriod']));
 
             hideNoResultsPopup();
