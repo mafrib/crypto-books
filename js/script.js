@@ -325,6 +325,7 @@ function prettyFilterName(src) {
     // helper that turns the internal filter-key into a label
     const map = {
         byCategory : i18n.t('filter.category'),
+        byTradition: i18n.t('filter.tradition'),
         byAuthor   : i18n.t('filter.author'),
         byIdioma   : i18n.t('filter.idioma'),
         byLibrary  : i18n.t('filter.library'),
