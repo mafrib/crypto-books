@@ -399,6 +399,7 @@ circle.library-point.location-selected {
 .library-point {
   stroke: #16404D;
   stroke-width: 0.5;
+  cursor: pointer;
 }
 
 .library-point.books-15plus   { fill: #7F5F24; }
