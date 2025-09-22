@@ -317,6 +317,9 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
                 skipNextTreemapRedraw = true;
 
                 if (isLeaf) {
+
+                    if (isFull) return;
+
                     if (currentTreemapMode === 'category') {
                         // Leaf in category mode = a Genre. Set BOTH Category and Genre.
                         const catName = d.parent.data.name;
@@ -416,6 +419,10 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
 
         const rectEnter = cellEnter.append("rect")
             .attr("fill", rectFillColor)
+            .style('cursor', d => (!d.children && d.x0 === 0 && d.y0 === 0 &&
+                        d.x1 === width && d.y1 === height)
+                        ? 'default'
+                        : 'pointer')
             .on("mousemove", (event, d) => {
                 const treemapRect = d3.select("#treemap").node().getBoundingClientRect();
                 const x = event.pageX - treemapRect.left - window.scrollX;
@@ -491,6 +498,10 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         window.clearTreemapHighlights = clearTreemapHighlights;
 
         cellUpdate.select("rect")
+            .style('cursor', d => (!d.children && d.x0 === 0 && d.y0 === 0 &&
+                           d.x1 === width && d.y1 === height)
+                          ? 'default'
+                          : 'pointer')
             .attr("fill", rectFillColor)
             .transition(t)
             .attr("x", d => d.x0)
