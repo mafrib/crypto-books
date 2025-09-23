@@ -37,6 +37,7 @@
 
             'treemap.title': "Books' classification system",
             'treemap.mode.category': 'Literary Categories',
+            'treemap.info.category': 'Literary Category',
             'treemap.mode.tradition': 'Intellectual Tradition',
             'treemap.breadcrumb.filtered': '(Filtered)',
             'treemap.info.genre': 'Literary Genre',
@@ -188,6 +189,7 @@
 
             'treemap.title': 'Sistema de classificação das obras',
             'treemap.mode.category': 'Categorias Literárias',
+            'treemap.info.category': 'Categoria Literária',
             'treemap.mode.tradition': 'Tradição Intelectual',
             'treemap.breadcrumb.filtered': '(Filtrado)',
             'treemap.info.genre': 'Género Literário',
