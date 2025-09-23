@@ -39,6 +39,7 @@
             'treemap.mode.category': 'Literary Categories',
             'treemap.mode.tradition': 'Intellectual Tradition',
             'treemap.breadcrumb.filtered': '(Filtered)',
+            'treemap.info.genre': 'Literary Genre',
 
             'catalog.search.placeholder': 'Search for a book, author or library...',
             'catalog.search.clear': 'Clear search',
@@ -189,6 +190,7 @@
             'treemap.mode.category': 'Categorias Literárias',
             'treemap.mode.tradition': 'Tradição Intelectual',
             'treemap.breadcrumb.filtered': '(Filtrado)',
+            'treemap.info.genre': 'Género Literário',
 
             'catalog.search.placeholder': 'Procure por livro, autor ou livraria...',
             'catalog.search.clear': 'Limpar pesquisa',

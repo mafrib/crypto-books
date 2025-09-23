@@ -209,16 +209,49 @@
         </div>
         <div class="visualization" id="treemap">
           <div class="treemap-header">
-            <h6 class="viz-title" data-i18n="treemap.title">Books' classification system</h6>
-            <div id="treemap-controls">
-              <button class="mode-button active" data-mode="category" data-i18n="treemap.mode.category">Literary Categories</button>
-              <button class="mode-button" data-mode="tradition" data-i18n="treemap.mode.tradition">Intellectual Tradition</button>
+            <div class="treemap-title-container">
+              <h6 class="viz-title" data-i18n="treemap.title">Books' classification system</h6>
+              <button id="treemap-info-btn"
+                      class="info-btn"
+                      aria-label="Classification system info"
+                      aria-expanded="false"
+                      aria-controls="treemap-info-panel">i</button>
+              <div id="treemap-info-panel" class="info-panel treemap-info-panel" hidden>
+              <div class="info-body">
+                <div class="classification-tree">
+                  <svg class="tree-svg" viewBox="0 0 240 130" aria-hidden="true">
+                    <defs>
+                      <marker id="tree-arrow" viewBox="0 0 6 6"
+                              refX="5" refY="3" markerWidth="4" markerHeight="4"
+                              orient="auto">
+                        <path d="M0 0L6 3L0 6Z" fill="#16404D"/>
+                      </marker>
+                    </defs>
+                    <text x="120" y="22" text-anchor="middle" font-size="12" font-weight="bold" fill="#16404D" data-i18n="treemap.title">Books' classification system</text>
+                    <line x1="120" y1="28" x2="120" y2="38" stroke="#16404D" stroke-width="1.5"/>
+                    <line x1="60" y1="38" x2="180" y2="38" stroke="#16404D" stroke-width="1.5"/>
+                    <line x1="60" y1="38" x2="60" y2="52" stroke="#16404D" stroke-width="1.5" marker-end="url(#tree-arrow)"/>
+                    <rect x="8" y="54" width="105" height="18" rx="8" fill="#16404D" stroke="#16404D" stroke-width="1"/>
+                    <text x="60" y="66" text-anchor="middle" font-size="10" fill="#FFFAEC" data-i18n="treemap.mode.category">Literary Categories</text>
+                    <line x1="180" y1="38" x2="180" y2="52" stroke="#16404D" stroke-width="1.5" marker-end="url(#tree-arrow)"/>
+                    <rect x="128" y="54" width="105" height="18" rx="8" fill="#A6CDC6" stroke="#16404D" stroke-width="1"/>
+                    <text x="180" y="66" text-anchor="middle" font-size="10" fill="#16404D" data-i18n="treemap.mode.tradition">Intellectual Tradition</text>
+                    <line x1="60" y1="72" x2="60" y2="85" stroke="#16404D" stroke-width="1.5" marker-end="url(#tree-arrow)"/>
+                    <text x="60" y="100" text-anchor="middle" font-size="9" fill="#16404D" data-i18n="treemap.info.genre">Literary Genre</text>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
-          <div id="treemap-breadcrumbs"></div>
-          <div id="treemap-area"></div>
-          <div id="tooltip"></div>
+          <div id="treemap-controls">
+            <button class="mode-button active" data-mode="category" data-i18n="treemap.mode.category">Literary Categories</button>
+            <button class="mode-button" data-mode="tradition" data-i18n="treemap.mode.tradition">Intellectual Tradition</button>
+          </div>
         </div>
+        <div id="treemap-breadcrumbs"></div>
+        <div id="treemap-area"></div>
+          <div id="tooltip"></div>
+      </div>
         <div class="visualization" id="catalog">
           <div class="search-container">
             <img src="../img/icons/search.svg" id="search-icon"></img>

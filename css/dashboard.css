@@ -1939,6 +1939,140 @@ details[open] > summary::after {
   color: #16404D;
 }
 
+.treemap-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding-right: 30px;
+  position: relative;
+}
+
+.treemap-title-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.treemap-title-container .viz-title {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #16404D;
+}
+
+#treemap-info-btn {
+  position: static;
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: 1px solid #16404D;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  line-height: 14px;
+  font-weight: 200;
+  text-align: center;
+  color: #16404D;
+  cursor: pointer;
+  z-index: 4;
+  flex-shrink: 0;
+  min-width: 16px;
+  min-height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#treemap-info-btn:hover {
+  background: #D6E5DB;
+}
+
+.treemap-info-panel {
+  position: absolute;
+  top: 26px;
+  left: 0;
+  width: clamp(200px, 28vw, 260px);
+  background: #D6E5DB;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  font-size: 0.65rem;
+  line-height: 1.2;
+  display: none;
+  z-index: 100;
+}
+
+.treemap-info-panel[hidden] {
+  display: none;
+}
+
+#treemap-info-btn:hover + #treemap-info-panel {
+  display: block;
+}
+
+#treemap-info-panel:hover {
+  display: block;
+}
+
+.classification-tree {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tree-svg {
+  width: 100%;
+  height: auto;
+  max-width: 280px;
+}
+
+.tree-svg text {
+  font-family: Inter, Helvetica, sans-serif;
+  pointer-events: none;
+  font-size: 10px;
+}
+
+.tree-svg line {
+  stroke: #16404D;
+}
+
+.tree-svg rect {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+}
+
+#treemap.is-expanded .treemap-title-container .viz-title {
+  font-size: 1.15rem;
+}
+
+#treemap.is-expanded #treemap-info-btn {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  max-width: 18px;
+  max-height: 18px;
+  font-size: 0.75rem;
+  line-height: 16px;
+}
+
+#treemap.is-expanded .treemap-info-panel {
+  width: clamp(260px, 40vw, 380px);
+  padding: 1rem;
+  font-size: 0.6rem;
+}
+
+#treemap.is-expanded .tree-svg text {
+  font-size: 0.6rem;
+}
+
+#treemap.is-expanded .tree-svg rect {
+  width: 105px;
+  height: 18px;
+}
+
 .mode-button {
   position: relative;
   border-radius: 8px;
