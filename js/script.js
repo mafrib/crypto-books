@@ -563,6 +563,54 @@ function isFemaleLibrary(rawName) {
   return lower.includes('d. leonor') || lower.includes('d. beatriz');
 }
 
+function categoryOfGenre(genreLabel) {
+  if (!genreLabel) return '';
+  const row = globalData.find(r =>
+      (r.GenLit_Descricao || '').trim() === genreLabel);
+  return row ? (row.CatLit_Descricao || '').trim() : '';
+}
+
+function buildGenreTooltips() {
+    const tip = document.getElementById('genre-tooltip') ||
+                document.body.appendChild(Object.assign(
+                    document.createElement('div'),
+                    { id: 'genre-tooltip', className: 'genre-tooltip', hidden: true }
+                ));
+
+    document.querySelectorAll('#filter-genre li').forEach(li => {
+        const input  = li.querySelector('input');
+        const genreLabel = li.querySelector('.chk-txt').textContent.trim();
+        const cat = categoryOfGenre(genreLabel) || genreLabel;
+
+        li.classList.add('genre-item');
+        li.dataset.cat = cat;
+
+        if (li.__tooltipWired) return;
+        li.__tooltipWired = true;
+
+        li.addEventListener('mouseenter', e => {
+            const disabled = input.disabled || li.classList.contains('disabled-option');
+            if (!disabled) return;
+            tip.textContent = `${i18n.t('filter.category')}: ${cat}`;
+            tip.hidden      = false;
+            tip.style.opacity = '1';
+            tip.style.left = (e.clientX + 12) + 'px';
+            tip.style.top  = (e.clientY + 12) + 'px';
+        });
+
+        li.addEventListener('mousemove', e => {
+            if (tip.hidden) return;
+            tip.style.left = (e.clientX + 12) + 'px';
+            tip.style.top  = (e.clientY + 12) + 'px';
+        });
+
+        li.addEventListener('mouseleave', () => {
+            tip.style.opacity = '0';
+            tip.hidden = true;
+        });
+    });
+}
+
 function populateFilterOptions() {
     // Libraries and authors
     fillChecklist('filter-library',  buildOptionsWithSpecials(globalData, 'Proprietario_Nome'));
@@ -1148,6 +1196,8 @@ function startDashboard() {
             updateTreemapBadge();
 
             populateFilterOptions();
+
+            buildGenreTooltips();
 
             wireSearch(
                 document.querySelector('#filter-author').previousElementSibling,

@@ -397,7 +397,6 @@ function updateChecklistAvailability () {
             ul.querySelectorAll('input').forEach(cb => {
                 cb.disabled = true;
                 cb.closest('li').classList.add('disabled-option');
-                cb.parentElement.title = 'Select a Literary Category first';
             });
             // keep disabled items sorted to the bottom behavior
             const lis = Array.from(ul.children);
@@ -438,10 +437,7 @@ function updateChecklistAvailability () {
             cb.disabled = !selectable;
             cb.closest('li').classList.toggle('disabled-option', !selectable);
 
-            if (!selectable)
-                cb.parentElement.title = 'No books match the current filters';
-            else
-                cb.parentElement.removeAttribute('title');
+            cb.parentElement.removeAttribute('title');
         });
 
         const lis = Array.from(ul.children);

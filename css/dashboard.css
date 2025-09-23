@@ -1957,11 +1957,35 @@ details[open] > summary::after {
 
 .disabled-option {
   color: #888;
-  pointer-events: none;
+  cursor: not-allowed;
+  pointer-events: auto;
 }
 
 .disabled-option input {
   cursor: not-allowed;
+}
+
+#filter-genre li.genre-item {
+  position: relative;
+}
+
+.disabled-option label {
+    cursor: default !important;
+}
+
+.genre-tooltip {
+  position: fixed;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  pointer-events: none;
+  z-index: 10050;
+  opacity: 0;
+  transition: opacity .12s ease;
 }
 
 /* ---- TREEMAP ---- */
