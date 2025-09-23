@@ -1264,6 +1264,10 @@ function startDashboard() {
                 selectedNodes.clear();
                 clickedLinks.clear();
                 selectedLinks.clear();
+
+                setGenderButtonState('male', false);
+                setGenderButtonState('female', false);
+
                 svg.classed('node-active-mode', false);
                 nodeGroup.selectAll('g.node')
                     .classed('active', false)
