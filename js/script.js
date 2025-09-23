@@ -25,6 +25,12 @@ const SPECIAL = {
     UNLOCATED:     '__UNLOCATED__'
 };
 
+// Translate an internal value to a user-facing label (if it is “special”)
+function displayLabel(v) {
+    const lbl = labelForSpecial(v);
+    return lbl || v;          // fall back to the raw string when not special
+}
+
 function _norm(s) {
     return (s ?? '').toString().trim()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -46,12 +52,12 @@ function specialKeyOf(raw) {
 // Localized label for a special key
 function labelForSpecial(key) {
     switch (key) {
-        case SPECIAL.UNKNOWN:      return i18n.t('filter.value.unknown');
-        case SPECIAL.CLASSIFYING:  return i18n.t('filter.value.classifying');
-        case SPECIAL.NA:           return i18n.t('filter.value.na');
-        case SPECIAL.QUESTION:     return i18n.t('filter.value.question');
-        case SPECIAL.UNDETERMINED: return i18n.t('filter.value.undetermined');
-        case SPECIAL.UNLOCATED:    return i18n.t('filter.location.unlocated');
+        case SPECIAL.UNKNOWN:      return 'Desconhecido';
+        case SPECIAL.CLASSIFYING:  return 'Em classificação';
+        case SPECIAL.NA:           return 'Não aplicável';
+        case SPECIAL.QUESTION:     return '?';
+        case SPECIAL.UNDETERMINED: return 'Indeterminada';
+        case SPECIAL.UNLOCATED:    return 'Sem localização';
         default:                   return '';
     }
 }
@@ -345,6 +351,20 @@ function hideConflictPopup() {
 
 window.hideConflictPopup = hideConflictPopup;
 
+function normaliseGeoArea(raw) {
+    const t = (raw ?? '').toString().trim();
+    if (!t || t === '?' || t === '??') return 'Desconhecido';
+
+    const plain = t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+    if (plain.startsWith('peninsula iberica')) {
+        return plain.includes('portugal')
+               ? 'Portugal'
+               : i18n.t('filter.geoarea-pi-except');
+    }
+    return t;
+}
+
 function prettyFilterName(src) {
     // helper that turns the internal filter-key into a label
     const map = {
@@ -371,7 +391,7 @@ function prettyFilterName(src) {
 
     if (src === 'byLibrary' || src === 'network') {
         const libs = activeFilters[src]?.values || [];
-        const list = libs.length ? `: ${libs.join(', ')}` : '';
+        const list = libs.length ? `: ${libs.map(displayLabel).join(', ')}` : '';
         return `${i18n.t('filter.library')}${list}`;
    }
 
@@ -636,8 +656,8 @@ function populateFilterOptions() {
     fillChecklist('filter-period', periods);
 
     // Probabilities (keep raw, but still allow special tokens to bubble up if present)
-    fillChecklist('filter-probobra',  buildOptionsWithSpecials(globalData, 'ProbAtribObra'));
-    fillChecklist('filter-probautor', buildOptionsWithSpecials(globalData, 'ProbAtribAutor'));
+    fillChecklist('filter-probobra',  buildOptionsWithSpecials(globalData,'ProbAtribObra'));
+    fillChecklist('filter-probautor', buildOptionsWithSpecials(globalData,'ProbAtribAutor'));
 }
 
 function rebuildFilterTags () {
@@ -670,7 +690,7 @@ function rebuildFilterTags () {
 
             case 'byGeoArea':
                 getChecked('filter-geoarea').forEach(v => {
-                    addTag(`${i18n.t('filter.geoarea')}: ${v}`, () => {
+                    addTag(`${i18n.t('filter.geoarea')}: ${displayLabel(v)}`, () => {
                         uncheckValue('filter-geoarea', v);
                         const remaining = getChecked('filter-geoarea');
                         if (remaining.length) {
@@ -692,7 +712,7 @@ function rebuildFilterTags () {
                     const input = document.querySelector(`#filter-location input[value="${CSS.escape(v)}"]`);
                     const label = input ? input.nextElementSibling.textContent.trim() : v;
 
-                    addTag(`${i18n.t('filter.location')}: ${label}`, () => {
+                    addTag(`${i18n.t('filter.location')}: ${displayLabel(v)}`, () => {
 
                         uncheckValue('filter-location', v);
 
@@ -723,21 +743,21 @@ function rebuildFilterTags () {
                 break;
 
             case 'byAuthor'   : getChecked('filter-author'   )
-                                .forEach(v => addTag(v, () => {
+                                .forEach(v => addTag(`${i18n.t('filter.author')}: ${displayLabel(v)}`, () => {
                                     uncheckValue('filter-author', v);
                                     clearGlobalFilter('byAuthor');
                                 }));
                                 break;
 
             case 'byIdioma'   : getChecked('filter-idioma'   )
-                                .forEach(v => addTag(v, () => {
+                               .forEach(v => addTag(`${i18n.t('filter.idioma')}: ${displayLabel(v)}`, () => {
                                     uncheckValue('filter-idioma', v);
                                     clearGlobalFilter('byIdioma');
                                 }));
                                 break;
 
             case 'byCategory' : getChecked('filter-category')
-                                .forEach(v => addTag(`${i18n.t('treemap.mode.category')} › ${v}`, () => {
+                                .forEach(v => addTag(`${i18n.t('treemap.mode.category')} › ${displayLabel(v)}`, () => {
                                     // Uncheck category
                                     uncheckValue('filter-category', v);
                                     clearGlobalFilter('byCategory');
@@ -751,7 +771,7 @@ function rebuildFilterTags () {
                                 break;
 
             case 'byTradition': getChecked('filter-tradition')
-                                .forEach(v => addTag(`${i18n.t('treemap.mode.tradition')} › ${v}`, () => {
+                                .forEach(v => addTag(`${i18n.t('treemap.mode.tradition')} › ${displayLabel(v)}`, () => {
                                     uncheckValue('filter-tradition', v);
                                     clearGlobalFilter('byTradition');
                                 }));
@@ -760,7 +780,7 @@ function rebuildFilterTags () {
             case 'byGenre'    : getChecked('filter-genre')
                                 .forEach(v => {
                                     const cat = categoryOfGenre(v) || getChecked('filter-category')[0] || '';
-                                    const label = cat ? `${cat} › ${v}` : v;
+                                    const label = cat ? `${cat} › ${displayLabel(v)}` : v;
                                     addTag(label, () => {
                                         uncheckValue('filter-genre', v);
                                         clearGlobalFilter('byGenre');
@@ -828,14 +848,14 @@ function rebuildFilterTags () {
                 break;
 
             case 'byProbObra' :
-                getChecked('filter-probobra').forEach(v=>addTag(`${i18n.t('filter.probobra')}: ${v}`, ()=>{
+                getChecked('filter-probobra').forEach(v=>addTag(`${i18n.t('filter.probobra')}: ${displayLabel(v)}`, ()=>{
                     uncheckValue('filter-probobra', v);
                     clearGlobalFilter('byProbObra');
                 }));
                 break;
 
             case 'byProbAutor':
-                getChecked('filter-probautor').forEach(v=>addTag(`${i18n.t('filter.probautor')}: ${v}`, ()=>{
+                getChecked('filter-probautor').forEach(v=>addTag(`${i18n.t('filter.probautor')}: ${displayLabel(v)}`, ()=>{
                     uncheckValue('filter-probautor', v);
                     clearGlobalFilter('byProbAutor');
                 }));
@@ -1117,6 +1137,15 @@ function renderConflictMessage(subjectLabel, filters, kind = 'library') {
                     filters.map(f => `• ${prettyFilterName(f)}`).join('<br>');
 }
 
+function buildOptionsRaw(data, field) {
+    const seen = new Map();
+    data.forEach(r => {
+        const v = (r[field] ?? '').toString().trim();
+        if (v) seen.set(v, true);
+    });
+    return Array.from(seen.keys()).sort((a,b) => a.localeCompare(b));
+}
+
 function openVizModal(viz) {
     const modal  = document.createElement('div');
     modal.className = 'viz-modal';
@@ -1187,7 +1216,8 @@ function startDashboard() {
                 const trimmed = (d.Obra ?? '').toString().trim();
                 return {
                     ...d,
-                    Obra: trimmed ? trimmed : 'Em classificação'
+                    Obra: (d.Obra ?? '').toString().trim() || 'Em classificação',
+                    OrigemGeografica_Autor: normaliseGeoArea(d.OrigemGeografica_Autor)
                 };
             });
             window.globalData = globalData;

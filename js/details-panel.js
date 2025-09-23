@@ -375,6 +375,16 @@ function clearHoverItem() {
 window.showDetailsHover = showHoverItem;
 window.clearDetailsHover = clearHoverItem;
 
+function fmtYear(raw) {
+    if (isPendingClassification(raw) || !raw || !String(raw).trim()) return '?';
+    return onlyYear(raw);
+}
+
+function fmtPlace(raw) {
+    if (isPendingClassification(raw) || !raw || !String(raw).trim()) return '?';
+    return String(raw).trim();
+}
+
 function renderPeriodDetails(periodName) {
     const panel       = document.getElementById('hover-details');
     panel.classList.add('details-panel--list-mode');
@@ -479,6 +489,7 @@ function renderBookDetails(row) {
     function onlyYear(v) {
         const t = (v || '').toString().trim();
         if (!t) return '';
+        if (isPendingClassification(t)) return '?';
         const m = t.match(/(\d{4})/);
         return m ? m[1] : t;
     }
@@ -561,14 +572,19 @@ function renderBookDetails(row) {
     // Author box
     const authorName = (getFirst(row, ['Nome_Autor', 'Autor']) || '').toString().trim();
 
-    const bornYear  = onlyYear(getFirst(row, ['DataNasc_Autor']));
-    const bornPlace = (getFirst(row, ['LocalNasc_Autor']) || '').toString().trim();
-    const diedYear  = onlyYear(getFirst(row, ['DataMorte_Autor']));
-    const diedPlace = (getFirst(row, ['LocalMorte_Autor']) || '').toString().trim();
+    const bornYear  = fmtYear ( getFirst(row, ['DataNasc_Autor' ]) );
+    const bornPlace = fmtPlace( getFirst(row, ['LocalNasc_Autor']) );
+    const diedYear  = fmtYear ( getFirst(row, ['DataMorte_Autor']) );
+    const diedPlace = fmtPlace( getFirst(row, ['LocalMorte_Autor']) );
 
-    // Compact lines for subpoints (Year, Place)
-    const bornLine = (bornYear || bornPlace) ? `${bornYear || '—'}${bornPlace ? ', ' + bornPlace : ''}` : '';
-    const diedLine = (diedYear || diedPlace) ? `${diedYear || '—'}${diedPlace ? ', ' + diedPlace : ''}` : '';
+    function buildLine(year, place) {
+        const y = year  && year.trim()  ? year  : '?';
+        const p = place && place.trim() ? place : '?';
+        return `${y}, ${p}`;
+    }
+
+    const bornLine = buildLine(bornYear, bornPlace);
+    const diedLine = buildLine(diedYear, diedPlace);
 
     const probAutorRaw = getFirst(row, ['ProbAtribAutor', 'ProbAtribuicao_Autor', 'Prob Atrib Autor', 'probatribautor']);
     const probAutor    = meaningful(probAutorRaw) ? probAutorRaw : '';
