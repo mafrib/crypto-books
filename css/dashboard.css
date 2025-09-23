@@ -1338,7 +1338,10 @@ details[open] > summary::after {
   display: none;
 }
 
-#hover-details.is-expanded .details-pin .label { display: inline; }
+#hover-details.is-expanded .details-pin img {
+    width: 24px;
+    height: 24px;
+}
 
 .details-panel__info {
   flex: 1 1 auto;
