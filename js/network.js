@@ -109,7 +109,7 @@ function handleLinkClick(d, allData) {
     clickedLinks.forEach(k => selectedLinks.add(k));
     auto.forEach(k => selectedLinks.add(k));
 
-    svg.selectAll('.link')
+    svg.selectAll('.link-group')
         .classed('active', l => selectedLinks.has(linkKey(l)));
 
     svg.selectAll('g.node')
@@ -481,8 +481,10 @@ function processEdges(data) {
 }
 
 function ticked() {
-    linkGroup.selectAll('path')
+    linkGroup.selectAll('.link-group')
+        .selectAll('path')
         .attr('d', d => routedLink(d, nodes));
+
     nodeGroup.selectAll('g.node')
         .attr('transform', d => `translate(${d.x},${d.y})`);
 }
@@ -593,7 +595,7 @@ function createNetworkGraph(containerSelector, data) {
     const [minW, maxW] = d3.extent(weights);
     const strokeScale = d3.scaleLinear()
         .domain(d3.extent(edges, e => +e.weight))
-        .range([3,10]);
+        .range([3.5,11]);
 
     const radiusScale = d3.scaleSqrt()
         .domain(d3.extent(nodes, d => d.size))
@@ -603,26 +605,51 @@ function createNetworkGraph(containerSelector, data) {
         .data(edges, d => linkKey(d));
     linkSel.exit().remove();
 
-    const linkEnter = linkSel.enter().append('path')
+    const linkEnter = linkSel.enter().append('g')
+    .attr('class', d => `link-group ${d.type}`);
+
+    // Add invisible thicker path for better hitbox
+    linkEnter.append('path')
+        .attr('class', d => `link-hitbox ${d.type}`)
+        .attr('stroke-width', d => Math.max(strokeScale(+d.weight), 8)) // Minimum 8px hitbox
+        .attr('d', d => routedLink(d, nodes))
+        .style('opacity', 0)
+        .style('pointer-events', 'stroke');
+
+    // Add visible thinner path
+    linkEnter.append('path')
         .attr('class', d => `link ${d.type}`)
         .attr('stroke-width', d => strokeScale(+d.weight))
         .attr('d', d => routedLink(d, nodes));
 
-    attachLinkTooltip(linkEnter);
+    const linkGroups = linkEnter.merge(linkSel);
 
-    linkEnter
-        .merge(linkSel)
+    linkGroups
         .on('click', (event, d) => handleLinkClick(d, data))
         .on('mouseover', (event, d) => {
+            const hoveredKey = linkKey(d);
+
+            // Highlight connected nodes
             svg.selectAll('g.node')
-            .classed('hovered', n =>
-                n.id === (d.source.id || d.source) ||
-                n.id === (d.target.id || d.target)
-            );
+                .classed('hovered', n =>
+                    n.id === (d.source.id || d.source) ||
+                    n.id === (d.target.id || d.target)
+                );
+
+            // Dim all other links
+            svg.selectAll('.link-group')
+                .classed('dimmed', l => linkKey(l) !== hoveredKey);
         })
-        .on('mouseout',  (event, d) => {
-            svg.selectAll('g.node').classed('hovered', false);
+        .on('mouseout', (event, d) => {
+            // Clear node highlighting and dimming
+            svg.selectAll('g.node')
+                .classed('hovered', false);
+
+            // Remove dimming from all links
+            svg.selectAll('.link-group').classed('dimmed', false);
         });
+
+    attachLinkTooltip(linkGroups);
 
     const nodeSel = nodeGroup.selectAll('g.node').data(nodes, d => d.id);
     nodeSel.exit().remove();
@@ -667,7 +694,7 @@ function createNetworkGraph(containerSelector, data) {
             } else if (selectedNodes.size === 0) {
                 clearGlobalFilter('network');
                 nodeGroup.selectAll('g.node').classed('active', false);
-                linkGroup.selectAll('.link').style('opacity', null);
+                linkGroup.selectAll('.link-group').style('opacity', null);
                 updateDashboard();
             } else {
                 window.hideNoResultsPopup();
@@ -725,7 +752,7 @@ function createNetworkGraph(containerSelector, data) {
                 setGlobalFilter('network', () => false);
                 updateDashboard();
                 nodeGroup.selectAll('g.node').classed('active', false);
-                linkGroup.selectAll('.link').style('opacity', null);
+                linkGroup.selectAll('.link-group').style('opacity', null);
                 window.showNoResultsPopup(prevSelection);
             } else {
                 window.hideNoResultsPopup();
@@ -766,7 +793,7 @@ function createNetworkGraph(containerSelector, data) {
 
 function updateNetworkStyles(allowedSet) {
     const nodesSel = nodeGroup.selectAll('g.node');
-    const linksSel = linkGroup.selectAll('.link');
+    const linksSel = linkGroup.selectAll('.link-group');
 
     if (!allowedSet) {
         allowedSet = new Set(

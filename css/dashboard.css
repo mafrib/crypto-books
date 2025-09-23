@@ -758,42 +758,96 @@ svg:not(.node-active-mode) .node:hover text {
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
-.link {
+/* Update existing link styles to work with groups */
+.link-group {
   mix-blend-mode: multiply;
   opacity: 0.6;
   fill: none;
-  pointer-events: stroke;
   cursor: pointer;
 }
 
-.link:hover:not(.active),
-.node-active-mode .link:hover:not(.active) {
+.link-group:hover:not(.active),
+.node-active-mode .link-group:hover:not(.active) {
   opacity: 0.9;
 }
 
-.link.active,
-.node-active-mode .link.active {
+.link-group.active,
+.node-active-mode .link-group.active {
   opacity: 1;
 }
 
-.link.active:hover,
-.node-active-mode .link.active:hover {
+.link-group.active:hover,
+.node-active-mode .link-group.active:hover {
   opacity: 1;
 }
 
-.link.book {
+.link-group .link.book {
   stroke: #B65B8C;
 }
 
-.link.author {
+.link-group .link.author {
   stroke: #578E7E;
 }
 
-.link.active.book {
+.link-group.active .link.book {
   stroke: #8F3E6A;
 }
 
-.link.active.author {
+.link-group.active .link.author {
+  stroke: #467265;
+}
+
+.link-hitbox {
+  fill: none;
+  stroke: transparent;
+  pointer-events: stroke;
+}
+
+.link-group.dimmed {
+  opacity: 0.35 !important;
+}
+
+.link-group.dimmed.active {
+  opacity: 0.45 !important;
+}
+
+.link-group.dimmed:hover:not(.active) {
+  opacity: 0.45 !important;
+}
+
+.link-group.dimmed.active:hover {
+  opacity: 0.50 !important;
+}
+
+#network-graph .links .link-group.search-dim {
+  opacity: 0.25 !important;
+}
+
+#network-graph .links .link-group.search-dim.active {
+  opacity: 0.40 !important;
+}
+
+#network-graph .links .link-group.search-dim:hover:not(.active) {
+  opacity: 0.35 !important;
+}
+
+#network-graph .links .link-group.search-dim.active:hover {
+  opacity: 0.40 !important;
+}
+
+.link-group:hover .link.book {
+  stroke: #8F3E6A;
+}
+
+.link-group:hover .link.author {
+  stroke: #467265;
+}
+
+.link-group.active:hover .link.book {
+  stroke: #8F3E6A;
+}
+
+.link-group.active:hover .link.author {
   stroke: #467265;
 }
 
@@ -899,22 +953,6 @@ svg:not(.node-active-mode) .node:hover text {
 }
 
 #network-graph .nodes .node.search-dim { opacity: 0.25; }
-
-#network-graph .links .link.search-dim {
-  opacity: 0.12 !important;
-}
-
-#network-graph .links .link.search-dim.active {
-  opacity: 0.24 !important;
-}
-
-#network-graph .links .link.search-dim:hover:not(.active) {
-  opacity: 0.18 !important;
-}
-
-#network-graph .links .link.search-dim.active:hover {
-  opacity: 0.24 !important;
-}
 
 .gender-btn {
   width: 24px;
