@@ -417,7 +417,7 @@ function isAnonymous(name) {
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')
         .trim();
-    return norm === 'não aplicável' || norm.includes('anonimo');
+    return norm === 'nao aplicavel' || norm.includes('anonimo');
 }
 
 function processNodes(data) {
