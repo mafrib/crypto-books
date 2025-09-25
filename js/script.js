@@ -6,7 +6,8 @@ let __searchFocusRows = null;
 let skipNextTreemapRedraw = false;
 let __lastConflictArgs = null;
 const periodOrder = [
-    'Por determinar',
+    'Em classificação',
+    'Indeterminada',
     'Época Arcaica (VIII-V aC)',
     'Antiguidade Clássica (V aC-III)',
     'Antiguidade Tardia (III-VIII)',
@@ -106,7 +107,10 @@ window.addEventListener('i18n:changed', () => {
 
     try { updateUnlocatedBadge(applyGlobalFilters(globalData)); } catch (e) {}
 
-    try { repaintPeriodBars(applyFiltersExcept(['period','byPeriod'])); } catch (e) {}
+    try {
+        repaintPeriodBars(applyFiltersExcept(['period','byPeriod']));
+        upsertPeriodNote(__classifyingCount);
+    } catch (e) {}
 
     try { window.updateBookCountLabel && window.updateBookCountLabel(); } catch (e) {}
 
@@ -142,14 +146,6 @@ window.addEventListener('i18n:changed', () => {
 function normalizeLabelForSearch(v) {
     const t = (v ?? '').toString().trim();
     return t ? t : 'Por classificar';
-}
-
-function normalizePeriod(v) {
-    const t = (v ?? '').toString().trim();
-    if (!t) return 'Por determinar';
-    const lc = t.toLowerCase();
-    if (lc === 'indeterminada' || lc === 'por determinar' || lc === 'em classificação') return 'Por determinar';
-    return t;
 }
 
 function applySearchFocus(rows) {
@@ -652,7 +648,8 @@ function populateFilterOptions() {
 
     // Periods: keep your canonical order (already starts with Por determinar)
     const normPeriodSet = new Set(globalData.map(d => normalizePeriod(d.EpocaHistorica_Autor)));
-    const periods = periodOrder.filter(p => normPeriodSet.has(p));
+    const periods = periodOrder
+        .filter(p => normPeriodSet.has(p) && p !== 'Por determinar');
     fillChecklist('filter-period', periods);
 
     // Probabilities (keep raw, but still allow special tokens to bubble up if present)

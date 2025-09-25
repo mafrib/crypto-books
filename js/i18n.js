@@ -169,7 +169,7 @@
             'map.overlay.nolocation': 'Sem localização associada ao autor deste livro',
             'map.legend.books': 'N.º de livros',
             'map.offmsg.tail': 'sem localização',
-            'period.title': 'Período histórico',
+            'period.title': 'Época histórica',
 
             'network.title': 'Livrarias, por proprietário',
             'network.info.aria': 'Informação da legenda',
@@ -220,7 +220,7 @@
             'filter.geoarea': 'Área Geográfica',
             'filter.geoarea-pi-except': 'Península Ibérica (exceto Portugal)',
             'filter.location': 'Localização',
-            'filter.period': 'Período Histórico',
+            'filter.period': 'Época Histórica',
             'filter.probobra': 'Atribuição Obra',
             'filter.probautor': 'Autoria',
             'filter.category': 'Categoria Literária',
@@ -250,7 +250,7 @@
             'label.numAuthors': 'N.º de autores',
 
             'conflict.prefix.library': 'A livraria',
-            'conflict.prefix.period': 'O período histórico',
+            'conflict.prefix.period': 'A época histórica',
             'conflict.prefix.item': 'O item',
             'conflict.suffix': 'não tem livros que correspondam a:',
             'conflict.keep': 'Manter os filtros',

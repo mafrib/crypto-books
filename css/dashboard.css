@@ -623,6 +623,19 @@ g.node.hovered-network-node circle {
   opacity: .55;
 }
 
+.period-filter-wrapper {
+    margin-top: 1px;
+}
+
+.period-note {
+  font-size: 0.6rem;
+  font-style: italic;
+  color: #606060;
+  text-align: right;
+  margin-top: 4px;
+  position: static;
+}
+
 /* --- NETWORK GRAPH --- */
 
 .viz-header {

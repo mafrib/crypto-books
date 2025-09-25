@@ -8,6 +8,7 @@ window.selectedPeriods = selectedPeriods.slice();
 let hoverRecentered = false;
 let hoverResetTimeout = null;
 let homeTransform = null;
+let __classifyingCount = 0;
 
 let mapPoints = [];
 let defaultTransform = d3.zoomIdentity;
@@ -245,11 +246,32 @@ function clickZoom(event, factor) {
             .call(zoom.scaleBy, factor);
 }
 
+function upsertPeriodNote(count) {
+    __classifyingCount = count;
+    let note = document.getElementById('period-note');
+    if (!note) {
+        note = d3.select('.period-filter-wrapper')
+                .append('p')
+                .attr('id', 'period-note')
+                .attr('class', 'period-note')
+                .node();
+    }
+    const unit  = i18n.plural(count,
+                  i18n.t('unit.book.one'),
+                  i18n.t('unit.book.many'));
+    const label = i18n.t('filter.value.classifying');
+    note.textContent = `${count} ${unit} ${label}`;
+    note.hidden = count === 0;
+}
+
 function normalizePeriod(v) {
     const t = (v ?? '').toString().trim();
-    if (!t) return 'Por determinar';
+    if (!t) return 'Em classificação';
     const lc = t.toLowerCase();
-    if (lc === 'indeterminada' || lc === 'por determinar') return 'Por determinar';
+    if (lc.includes('em classif'))            return 'Em classificação';
+    if (lc.includes('indeterminad') ||
+        lc.includes('por determin'))          return 'Indeterminada';
+
     return t;
 }
 
@@ -795,19 +817,11 @@ function makeMap () {
                 .attr('class', 'legend-label')
                 .text(d => d.label);
 
-            const periodOrder = [
-                'Por determinar',
-                'Época Arcaica (VIII-V aC)',
-                'Antiguidade Clássica (V aC-III)',
-                'Antiguidade Tardia (III-VIII)',
-                'Alta Idade Média (VIII-XI)',
-                'Idade Média Central (XI-XIII)',
-                'Baixa Idade Média (XIV-XV)'
-            ];
-
             const allPeriods = Array.from(
                 new Set(libraries.map(d => normalizePeriod(d.EpocaHistorica_Autor)))
-                ).sort((a, b) => periodOrder.indexOf(a) - periodOrder.indexOf(b));
+            )
+                .filter(p => p !== 'Em classificação')
+                .sort((a, b) => periodOrder.indexOf(a) - periodOrder.indexOf(b));
 
             const pf = d3.select('#period-filter');
             const periodBars = pf.selectAll('.period-bar')
@@ -899,6 +913,8 @@ function makeMap () {
 
             repaintPeriodBars(libraries);
 
+            upsertPeriodNote(periodCounts.get('Em classificação') || 0);
+
             function highlightPeriodBar(book) {
                 const bookPeriod = normalizePeriod(book.EpocaHistorica_Autor);
                 d3.selectAll('#period-filter .period-bar')
@@ -929,8 +945,13 @@ function updateDashboard() {
     refreshMapPoints(filteredForMap);
     updateUnlocatedBadge(filtered);
 
-    const filteredNoPeriod = applyFiltersExcept(['period','byPeriod']);
-    repaintPeriodBars(filteredNoPeriod);
+    const noPeriod = applyFiltersExcept(['period','byPeriod']);
+    repaintPeriodBars(noPeriod);
+
+    const classifying = filtered
+        .filter(r => normalizePeriod(r.EpocaHistorica_Autor) === 'Em classificação')
+        .length;
+    upsertPeriodNote(classifying);
 
     d3.selectAll('circle.library-point')
         .style('display', d =>
