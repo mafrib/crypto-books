@@ -329,17 +329,42 @@ function clearGlobalFilter(source) {
 }
 
 function clearAllFilters() {
-    activeFilters        = {};
+    activeFilters          = {};
     window.selectedPeriods = [];
 
-    treemapSelection     = null;
-    treemapFilterOrigin  = null;
+    treemapSelection       = null;
+    treemapFilterOrigin    = null;
     lastClassificationMode = null;
 
     selectedNodes.clear();
     selectedLinks.clear();
     clickedLinks.clear();
-    selectedPeriods      = [];
+    selectedPeriods        = [];
+
+   d3.selectAll('#period-filter .period-bar')
+       .classed('selected', false);
+   if (typeof clearPeriodHighlights === 'function') clearPeriodHighlights();
+
+   if (typeof unpinBook          === 'function') unpinBook();
+   if (typeof clearHoverItem     === 'function') clearHoverItem();
+   if (typeof setDetailsItems    === 'function') setDetailsItems([], null);
+   else if (typeof clearDetailsPanel === 'function') clearDetailsPanel();
+
+   try {
+       d3.select('#network-graph .network-wrapper')
+         .selectAll('g.node')
+         .classed('active', false)
+         .classed('selected-by-link', false);
+       d3.select('#network-graph .network-wrapper')
+         .selectAll('.link')
+         .classed('active', false)
+         .style('opacity', null);
+   } catch (_) {}
+
+   if (window.selectedLocations) window.selectedLocations.clear();
+   if (typeof clearMapHighlights === 'function') clearMapHighlights();
+
+   d3.selectAll('#catalog-entries .catalog-entry').classed('pinned', false);
 
     notifyFilterChange();
     updateNetworkStyles(null);
