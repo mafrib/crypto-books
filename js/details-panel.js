@@ -479,6 +479,8 @@ function __getSelectedPeriods() {
 }
 
 function renderBookDetails(row) {
+    const isPinned = window.getPinnedBook && window.getPinnedBook() === row;
+    setPinIndicator(isPinned ? 'book' : null);
     const panel       = document.getElementById('hover-details');
     panel.classList.add('details-panel--list-mode', 'details-panel--book-mode');
 
