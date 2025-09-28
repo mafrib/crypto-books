@@ -722,7 +722,7 @@ function rebuildFilterTags () {
                     const input = document.querySelector(`#filter-location input[value="${CSS.escape(v)}"]`);
                     const label = input ? input.nextElementSibling.textContent.trim() : v;
 
-                    addTag(`${i18n.t('filter.location')}: ${displayLabel(v)}`, () => {
+                    addTag(`${i18n.t('filter.location')}: ${label}`, () => {
 
                         uncheckValue('filter-location', v);
 
