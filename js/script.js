@@ -746,9 +746,11 @@ function rebuildFilterTags () {
 
             case 'byLibrary':
                 if (activeFilters.network) break;
-                getChecked('filter-library').forEach(v => addTag(v, () => {
-                    uncheckValue('filter-library', v);
-                    clearGlobalFilter('byLibrary');
+                getChecked('filter-library').forEach(v => addTag(
+                    `${i18n.t('filter.library')}: ${displayLabel(v)}`,
+                    () => {
+                        uncheckValue('filter-library', v);
+                        clearGlobalFilter('byLibrary');
                 }));
                 break;
 
@@ -803,11 +805,13 @@ function rebuildFilterTags () {
 
                 if (periodTagAdded) break;
                 periodTagAdded = true;
-                selectedPeriods.forEach(p => addTag(p, () => {
-                    selectedPeriods = [];
-                    d3.selectAll('#period-filter .period-bar').classed('selected', false);
-                    clearGlobalFilter('period');
-                    clearGlobalFilter('byPeriod');
+                selectedPeriods.forEach(p => addTag(
+                    `${i18n.t('filter.period')}: ${p}`,
+                    () => {
+                        selectedPeriods = [];
+                        d3.selectAll('#period-filter .period-bar').classed('selected', false);
+                        clearGlobalFilter('period');
+                        clearGlobalFilter('byPeriod');
                 }));
                 break;
 
