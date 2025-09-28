@@ -310,13 +310,13 @@
         }
     };
 
+    const stored = localStorage.getItem('lang');
     const i18n = {
-        locale: localStorage.getItem('lang') ||
-                (navigator.language || '').toLowerCase().startsWith('pt') ? 'pt' : 'en',
+        locale: stored || 'pt',
 
         t(key) {
-        const pack = messages[this.locale] || messages.en;
-        return pack[key] || messages.en[key] || key;
+            const pack = messages[this.locale] || messages.en;
+            return pack[key] || messages.en[key] || key;
         },
 
         // very small plural helper
