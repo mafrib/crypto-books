@@ -532,4 +532,6 @@ function createTreemap(selector, data, mode = 'category', onUpdate) {
         const t = (v ?? '').toString().trim();
         return t ? t : 'Em classificação';
     }
+
+    reapplyPinnedHighlights();
 }

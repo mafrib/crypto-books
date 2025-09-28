@@ -97,6 +97,7 @@ function createBooksCatalog(data) {
         } else {
           // Pin
           window.pinBook && window.pinBook(d);
+          reapplyPinnedHighlights();
 
           d3.selectAll('#catalog-entries .catalog-entry')
             .classed('pinned', false)

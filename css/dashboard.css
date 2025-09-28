@@ -551,6 +551,10 @@ g.node.hovered-network-node circle {
   stroke-width: 2px;
 }
 
+#period-filter .period-bar.pinned-period-bar {
+  border: 2px solid red;
+}
+
 #period-filter .period-bar.hovered-period-bar{
   border: 2px solid red;
 }
@@ -598,9 +602,6 @@ g.node.hovered-network-node circle {
   color: #16404D;
 }
 
-#period-filter .period-bar.pinned-period-bar {
-  border: 2px solid red;
-}
 #period-filter .period-bar.pinned-period-bar:not(:hover) .label { display: block; }
 #period-filter .period-bar.pinned-period-bar:not(:hover) .count { display: none; }
 

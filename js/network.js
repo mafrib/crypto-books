@@ -789,6 +789,7 @@ function createNetworkGraph(containerSelector, data) {
     simulation.nodes(nodes);
     simulation.force('link').links(edges);
     simulation.alpha(0.5).restart();
+    reapplyPinnedHighlights();
 }
 
 function updateNetworkStyles(allowedSet) {

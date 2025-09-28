@@ -90,6 +90,19 @@ function buildOptionsWithSpecials(data, field) {
     return specialList.concat(normalList);
 }
 
+function reapplyPinnedHighlights () {
+    const row = window.getPinnedBook && window.getPinnedBook();
+    if (!row) return;
+
+    window.highlightMapPoint    && window.highlightMapPoint(row);
+    window.highlightNetworkNode && window.highlightNetworkNode(row.Proprietario_Nome);
+    window.highlightTreemapRect && window.highlightTreemapRect(row);
+
+    const period = normalizePeriod(row.EpocaHistorica_Autor);
+    d3.selectAll('#period-filter .period-bar')
+        .classed('pinned-period-bar', d => d === period);
+}
+
 function rowMatchesSelection(row, field, selectedSet) {
     const raw = row[field];
     const sk = specialKeyOf(raw);
@@ -1069,6 +1082,7 @@ function redrawVisualisation(vizEl){
             break;
         default:
     }
+    reapplyPinnedHighlights();
 }
 
 function redrawAllViz () {

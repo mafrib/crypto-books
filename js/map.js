@@ -219,14 +219,25 @@ function updateUnlocatedBadge(rowSet) {
     el.classList.remove('map-offhint--hidden');
 }
 
+function isPinnedPoint(point) {
+    const pinned = window.getPinnedBook && window.getPinnedBook();
+    if (!pinned) return false;
+    return point.entries.some(r => r.ID_Cod === pinned.ID_Cod);
+}
+
 function highlightPoint(el, d) {
     el.raise()
         .classed('highlighted', true)
+        .classed('dimmed', false)
         .transition().duration(120)
         .attr('r', (d.baseR * 2) / currentZoomK);
 
+    const pinned = window.getPinnedBook && window.getPinnedBook();
     d3.selectAll('circle.library-point')
-        .filter(p => p !== d)
+        .filter(p =>
+        p !== d &&
+        !(pinned && isPinnedPoint(p))
+        )
         .classed('dimmed', true);
 }
 
@@ -236,6 +247,9 @@ function clearPointHighlight(el, d) {
         .attr('r', d.baseR / currentZoomK);
 
     d3.selectAll('circle.library-point').classed('dimmed', false);
+
+    const pinned = window.getPinnedBook && window.getPinnedBook();
+    if (pinned) window.highlightMapPoint && window.highlightMapPoint(pinned);
 }
 
 function clickZoom(event, factor) {
@@ -693,36 +707,38 @@ function makeMap () {
                         }
                     })
                     .on("mouseover", function (event, d) {
-                    const rows       = d.filteredEntries ?? d.entries;
-                    const location   = d.label || "Unknown location";
-                    const numAuthors = new Set(rows.map(e => e.Nome_Autor)).size;
-                    const numBooks   = rows.length;
+                        if (isPinnedPoint(d)) return;
+                        const rows       = d.filteredEntries ?? d.entries;
+                        const location   = d.label || "Unknown location";
+                        const numAuthors = new Set(rows.map(e => e.Nome_Autor)).size;
+                        const numBooks   = rows.length;
 
-                    highlightPoint(d3.select(this), d);
+                        highlightPoint(d3.select(this), d);
 
-                    const authorsLabel = i18n.t('label.numAuthors');
-                    const booksLabel   = i18n.t('label.numBooks');
-                    const locLabel     = i18n.t('label.location');
+                        const authorsLabel = i18n.t('label.numAuthors');
+                        const booksLabel   = i18n.t('label.numBooks');
+                        const locLabel     = i18n.t('label.location');
 
-                    tooltip
-                        .style("opacity", 1)
-                        .html(
-                            `<strong>${locLabel}</strong>: ${location}<br/>` +
-                            `<strong>${authorsLabel}</strong>: ${numAuthors}<br/>` +
-                            `<strong>${booksLabel}</strong>: ${numBooks}`
-                        )
-                        .style("left", (event.pageX + 8) + "px")
-                        .style("top",  (event.pageY - 28) + "px");
-                    })
-                    .on("mousemove", event => {
-                    tooltip
-                        .style("left", (event.pageX + 8) + "px")
-                        .style("top",  (event.pageY - 28) + "px");
-                    })
-                    .on("mouseout", function (event, d) {
-                    clearPointHighlight(d3.select(this), d);
-                    tooltip.style("opacity", 0);
-                    });
+                        tooltip
+                            .style("opacity", 1)
+                            .html(
+                                `<strong>${locLabel}</strong>: ${location}<br/>` +
+                                `<strong>${authorsLabel}</strong>: ${numAuthors}<br/>` +
+                                `<strong>${booksLabel}</strong>: ${numBooks}`
+                            )
+                            .style("left", (event.pageX + 8) + "px")
+                            .style("top",  (event.pageY - 28) + "px");
+                        })
+                        .on("mousemove", event => {
+                            tooltip
+                                .style("left", (event.pageX + 8) + "px")
+                                .style("top",  (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", function (event, d) {
+                            if (isPinnedPoint(d)) return;
+                            clearPointHighlight(d3.select(this), d);
+                            tooltip.style("opacity", 0);
+                        });
 
             mapPoints = aggregatedPoints;
             window.mapPoints = mapPoints;
@@ -926,11 +942,11 @@ function makeMap () {
                 .classed('hovered-period-bar', false);
             }
 
-            window.highlightPeriodBar   = highlightPeriodBar;
-            window.clearPeriodHighlights = clearPeriodHighlights;
+
             refreshMapPoints(applyGlobalFilters(globalData));
             if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
             updateMapLocationStyles();
+            reapplyPinnedHighlights();
         })
 
     .catch(err => console.error("Error loading map or data:", err));
@@ -990,16 +1006,17 @@ function repaintPeriodBars(rowSetWithoutPeriod) {
         const n   = counts.get(period) || 0;
         const unit = i18n.plural(n, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
 
-        d3.select(this)
-        .classed('selected', sel)
-        .classed('inactive', n === 0)
-        .classed('dimmed',  !sel && selectedPeriods.length > 0)
-        .select('.count')
-        .text(`${n} ${unit}`);
+        const bar = d3.select(this);
+        const keepPin = bar.classed('pinned-period-bar');
+
+        bar.classed('selected', sel)
+            .classed('inactive', n === 0)
+            .classed('dimmed',  !sel && selectedPeriods.length > 0)
+            .classed('pinned-period-bar', keepPin)
+            .select('.count')
+            .text(`${n} ${unit}`);
     });
 }
-
-window.repaintPeriodBars = repaintPeriodBars;
 
 function refreshMapPoints(filteredRows) {
 

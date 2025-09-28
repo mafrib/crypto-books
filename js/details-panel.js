@@ -355,6 +355,7 @@ function unpinBook() {
     window.clearNetworkHighlights && window.clearNetworkHighlights();
     window.clearTreemapHighlights && window.clearTreemapHighlights();
     window.clearPeriodHighlights && window.clearPeriodHighlights();
+    d3.selectAll('#period-filter .period-bar').classed('pinned-period-bar', false);
 }
 
 window.pinBook = pinBook;

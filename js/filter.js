@@ -314,6 +314,7 @@ function notifyFilterChange () {
     if (typeof updateModalClearButton === 'function') {
         updateModalClearButton();
     }
+    reapplyPinnedHighlights();
 }
 
 // Centralized filtering system
