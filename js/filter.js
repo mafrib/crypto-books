@@ -7,6 +7,17 @@ function filterBooks(data, query) {
     );
 }
 
+function ensurePinnedBookValidity () {
+    if (!window.getPinnedBook) return;
+    const pinned = window.getPinnedBook();
+    if (!pinned) return;
+
+    if (typeof window.unpinBook === 'function') window.unpinBook();
+
+    d3.selectAll('#catalog-entries .catalog-entry').classed('pinned', false);
+    updateClearButton();
+}
+
 function deriveTreemapFromActiveFilters() {
     if (activeFilters.treemap && treemapSelection) {
         return {
@@ -288,6 +299,7 @@ function commitChecklistFilters () {
 }
 
 function notifyFilterChange () {
+    ensurePinnedBookValidity();
     updateClearButton();
     updateFilterBadge();
     document.querySelectorAll('.checklist').forEach(bumpCounter);
