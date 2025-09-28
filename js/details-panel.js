@@ -454,7 +454,8 @@ function renderPeriodDetails(periodName) {
       authors.forEach(([author, n]) => {
         const div = document.createElement('div');
         div.className = 'list-item';
-        div.textContent = `${author} — ${n} book${n === 1 ? '' : 's'}`;
+        const word = i18n.plural(n, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
+        div.textContent = `${author} — ${n} ${word}`;
         listEl.appendChild(div);
       });
     }
@@ -858,10 +859,11 @@ function renderLocationDetails(locKey) {
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
       authors.forEach(([author, n]) => {
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.textContent = `${author} — ${n} book${n===1?'':'s'}`;
-        listEl.appendChild(div);
+          const div   = document.createElement('div');
+          const word  = i18n.plural(n, i18n.t('unit.book.one'), i18n.t('unit.book.many'));
+          div.className = 'list-item';
+          div.textContent = `${author} — ${n} ${word}`;
+          listEl.appendChild(div);
       });
     }
     setDetailsExpandEnabled(true);
