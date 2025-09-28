@@ -373,8 +373,13 @@ function clearHoverItem() {
     renderCurrentItem();
 }
 
-window.showDetailsHover = showHoverItem;
-window.clearDetailsHover = clearHoverItem;
+function onlyYear(v) {
+    const t = (v || '').toString().trim();
+    if (!t) return '';
+    if (isPendingClassification(t)) return '?';
+    const m = t.match(/(\d{4})/);
+    return m ? m[1] : t;
+}
 
 function fmtYear(raw) {
     if (isPendingClassification(raw) || !raw || !String(raw).trim()) return '?';
@@ -487,14 +492,6 @@ function renderBookDetails(row) {
 
     const { attribEl, authorshipEl, descEl } = ensureBookNodes(panel);
 
-    function onlyYear(v) {
-        const t = (v || '').toString().trim();
-        if (!t) return '';
-        if (isPendingClassification(t)) return '?';
-        const m = t.match(/(\d{4})/);
-        return m ? m[1] : t;
-    }
-
     // Base visibility
     placeholder.style.display = 'none';
     wrapper.style.display     = 'none';
@@ -594,18 +591,21 @@ function renderBookDetails(row) {
     const autorStatusRaw = getFirst(row, ['EstatutoAutor']);
     const autorStatus    = meaningful(autorStatusRaw) ? autorStatusRaw.toString().trim() : '';
 
+    const bioRaw = getFirst(row, ['BioAbreviada_Autor']);
+    const bio = meaningful(bioRaw) ? bioRaw.toString().trim() : '';
+
     const authorBox = document.createElement('div');
     authorBox.className = 'list-item';
     authorBox.innerHTML = `
       <div><strong>${withColon(i18n.t('catalog.header.author'))}</strong> ${authorName || '—'}</div>
       ${(bornLine || diedLine) ? `
-        <ul class="subpoints author-subpoints" role="group" aria-label="${(i18n.t && i18n.t('details.authorSubpoints')) || 'Author details'}">
+        <ul class="subpoints author-subpoints">
           ${bornLine ? `<li><strong>${withColon(i18n.t('details.birth'))}</strong> ${bornLine}</li>` : ''}
           ${diedLine ? `<li><strong>${withColon(i18n.t('details.death'))}</strong> ${diedLine}</li>` : ''}
-        </ul>
-      ` : ''}
+        </ul>` : ''}
       ${autorBadge ? `<div><strong>${withColon(i18n.t('details.authorship'))}</strong> ${autorBadge}</div>` : ''}
       ${autorStatus ? `<div><strong>${withColon(i18n.t('details.authorStatus'))}</strong> ${autorStatus}</div>` : ''}
+      ${bio        ? `<div><strong>${withColon(i18n.t('details.bio'))}</strong> ${bio}</div>` : ''}   <!-- NEW -->
     `;
     listEl.appendChild(authorBox);
 
@@ -638,7 +638,7 @@ function renderBookDetails(row) {
     }
 
     // Synopsis (hidden if pending)
-    const synopsisRaw = getFirst(row, ['Sinopse_Obra', 'Sinopse obra', 'Sinopse']);
+    const synopsisRaw = getFirst(row, ['Sinopse_Obra']);
     const synopsis    = meaningful(synopsisRaw) ? synopsisRaw.toString().trim() : '';
     if (synopsis) {
         const syn = document.createElement('div');

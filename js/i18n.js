@@ -125,6 +125,7 @@
             'details.authorStatus': 'Author status',
             'details.birth': 'Birth',
             'details.death': 'Death',
+            'details.bio': 'Biography',
             'details.seeMore': 'See more',
             'details.seeLess': 'See less',
 
@@ -278,6 +279,7 @@
             'details.authorStatus': 'Estatuto do autor',
             'details.birth': 'Nascimento',
             'details.death': 'Morte',
+            'details.bio': 'Biografia',
             'details.seeMore': 'Ver mais',
             'details.seeLess': 'Ver menos',
 
