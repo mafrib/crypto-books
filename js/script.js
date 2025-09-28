@@ -16,6 +16,10 @@ const periodOrder = [
     'Baixa Idade Média (XIV-XV)'
 ];
 
+// order from less to more certain
+const PROB_OBRA_ORDER  = ['Indeterminada','Provável','Segura'];
+const PROB_AUTOR_ORDER = ['Possível','Provável','Segura','Indisputada'];
+
 // Canonical keys for special values
 const SPECIAL = {
     UNKNOWN:       '__UNKNOWN__',
@@ -119,6 +123,34 @@ function buildAuthorOptions(data) {
     return specialList.concat(normalList);
 }
 
+function buildProbOptions(data, field, customOrder) {
+    const pool = new Map();
+
+    data.forEach(r => {
+        const raw = r[field];
+        const sk  = specialKeyOf(raw);
+        if (sk) {
+            pool.set(labelForSpecial(sk), sk);
+        } else {
+            const lbl = (raw ?? '').toString().trim();
+            if (lbl) pool.set(lbl, lbl);
+        }
+    });
+
+    const out   = [];
+    const pushIfPresent = lbl => {
+        if (pool.has(lbl)) {
+            out.push({ value: pool.get(lbl), label: lbl });
+            pool.delete(lbl);
+        }
+    };
+
+    pushIfPresent('Em classificação');
+
+    customOrder.forEach(pushIfPresent);
+
+    return out;
+}
 
 function reapplyPinnedHighlights () {
     const row = window.getPinnedBook && window.getPinnedBook();
@@ -696,8 +728,10 @@ function populateFilterOptions() {
     fillChecklist('filter-period', periods);
 
     // Probabilities (keep raw, but still allow special tokens to bubble up if present)
-    fillChecklist('filter-probobra',  buildOptionsWithSpecials(globalData,'ProbAtribObra'));
-    fillChecklist('filter-probautor', buildOptionsWithSpecials(globalData,'ProbAtribAutor'));
+    fillChecklist('filter-probobra',
+        buildProbOptions(globalData,'ProbAtribObra', PROB_OBRA_ORDER));
+    fillChecklist('filter-probautor',
+        buildProbOptions(globalData,'ProbAtribAutor', PROB_AUTOR_ORDER));
 }
 
 function rebuildFilterTags () {
