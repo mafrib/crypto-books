@@ -90,6 +90,36 @@ function buildOptionsWithSpecials(data, field) {
     return specialList.concat(normalList);
 }
 
+function buildAuthorOptions(data) {
+    const allowedTop = new Set([SPECIAL.UNKNOWN, SPECIAL.NA]);
+
+    const specials = new Map();
+    const normal   = new Map();
+
+    data.forEach(r => {
+        const raw = r.Nome_Autor;
+        const sk  = specialKeyOf(raw);
+
+        if (sk && allowedTop.has(sk)) {
+            specials.set(sk, labelForSpecial(sk));
+        } else {
+            const label = (raw ?? '').toString().trim();
+            if (label) normal.set(label, true);
+        }
+    });
+
+    const specialList = Array.from(specials.entries())
+        .map(([value, label]) => ({ value, label }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+    const normalList = Array.from(normal.keys())
+        .map(label => ({ value: label, label }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+
+    return specialList.concat(normalList);
+}
+
+
 function reapplyPinnedHighlights () {
     const row = window.getPinnedBook && window.getPinnedBook();
     if (!row) return;
@@ -643,7 +673,7 @@ function buildGenreTooltips() {
 function populateFilterOptions() {
     // Libraries and authors
     fillChecklist('filter-library',  buildOptionsWithSpecials(globalData, 'Proprietario_Nome'));
-    fillChecklist('filter-author',   buildOptionsWithSpecials(globalData, 'Nome_Autor'));
+    fillChecklist('filter-author',   buildAuthorOptions(globalData));
 
     // Language
     fillChecklist('filter-idioma',   buildOptionsWithSpecials(globalData, 'Idioma'));
