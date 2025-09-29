@@ -643,6 +643,7 @@ g.node.hovered-network-node circle {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 var(--pad-h) 0 var(--pad-h);
 }
 
 .viz-header .expand-btn,
@@ -1002,6 +1003,10 @@ svg:not(.node-active-mode) .node:hover text {
   font-weight: 200;
   text-align: center; color: #16404D;
   cursor: pointer; z-index: 2;
+  min-width: 22px;
+  min-height: 22px;
+  max-width: 22px;
+  max-height: 22px;
 }
 
 .info-btn:hover { background:#D6E5DB; }
@@ -2004,14 +2009,6 @@ details[open] > summary::after {
 
 /* ---- TREEMAP ---- */
 
-.treemap-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  padding-right: 30px;
-}
-
 .treemap-header .viz-title {
   margin: 0;
   font-size: 0.9rem;
@@ -2020,10 +2017,9 @@ details[open] > summary::after {
 
 .treemap-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 4px;
-  padding-right: 30px;
+  margin-bottom: 8px;
   position: relative;
 }
 
@@ -2042,8 +2038,6 @@ details[open] > summary::after {
 
 #treemap-info-btn {
   position: static;
-  width: 16px;
-  height: 16px;
   background: transparent;
   border: 1px solid #16404D;
   border-radius: 50%;
@@ -2242,10 +2236,7 @@ details[open] > summary::after {
 #treemap.is-expanded #treemap-area text { font-size: 0.8rem !important; }
 
 #treemap-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  margin-right: 30px;
 }
 
 #treemap-area {
@@ -2261,6 +2252,7 @@ details[open] > summary::after {
   color: #16404D;
   margin-bottom: 10px;
   cursor: pointer;
+  margin-inline: 0 var(--pad-h);
 }
 
 #tooltip {
@@ -2313,6 +2305,7 @@ details[open] > summary::after {
 
 .search-container {
   display: flex;
+  align-items: center;
   margin-bottom: 0.5rem;
   position: relative;
 }
@@ -2540,10 +2533,6 @@ details[open] > summary::after {
   align-items: center;
 }
 
-#catalog .search-container {
-  padding-right: 2rem;
-}
-
 .catalog-header {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 0.5fr;
@@ -2710,6 +2699,14 @@ details[open] > summary::after {
   position: absolute;
   top:  var(--pad-v);
   right:var(--pad-h);
+}
+
+.map-offhint,
+.period-note,
+#book-count {
+  position: static;
+  margin: var(--pad-v) 0 0;
+  text-align: right;
 }
 
 /* ----VIEWPORT WARNING---- */
