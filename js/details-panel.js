@@ -1046,3 +1046,6 @@ document.addEventListener('focusout', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', ensureDetailsExpand);
+
+window.showDetailsHover  = showHoverItem;
+window.clearDetailsHover = clearHoverItem;
