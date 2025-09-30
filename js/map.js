@@ -225,6 +225,11 @@ function isPinnedPoint(point) {
     return point.entries.some(r => r.ID_Cod === pinned.ID_Cod);
 }
 
+function isPointOf(book, point) {
+    if (!book) return false;
+    return point.entries.some(e => e.ID_Cod === book.ID_Cod);
+}
+
 function highlightPoint(el, d) {
     el.raise()
         .classed('highlighted', true)
@@ -707,13 +712,14 @@ function makeMap () {
                         }
                     })
                     .on("mouseover", function (event, d) {
-                        if (isPinnedPoint(d)) return;
+                        const pinned = window.getPinnedBook && window.getPinnedBook();
+                        if (pinned && !isPointOf(pinned, d)) return;
                         const rows       = d.filteredEntries ?? d.entries;
                         const location   = d.label || "Unknown location";
                         const numAuthors = new Set(rows.map(e => e.Nome_Autor)).size;
                         const numBooks   = rows.length;
 
-                        highlightPoint(d3.select(this), d);
+                        if (!pinned) highlightPoint(d3.select(this), d);
 
                         const authorsLabel = i18n.t('label.numAuthors');
                         const booksLabel   = i18n.t('label.numBooks');
@@ -730,13 +736,17 @@ function makeMap () {
                             .style("top",  (event.pageY - 28) + "px");
                         })
                         .on("mousemove", event => {
+                            const pinned = window.getPinnedBook && window.getPinnedBook();
+                            if (pinned && !isPointOf(pinned, d)) return;
                             tooltip
                                 .style("left", (event.pageX + 8) + "px")
                                 .style("top",  (event.pageY - 28) + "px");
                         })
                         .on("mouseout", function (event, d) {
-                            if (isPinnedPoint(d)) return;
-                            clearPointHighlight(d3.select(this), d);
+                            const pinned = window.getPinnedBook && window.getPinnedBook();
+                            if (pinned && !isPointOf(pinned, d)) return;
+
+                            if (!isPinnedPoint(d)) clearPointHighlight(d3.select(this), d);
                             tooltip.style("opacity", 0);
                         });
 
