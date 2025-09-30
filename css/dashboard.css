@@ -744,7 +744,7 @@ g.node.hovered-network-node circle {
 }
 
 .node:hover circle {
-  fill: #375A61;
+  fill: #4F6F78;
 }
 
 .gender-label {
