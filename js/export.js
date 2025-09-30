@@ -44,9 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const ensure = h => { if (y+h > pageH) newPage(); };
         const section = titleTxt => {
             ensure(20);
-            pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(80)
-                .text(t('export.cover.note'), mar, y, {maxWidth: pageW});
-            pdf.text(titleTxt, mar, y);
+            pdf.setFont('helvetica','bold').setFontSize(11).setTextColor(...teal)
+                .text(titleTxt, mar, y);
             y += 6;
         };
 
@@ -57,8 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pdf.setFont('helvetica','normal').setFontSize(9).setTextColor(80)
             .text(
-                'This report reflects the dashboard’s current view at export time, ' +
-                'considering all active filters.',
+                t('export.cover.note'),
                 mar, y, {maxWidth: pageW}
             );
         y += 8;
