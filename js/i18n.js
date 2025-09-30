@@ -27,6 +27,10 @@
             'network.gender.label': 'Filter by owner’s gender:',
             'gender.male': 'Male libraries',
             'gender.female': 'Female libraries',
+            "gender.disabled.male.long"   :
+                "Unable to select by gender.\nSome of the male libraries do not match the current filters",
+            "gender.disabled.female.long" :
+                "Unable to select by gender.\nSome of the female libraries do not match the current filters",
 
             'side.filter': 'Filter',
             'side.clear': 'Clear',
@@ -181,6 +185,10 @@
             'network.gender.label': 'Filtrar por género do proprietário:',
             'gender.male': 'Livrarias masculinas',
             'gender.female': 'Livrarias femininas',
+            "gender.disabled.male"   :
+            "Não é possível filtrar por género.\nAlgumas livrarias masculinas não correspondem aos filtros atuais",
+            "gender.disabled.female" :
+            "Não é possível filtrar por género.\nAlgumas livrarias femininas não correspondem aos filtros atuais",
 
             'side.filter': 'Filtrar',
             'side.clear': 'Limpar',

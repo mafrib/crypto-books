@@ -10,6 +10,8 @@ window.selectedNodes = selectedNodes;
 const linkKey = d => `${d.source.id || d.source}|${d.target.id || d.target}|${d.type}`;
 window.linkKey = linkKey;
 
+function getTooltip () { return tooltip; }
+
 function linkLabel(key) {
     const [a, b, type] = key.split('|');
     const kind = (type === 'book')
@@ -240,6 +242,71 @@ function buildGenderSets(data) {
     return { males, females };
 }
 
+function updateGenderButtonsAvailability() {
+    const { males, females } = buildGenderSets(allDataRef || globalData);
+
+    // Libraries still allowed by ALL active filters except network/library ones
+    const allowed = new Set(
+        applyFiltersExcept(['network', 'byLibrary'])
+            .map(r => r.Proprietario_Nome.trim())
+    );
+
+    const maleOk   = [...males  ].every(id => allowed.has(id));
+    const femaleOk = [...females].every(id => allowed.has(id));
+
+    setGenderButtonDisabled('male',   !maleOk);
+    setGenderButtonDisabled('female', !femaleOk);
+}
+
+function setGenderButtonDisabled(kind, disabled) {
+    const btn = document.getElementById(
+        kind === 'male' ? 'gender-btn-male' : 'gender-btn-female'
+    );
+    if (!btn) return;
+
+    btn.classList.toggle('disabled', disabled);
+    btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+
+    // remove normal title while disabled, restore when enabled
+    if (disabled) {
+        btn.__normalTitle = btn.getAttribute('title'); // cache
+        btn.removeAttribute('title');
+    } else {
+        btn.setAttribute('title', btn.__normalTitle || i18n.t(`gender.${kind}`));
+    }
+
+    // long explanatory message for our custom tooltip
+    const longKey = kind === 'male'
+        ? 'gender.disabled.male.long'
+        : 'gender.disabled.female.long';
+    btn.__tipText = i18n.t(longKey);
+
+    /* wire tooltip only once */
+    if (!btn.__wiredTip) {
+        btn.__wiredTip = true;
+        btn.addEventListener('mouseenter', e => {
+            if (!btn.classList.contains('disabled')) return;
+            getTooltip()
+                .style('left', (e.pageX + 12) + 'px')
+                .style('top',  (e.pageY + 12) + 'px')
+                .style('visibility', 'visible')
+                .style('opacity', 1)
+                .html(btn.__tipText.replace(/\n/g,'<br>'));
+        });
+        btn.addEventListener('mousemove', e => {
+            const tip = getTooltip();
+            if (tip.style('visibility') === 'hidden') return;
+            tip.style('left', (e.pageX + 12) + 'px')
+               .style('top',  (e.pageY + 12) + 'px');
+        });
+        btn.addEventListener('mouseleave', () => {
+            getTooltip()
+                .style('opacity', 0)
+                .style('visibility', 'hidden');
+        });
+    }
+}
+
 function ensureGenderControls(containerSelector) {
     const container = d3.select(containerSelector).node();
     if (!container) return;
@@ -277,6 +344,10 @@ function ensureGenderControls(containerSelector) {
 }
 
 function toggleGenderSelection(kind) {
+    const btn = document.getElementById(kind === 'male'
+                 ? 'gender-btn-male' : 'gender-btn-female');
+    if (btn.classList.contains('disabled')) return;
+
     const maleBtn   = d3.select('#gender-btn-male');
     const femaleBtn = d3.select('#gender-btn-female');
 
@@ -293,7 +364,20 @@ function toggleGenderSelection(kind) {
     // Simplification rule: clicking these buttons replaces previous library selections
     selectedNodes.clear();
     clickedLinks.clear();
-    selectedLinks.clear();
+    selectedLinks.clear();               // drop previous auto links
+        edges.forEach(e => {
+            const k = linkKey(e);
+            const a = e.source.id || e.source;
+            const b = e.target.id || e.target;
+            if (selectedNodes.has(a) && selectedNodes.has(b)) {
+                selectedLinks.add(k);
+            }
+        });
+svg.selectAll('.link-group')
+   .classed('active', l => selectedLinks.has(linkKey(l)))
+   .style('opacity', null);
+
+rebuildNetworkFilterFromState(allDataRef || globalData);
 
     setGenderButtonState('male', false);
     setGenderButtonState('female', false);
@@ -302,6 +386,15 @@ function toggleGenderSelection(kind) {
 
     if (maleActiveNext)   males.forEach(id => selectedNodes.add(id));
     if (femaleActiveNext) females.forEach(id => selectedNodes.add(id));
+
+    selectedLinks.clear();
+    edges.forEach(e => {
+        const src = e.source.id || e.source;
+        const tgt = e.target.id || e.target;
+        if (selectedNodes.has(src) && selectedNodes.has(tgt)) {
+            selectedLinks.add(linkKey(e));
+        }
+    });
 
     nodeGroup.selectAll('g.node')
         .classed('active', d => selectedNodes.has(d.id));
@@ -341,6 +434,7 @@ function wireGenderButtons() {
         female.addEventListener('click', () => toggleGenderSelection('female'));
         female.dataset.wired = '1';
   }
+  updateGenderButtonsAvailability();
 }
 
 function setGenderButtonState(kind, active) {
@@ -732,7 +826,8 @@ function createNetworkGraph(containerSelector, data) {
 
             // Update CSS classes
             svg.selectAll('.link')
-                .classed('active', l => selectedLinks.has(linkKey(l)));
+                .classed('active', l => selectedLinks.has(linkKey(l)))
+                .style('opacity', null);
 
             svg.selectAll('g.node')
                 .classed('selected-by-link', n =>

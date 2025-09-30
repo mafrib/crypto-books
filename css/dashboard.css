@@ -979,6 +979,14 @@ svg:not(.node-active-mode) .node:hover text {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative;
+}
+
+.gender-btn::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
 }
 
 .gender-btn:hover,
@@ -991,6 +999,23 @@ svg:not(.node-active-mode) .node:hover text {
   height: 20px;
   pointer-events: none;
 }
+
+.tooltip::after {
+    content: none;
+    position: absolute;
+    left: 10px;
+    top: 100%;
+    border: 6px solid transparent;
+    border-top-color: rgba(0,0,0,0.7);
+}
+
+.gender-btn.disabled {
+    opacity: .35;
+    cursor: default;
+    pointer-events: auto;
+}
+
+.gender-btn.disabled:hover { background: transparent; }
 
 .info-btn {
   position: absolute;

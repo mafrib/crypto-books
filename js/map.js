@@ -992,6 +992,7 @@ function updateDashboard() {
     }
 
     if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
+    updateGenderButtonsAvailability();
 }
 
 function repaintPeriodBars(rowSetWithoutPeriod) {
