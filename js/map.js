@@ -952,6 +952,8 @@ function makeMap () {
                 .classed('hovered-period-bar', false);
             }
 
+            window.highlightPeriodBar    = highlightPeriodBar;
+            window.clearPeriodHighlights = clearPeriodHighlights;
 
             refreshMapPoints(applyGlobalFilters(globalData));
             if (window.reapplySearchFocusIfAny) window.reapplySearchFocusIfAny();
