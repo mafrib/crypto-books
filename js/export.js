@@ -169,6 +169,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         y = pdf.lastAutoTable.finalY + GAP;
 
+        /* ===== Authors & books per historical period ===================== */
+        section(t('export.section.period'));
+
+        const periodAgg = d3.rollups(
+            rows,
+            v => ({
+                books   : v.length,
+                authors : Array.from(new Set(v.map(d => d.Nome_Autor))).sort()
+            }),
+            d => normalizePeriod(d.EpocaHistorica_Autor)
+        );
+
+        /* Sort by the visual order used in the dashboard, if available     */
+        if (window.periodOrder) {
+            periodAgg.sort(
+                (a, b) => window.periodOrder.indexOf(a[0]) - window.periodOrder.indexOf(b[0])
+            );
+        } else {
+            periodAgg.sort((a, b) => a[0].localeCompare(b[0]));
+        }
+
+        const periodBody = periodAgg.map(([period, o]) => [
+            period,
+            o.authors.join('\n'),
+            o.books
+        ]);
+
+        pdf.autoTable({
+            head: [[
+                t('export.period.header.period'),
+                t('export.period.header.author'),
+                t('export.period.header.numBooks')
+            ]],
+            body      : periodBody,
+            startY    : y,
+            margin    : { left: mar, right: mar },
+            styles    : { fontSize: 7, overflow: 'linebreak' },
+            headStyles: { fillColor: teal, textColor: 255 }
+        });
+
+        y = pdf.lastAutoTable.finalY + GAP;
+
+
         /* ===== Library owners =========================================== */
         section(t('export.section.owners'));
 
