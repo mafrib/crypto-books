@@ -1,8 +1,8 @@
 // Responsive handling for the dashboard
 class ResponsiveDashboard {
     constructor() {
-        this.minWidth = 1200; // Minimum viewport width
-        this.minHeight = 700; // Minimum viewport height
+        this.minWidth = 1024;
+        this.minHeight = 600;
         this.resizeTimeout = null;
         this.lastWidth = window.innerWidth;
         this.lastHeight = window.innerHeight;
