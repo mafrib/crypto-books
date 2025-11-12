@@ -2813,3 +2813,124 @@ details[open] > summary::after {
     grid-row: 2;
   }
 }
+
+/* Larger screens (external monitors) */
+@media (min-width: 1600px) {
+  /* Navbar and titles */
+  .title { font-size: x-large; }
+
+  /* Map visualization */
+  .map-color-scale { width: 200px; }
+  .map-color-scale .legend-title {
+    font-size: 0.75rem;
+    max-width: 200px;  /* Override default max-width to allow wider title */
+  }
+  .map-color-scale .bar-wrapper .legend-bar .legend-label { font-size: 0.75rem; }
+  .legend-label { font-size: 0.75rem; }
+  .filter-title { font-size: 0.85rem; }
+  #period-filter .period-bar .label { font-size: 0.65em; }
+  #period-filter .period-bar .count { font-size: 0.7em; }
+  .map-offhint { font-size: 0.75rem; }
+  .period-note { font-size: 0.75rem; }
+  .map-tooltip { font-size: 0.75rem; }
+  .map-limit-toast { font-size: 0.85rem; }
+
+  /* Network graph */
+  .viz-title { font-size: 1.05rem; }
+  .legend-item span { font-size: 0.75rem; }
+  #network-graph .tools-label {
+    font-size: 0.75rem;
+    max-width: 100px;
+  }  /* Gender filter label */
+  .tooltip { font-size: 0.75rem; }
+  .info-btn {
+    font-size: 1.15rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #network-info-btn {
+    font-size: 1.15rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #network-info-panel { font-size: 0.8rem; }
+  #network-info-panel .legend-label { font-size: 0.75rem; }
+
+  /* Details panel */
+  .details-panel__placeholder { font-size: 0.9rem; }
+  .details-panel__name { font-size: 0.85rem; }
+  .details-panel__books { font-size: 0.8rem; }
+  .details-panel .details-panel__dates,
+  .details-panel .details-panel__title,
+  .details-panel .details-panel__reign { font-size: 0.75rem; }
+  #hover-details.is-expanded .details-panel__dates,
+  #hover-details.is-expanded .details-panel__title,
+  #hover-details.is-expanded .details-panel__reign { font-size: 0.7rem; }
+  .details-panel__list .list-item { font-size: 0.75rem; }
+  .details-panel__list .list-header { font-size: 0.9rem; }
+  .details-panel--book-mode .details-panel__attrib,
+  .details-panel--book-mode .details-panel__authorship { font-size: 0.8rem; }
+  .details-panel--book-mode .details-panel__description { font-size: 0.8rem; }
+  .details-panel p { font-size: 0.85rem; }
+
+  /* Treemap */
+  #treemap-breadcrumbs { font-size: 0.85rem; }
+  .mode-button { font-size: 0.8rem; }
+  .mode-button .filter-indicator { width: 12px; height: 12px; }
+  .mode-button .filter-indicator::after { font-size: 0.75rem; }
+  #tooltip { font-size: 0.75rem; }
+  .treemap-info-panel { font-size: 0.8rem; }
+  #treemap-info-btn { font-size: 0.8rem; }
+  #treemap-area text { font-size: 0.75rem !important; }
+
+  /* Classification tree diagram */
+  .treemap-info-panel {
+    padding: 0.6rem 1rem;
+    width: clamp(280px, 30vw, 320px);
+  }
+  .classification-tree {
+    padding: 0.5rem 0;
+  }
+  .classification-tree .tree-svg {
+    max-width: 100%;
+    width: 100%;
+    transform: scale(1.05);
+    transform-origin: center center;
+  }
+
+  /* Catalog */
+  #search-input { font-size: 0.85rem; }
+  #search-input::placeholder { font-size: 0.85rem; }
+  .catalog-header h5 { font-size: 1.05rem; }
+  .sortable { font-size: 0.85rem; }
+  .catalog-entry { font-size: 0.8rem; }
+  #book-count { font-size: 0.8rem; }
+  .catalog-toast { font-size: 0.85rem; }
+
+  /* Filter modal */
+  .modal-header h2 { font-size: 1.25rem; }
+  summary { font-size: 0.9rem; }
+  summary .count { font-size: 0.85rem; }
+  .checklist li { font-size: 0.9rem; }
+  .quick-search { font-size: 0.9rem; }
+  .guard-msg { font-size: 0.85rem; }
+  .text-btn { font-size: 1rem; }
+  .solid-btn { font-size: 1rem; }
+
+  /* Info buttons and tooltips */
+  .header-info { font-size: 0.7rem; }
+  .header-info::after { font-size: 0.75rem; }
+  .prob-badge { font-size: 0.9em; }
+  .prob-badge::after { font-size: 0.75rem; }
+  .prob-tip { font-size: 0.9rem; }
+
+  /* Buttons and controls */
+  .dropdown-menu li a { font-size: 0.9rem; }
+  #filter-btn span, #clear-btn span { font-size: 0.85rem; }
+  .filter-badge { font-size: 0.85rem; }
+  .filter-tag { font-size: 0.8rem; }
+}
