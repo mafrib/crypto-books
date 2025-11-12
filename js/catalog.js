@@ -67,10 +67,10 @@ function createBooksCatalog(data) {
           isNaN(window.parseDMS(d.Longitude_Autor));
 
         window.showNoLocationOverlay(missing);
-        window.highlightMapPoint(d);
-        window.highlightNetworkNode(d.Proprietario_Nome);
-        window.highlightTreemapRect(d);
-        window.highlightPeriodBar(d); // highlight the corresponding period
+        window.highlightMapPoint && window.highlightMapPoint(d);
+        window.highlightNetworkNode && window.highlightNetworkNode(d.Proprietario_Nome);
+        window.highlightTreemapRect && window.highlightTreemapRect(d);
+        window.highlightPeriodBar && window.highlightPeriodBar(d);
       })
       .on('mouseout', (event, d) => {
         d3.select(event.currentTarget).classed('hovered-entry', false);

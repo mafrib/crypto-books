@@ -1196,11 +1196,6 @@ svg:not(.node-active-mode) .node:hover text {
   border: 2px solid #D6E5DB;
 }
 
-.modal-body::-webkit-scrollbar-thumb:hover,
-.modal-body::-webkit-scrollbar-thumb:active {
-  background-color: #16404D;
-}
-
 .filter-group { display:flex; flex-direction:column; gap:.75rem; }
 .filter-group.two-col {
   display:grid; grid-template-columns:1fr 1fr; gap:1rem;
@@ -2641,7 +2636,7 @@ details[open] > summary::after {
 
 /* Scrollbar styling */
 #catalog-entries::-webkit-scrollbar {
-  width: 8px
+  width: 8px;
 }
 
 #catalog-entries::-webkit-scrollbar-track {
@@ -2652,11 +2647,6 @@ details[open] > summary::after {
   background-color: #A6CDC6;
   border-radius: 4px;
   border: 2px solid #D6E5DB;
-}
-
-#catalog-entries::-webkit-scrollbar-thumb:hover,
-#catalog-entries::-webkit-scrollbar-thumb:active {
-  background-color: #16404D;
 }
 
 #book-count {
