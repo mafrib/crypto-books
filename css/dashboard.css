@@ -1337,6 +1337,7 @@ details[open] > summary::after {
 
 #filter-btn span {
   color: #16404D;
+  font-size: 0.7rem;
 }
 
 #filter-icon {
@@ -1368,6 +1369,7 @@ details[open] > summary::after {
 /* non-active mode*/
 #clear-btn span {
   color: #A6CDC6;
+  font-size: 0.7rem;
 }
 
 .details-panel {
