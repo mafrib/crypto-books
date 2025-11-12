@@ -6,6 +6,7 @@ class ResponsiveDashboard {
         this.resizeTimeout = null;
         this.lastWidth = window.innerWidth;
         this.lastHeight = window.innerHeight;
+        this.wasViewportTooSmall = false;
 
         this.init();
     }
@@ -55,18 +56,30 @@ class ResponsiveDashboard {
     handleResize() {
         const newWidth = window.innerWidth;
         const newHeight = window.innerHeight;
+        const isViewportAcceptable = this.checkViewport();
 
-        // Check if viewport is acceptable
-        if (!this.checkViewport()) {
-            return; // Don't redraw if viewport is too small
+        // If viewport is too small, mark it and skip redraw
+        if (!isViewportAcceptable) {
+            this.wasViewportTooSmall = true;
+            return;
+        }
+
+        // If viewport was too small but now acceptable, force redraw
+        if (this.wasViewportTooSmall) {
+            console.log('Responsive: Viewport restored to acceptable size, forcing redraw');
+            this.wasViewportTooSmall = false;
+            this.redrawAllVisualizations();
+            this.lastWidth = newWidth;
+            this.lastHeight = newHeight;
+            return;
         }
 
         // Only redraw if size actually changed significantly
         const widthDiff = Math.abs(newWidth - this.lastWidth);
         const heightDiff = Math.abs(newHeight - this.lastHeight);
 
-        if (widthDiff < 50 && heightDiff < 50) {
-            return; // Skip minor changes
+        if (widthDiff < 30 && heightDiff < 30) {
+            return;
         }
 
         console.log('Responsive: Redrawing visualizations due to resize');

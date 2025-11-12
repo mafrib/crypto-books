@@ -2260,6 +2260,7 @@ details[open] > summary::after {
 
 #treemap-controls {
   margin-right: 30px;
+  margin-left: 15px;
 }
 
 #treemap-area {
@@ -2787,20 +2788,27 @@ details[open] > summary::after {
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1200px) and (min-width: 1024px) {
   .dashboard {
-    grid-template-columns: 1fr 8rem;
-    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 8rem;
+    grid-template-rows: 1fr 1fr;
   }
 
-  #catalog {
-    grid-column: 1 / -1;
-    grid-row: 3;
+  .visualization {
+    padding: 0.4rem;
   }
 
-  #treemap {
-    grid-column: 1;
-    grid-row: 2;
+  #hover-details {
+    --pad-h: 0.5rem;
+    --pad-v: 0.4rem;
+  }
+
+  #hover-details.is-expanded .details-panel__img-wrapper {
+    width: 7rem;
+  }
+
+  .dashboard {
+    gap: 10px;
   }
 }
 
