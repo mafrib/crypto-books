@@ -2044,6 +2044,7 @@ details[open] > summary::after {
   justify-content: space-between;
   margin-bottom: 8px;
   position: relative;
+  flex-wrap: nowrap;
 }
 
 .treemap-title-container {
@@ -2051,6 +2052,7 @@ details[open] > summary::after {
   align-items: center;
   gap: 8px;
   position: relative;
+  flex-wrap: nowrap;
 }
 
 .treemap-title-container .viz-title {
@@ -2809,6 +2811,19 @@ details[open] > summary::after {
 
   .dashboard {
     gap: 10px;
+  }
+
+  .treemap-title-container {
+    flex-shrink: 0;
+  }
+
+  .treemap-title-container .viz-title {
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  #treemap-info-btn {
+    flex-shrink: 0;
   }
 }
 
