@@ -1337,7 +1337,7 @@ details[open] > summary::after {
 
 #filter-btn span {
   color: #16404D;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 #filter-icon {
@@ -1369,7 +1369,7 @@ details[open] > summary::after {
 /* non-active mode*/
 #clear-btn span {
   color: #A6CDC6;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .details-panel {
@@ -2817,11 +2817,14 @@ details[open] > summary::after {
 
   .treemap-title-container {
     flex-shrink: 0;
+    gap: 1px;
   }
 
   .treemap-title-container .viz-title {
     font-size: 0.75rem;
-    white-space: nowrap;
+    white-space: normal;
+    max-width: 110px;
+    line-height: 1.2;
   }
 
   #treemap-info-btn {
