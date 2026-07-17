@@ -132,11 +132,14 @@ function centerOnProjectedPointIfOffscreen(px, py, margin = 16) {
 
 function parseDMS(str) {
     if (!str) return NaN;
+    str = str
+        .replace(/´´/g, "″")
+        .replace(/´/g, "′");
     const m = str.match(/(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEW])/);
     if (!m) return NaN;
-    let [,deg,min,sec,dir] = m;
-    let dec = +deg + +min/60 + +sec/3600;
-    if (dir==='S'||dir==='W') dec = -dec;
+    let [, deg, min, sec, dir] = m;
+    let dec = +deg + +min / 60 + +sec / 3600;
+    if (dir === 'S' || dir === 'W') dec = -dec;
     return dec;
 }
 
@@ -568,13 +571,17 @@ function makeMap () {
             );
 
             const parseDMS = str => {
-                const m = str.match(/(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEW])/);
-                if (!m) return NaN;
-                let [, deg, min, sec, dir] = m;
-                let dec = +deg + +min/60 + +sec/3600;
-                if (dir === "S"||dir==="W") dec = -dec;
-                return dec;
-            };
+    if (!str) return NaN;
+    str = str
+        .replace(/´´/g, "″")
+        .replace(/´/g, "′");
+    const m = str.match(/(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEW])/);
+    if (!m) return NaN;
+    let [, deg, min, sec, dir] = m;
+    let dec = +deg + +min / 60 + +sec / 3600;
+    if (dir === "S" || dir === "W") dec = -dec;
+    return dec;
+};
 
             const points = libraries
                 .map(d => ({
